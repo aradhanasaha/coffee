@@ -22,3 +22,7 @@ with check (auth.uid() = user_id);
 create policy "Users can view their own logs" 
 on coffee_logs for select 
 using (auth.uid() = user_id);
+
+create policy "Anyone can view coffee logs"
+on coffee_logs for select
+using (true);
