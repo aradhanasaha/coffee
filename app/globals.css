@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Yellow Ochre Background */
+    --background: 42 68% 65%;
+    /* Brown Text */
+    --foreground: 25 70% 25%;
+
+    --card: 42 68% 65%;
+    --card-foreground: 25 70% 25%;
+
+    --popover: 42 68% 65%;
+    --popover-foreground: 25 70% 25%;
+
+    /* Darker Brown for Primary elements */
+    --primary: 25 70% 25%;
+    --primary-foreground: 42 68% 90%;
+
+    /* Lighter/Cream for Secondary elements */
+    --secondary: 42 68% 85%;
+    --secondary-foreground: 25 70% 25%;
+
+    --muted: 42 30% 60%;
+    --muted-foreground: 25 50% 35%;
+
+    --accent: 42 68% 55%;
+    --accent-foreground: 25 70% 25%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 25 70% 25%;
+    --input: 25 70% 25%;
+    --ring: 25 70% 25%;
+
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 25 70% 15%;
+    --foreground: 42 68% 85%;
+
+    --card: 25 70% 15%;
+    --card-foreground: 42 68% 85%;
+
+    --popover: 25 70% 15%;
+    --popover-foreground: 42 68% 85%;
+
+    --primary: 42 68% 65%;
+    --primary-foreground: 25 70% 15%;
+
+    --secondary: 25 50% 25%;
+    --secondary-foreground: 42 68% 85%;
+
+    --muted: 25 30% 25%;
+    --muted-foreground: 42 50% 65%;
+
+    --accent: 25 50% 25%;
+    --accent-foreground: 42 68% 85%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 42 68% 25%;
+    --input: 42 68% 25%;
+    --ring: 42 68% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
