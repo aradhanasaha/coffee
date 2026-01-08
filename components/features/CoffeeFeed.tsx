@@ -17,9 +17,10 @@ interface CoffeeLog {
 
 interface CoffeeFeedProps {
     selectedCity: string;
+    limit?: number;
 }
 
-export default function CoffeeFeed({ selectedCity }: CoffeeFeedProps) {
+export default function CoffeeFeed({ selectedCity, limit }: CoffeeFeedProps) {
     const [logs, setLogs] = useState<CoffeeLog[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -32,6 +33,10 @@ export default function CoffeeFeed({ selectedCity }: CoffeeFeedProps) {
                     .from('coffee_logs')
                     .select('*')
                     .order('created_at', { ascending: false });
+
+                if (limit) {
+                    query = query.limit(limit);
+                }
 
                 // If selectedCity is not "All" and not "Delhi" (default), we might want to filter
                 // But currently our schema doesn't have a 'city' column, only 'place'.
