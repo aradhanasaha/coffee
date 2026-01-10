@@ -38,10 +38,8 @@ export default function CoffeeFeed({ selectedCity, limit }: CoffeeFeedProps) {
                     query = query.limit(limit);
                 }
 
-                // If selectedCity is not "All" and not "Delhi" (default), we might want to filter
-                // But currently our schema doesn't have a 'city' column, only 'place'.
-                // For now, we'll just show all logs since we don't have city data in the table yet.
-                // In a real app, we'd add a city column or infer it.
+                // If selectedCity is "All", we show all logs. 
+                // Currently, we don't filter by city as the schema doesn't have a city column yet.
 
                 const { data, error } = await query;
 
