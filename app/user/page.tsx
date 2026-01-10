@@ -1,0 +1,423 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+import { Button } from "@/components/common";
+import { ArrowLeft, LogOut, Coffee, MapPin, Calendar, Star, TrendingUp, Map as MapIcon, User as UserIcon, Edit2, Check, X } from "lucide-react";
+import Link from "next/link";
+import { validateUsername } from "@/lib/usernameValidation";
+import LogCoffeeForm from "@/components/features/LogCoffeeForm";
+
+interface CoffeeLog {
+    id: string;
+    created_at: string;
+    coffee_name: string;
+    place: string;
+    rating: number;
+    price: number | null;
+    review: string | null;
+    flavor_notes: string | null;
+    price_feel: 'steal' | 'fair' | 'expensive' | '';
+    location_id: string | null;
+}
+
+export default function UserDashboard() {
+    const [user, setUser] = useState<any>(null);
+    const [logs, setLogs] = useState<CoffeeLog[]>([]);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                router.push('/login');
+                return;
+            }
+
+            // Check if user has a profile
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .single();
+
+            if (!profile) {
+                router.push('/set-username');
+                return;
+            }
+
+            setUser({ ...session.user, ...profile });
+
+            const { data: logsData, error } = await supabase
+                .from('coffee_logs')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .is('deleted_at', null)
+                .order('created_at', { ascending: false });
+
+            if (!error && logsData) {
+                const activeLogs = logsData.filter((log: any) => !log.deleted_at);
+                setLogs(activeLogs as CoffeeLog[]);
+            }
+            setLoading(false);
+        };
+        fetchData();
+    }, [router]);
+
+    const [isEditingUsername, setIsEditingUsername] = useState(false);
+    const [newUsername, setNewUsername] = useState("");
+    const [usernameError, setUsernameError] = useState<string | null>(null);
+    const [updateLoading, setUpdateLoading] = useState(false);
+
+    const canChangeUsername = () => {
+        if (!user?.username_last_changed_at) return true;
+        const lastChanged = new Date(user.username_last_changed_at);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return lastChanged < thirtyDaysAgo;
+    };
+
+    const getDaysUntilNextChange = () => {
+        if (!user?.username_last_changed_at) return 0;
+        const lastChanged = new Date(user.username_last_changed_at);
+        const nextAvailable = new Date(lastChanged);
+        nextAvailable.setDate(nextAvailable.getDate() + 30);
+        const diff = nextAvailable.getTime() - new Date().getTime();
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    };
+
+    const handleUpdateUsername = async () => {
+        const validation = validateUsername(newUsername);
+        if (!validation.isValid) {
+            setUsernameError(validation.error || "Invalid username");
+            return;
+        }
+
+        setUpdateLoading(true);
+        setUsernameError(null);
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    username: newUsername.toLowerCase(),
+                    username_last_changed_at: new Date().toISOString()
+                })
+                .eq('user_id', user.id);
+
+            if (error) {
+                if (error.code === '23505') throw new Error("Username already taken");
+                throw error;
+            }
+
+            setUser({
+                ...user,
+                username: newUsername.toLowerCase(),
+                username_last_changed_at: new Date().toISOString()
+            });
+            setIsEditingUsername(false);
+        } catch (err: any) {
+            setUsernameError(err.message);
+        } finally {
+            setUpdateLoading(false);
+        }
+    };
+
+    const [editingLogId, setEditingLogId] = useState<string | null>(null);
+    const [editFormData, setEditFormData] = useState<Partial<CoffeeLog>>({});
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    const handleEditClick = (log: CoffeeLog) => {
+        setEditingLogId(log.id);
+        setEditFormData(log);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingLogId(null);
+        setEditFormData({});
+    };
+
+    const handleUpdateLog = async () => {
+        // This is now handled by LogCoffeeForm onSuccess
+        setEditingLogId(null);
+        // Refresh logs to show updated data
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            const { data: logsData } = await supabase
+                .from('coffee_logs')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .is('deleted_at', null)
+                .order('created_at', { ascending: false });
+            if (logsData) setLogs(logsData);
+        }
+    };
+
+    const handleDeleteLog = async (id: string) => {
+        if (!confirm("This entry will be removed from your profile and all feeds. Are you sure?")) return;
+        setIsDeleting(id);
+
+        try {
+            const { error } = await supabase
+                .from('coffee_logs')
+                .update({
+                    deleted_at: new Date().toISOString(),
+                    deleted_by: user.id,
+                    deletion_reason: 'user_deleted'
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setLogs(logs.filter(log => log.id !== id));
+        } catch (err: any) {
+            console.error("Error deleting log:", err.message);
+            alert("Failed to delete log: " + err.message);
+        } finally {
+            setIsDeleting(null);
+        }
+    };
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/login');
+        router.refresh();
+    };
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
+    }
+
+    const totalEntries = logs.length;
+    const firstEntryDate = logs.length > 0 ? new Date(logs[logs.length - 1].created_at).toLocaleDateString() : "—";
+    const lastEntryDate = logs.length > 0 ? new Date(logs[0].created_at).toLocaleDateString() : "—";
+
+    const getPriceLabel = (feel: string) => {
+        switch (feel) {
+            case 'steal': return 'What a steal!';
+            case 'fair': return 'Just right';
+            case 'expensive': return 'Felt expensive';
+            default: return feel || '—';
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-background text-foreground pb-20">
+            {/* Top Bar */}
+            <header className="sticky top-0 z-10 w-full py-4 px-6 bg-background/80 backdrop-blur-md border-b border-primary/10 flex items-center justify-between">
+                <Link href="/home">
+                    <Button variant="secondary" size="sm" className="flex items-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
+                    </Button>
+                </Link>
+                <span className="text-sm font-bold text-primary truncate max-w-[200px]">
+                    @{user?.username}
+                </span>
+                <Button onClick={handleLogout} variant="secondary" size="sm" className="text-destructive hover:bg-destructive/10">
+                    <LogOut className="w-4 h-4" />
+                </Button>
+            </header>
+
+            <main className="container mx-auto max-w-4xl px-4 py-8 space-y-12">
+                {/* User Info Section */}
+                <section className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm">
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Coffee className="w-5 h-5 text-primary" />
+                        </div>
+                        User Profile
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Email</p>
+                                <p className="font-medium text-muted-foreground">{user?.email}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Joined</p>
+                                <p className="font-medium">{new Date(user?.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
+                                <UserIcon className="w-3 h-3" />
+                                Username
+                            </p>
+
+                            {isEditingUsername ? (
+                                <div className="space-y-3">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newUsername}
+                                            onChange={(e) => setNewUsername(e.target.value.toLowerCase())}
+                                            className="flex-1 bg-background border-2 border-primary/20 rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-primary"
+                                            placeholder="new_username"
+                                            autoFocus
+                                        />
+                                        <Button
+                                            size="sm"
+                                            onClick={handleUpdateUsername}
+                                            disabled={updateLoading}
+                                        >
+                                            <Check className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => setIsEditingUsername(false)}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                    {usernameError && <p className="text-[10px] text-destructive font-bold">{usernameError}</p>}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xl font-black text-primary">@{user?.username}</p>
+                                    {canChangeUsername() ? (
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => {
+                                                setNewUsername(user.username);
+                                                setIsEditingUsername(true);
+                                            }}
+                                        >
+                                            <Edit2 className="w-3 h-3" />
+                                        </Button>
+                                    ) : (
+                                        <span className="text-[10px] text-muted-foreground font-medium italic">
+                                            Change in {getDaysUntilNextChange()} days
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            <p className="text-[10px] text-muted-foreground mt-2">
+                                This is your public name shown on your coffee entries. You can change it once every 30 days.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Stats Section */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm flex flex-col items-center text-center">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">Total Logs</p>
+                        <p className="text-4xl font-black text-primary">{totalEntries}</p>
+                    </div>
+                    <div className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm flex flex-col items-center text-center">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">First Entry</p>
+                        <p className="text-xl font-bold">{firstEntryDate}</p>
+                    </div>
+                    <div className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm flex flex-col items-center text-center">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">Latest Entry</p>
+                        <p className="text-xl font-bold">{lastEntryDate}</p>
+                    </div>
+                </section>
+
+                {/* My Coffee Entries Section */}
+                <section>
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        My Coffee History
+                    </h2>
+                    {logs.length === 0 ? (
+                        <div className="bg-card/50 border-2 border-dashed border-primary/10 rounded-2xl p-12 text-center">
+                            <p className="text-muted-foreground">You haven’t logged any coffees yet.</p>
+                            <Link href="/log" className="mt-4 inline-block">
+                                <Button size="md">Log your first coffee</Button>
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {logs.map((log) => (
+                                <div key={log.id} className="bg-card p-5 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
+                                    {editingLogId === log.id ? (
+                                        <LogCoffeeForm
+                                            initialData={log}
+                                            onSuccess={handleUpdateLog}
+                                            submitLabel="Save Changes"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <h3 className="font-bold text-lg">{log.coffee_name}</h3>
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <MapPin className="w-3 h-3" />
+                                                    <span>{log.place} • Delhi</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-4">
+                                                <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+                                                    <Star className="w-4 h-4 text-primary fill-primary" />
+                                                    <span className="font-bold text-primary">{log.rating}</span>
+                                                </div>
+                                                <div className="text-xs font-bold px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
+                                                    {getPriceLabel(log.price_feel)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground font-medium">
+                                                    {new Date(log.created_at).toLocaleDateString()}
+                                                </div>
+                                                <div className="flex items-center gap-2 ml-auto">
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                        onClick={() => handleEditClick(log)}
+                                                    >
+                                                        <Edit2 className="w-3 h-3" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                                        onClick={() => handleDeleteLog(log.id)}
+                                                        disabled={isDeleting === log.id}
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                {/* Placeholder Sections */}
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">
+                    <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
+                        <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                            Coming Soon
+                        </div>
+                        <h3 className="font-bold mb-2 flex items-center gap-2">
+                            <MapIcon className="w-4 h-4" />
+                            Map of logged places
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Visualize your coffee journey across the city.</p>
+                    </div>
+                    <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
+                        <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                            Coming Soon
+                        </div>
+                        <h3 className="font-bold mb-2 flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4" />
+                            Taste analytics & trends
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Discover your flavor profile and habits.</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    );
+}

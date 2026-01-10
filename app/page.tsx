@@ -6,28 +6,18 @@ import CoffeeFeed from "@/components/features/CoffeeFeed";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { Button } from "@/components/common";
 
 export default function Home() {
     const [selectedCity, setSelectedCity] = useState("Delhi");
-    const [hasLogs, setHasLogs] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkLogs = async () => {
-            const { count, error } = await supabase
-                .from('coffee_logs')
-                .select('*', { count: 'exact', head: true });
-
-            if (!error && count && count > 0) {
-                setHasLogs(true);
-            }
-            setLoading(false);
-        };
-        checkLogs();
+        setLoading(false);
     }, []);
 
     return (
-        <main className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-background flex flex-col">
             <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} />
 
             <div className="container mx-auto max-w-5xl px-4 py-12 flex-1 flex flex-col items-center gap-12">
@@ -51,17 +41,15 @@ export default function Home() {
                         </p>
                     </div>
                     <div className="flex gap-4 mt-4">
-                        <Link
-                            href="/signup"
-                            className="px-8 py-3 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg hover:bg-primary/90 transition-all hover:scale-105"
-                        >
-                            Join the Club
+                        <Link href="/signup">
+                            <Button size="lg" className="px-8">
+                                Join the Club
+                            </Button>
                         </Link>
-                        <Link
-                            href="/login"
-                            className="px-8 py-3 bg-card text-primary font-bold rounded-2xl border-2 border-primary/20 hover:bg-primary/5 transition-all"
-                        >
-                            Log In
+                        <Link href="/login">
+                            <Button variant="secondary" size="lg" className="px-8">
+                                Log In
+                            </Button>
                         </Link>
                     </div>
                 </section>
@@ -87,6 +75,6 @@ export default function Home() {
                     </div>
                 </section>
             </div>
-        </main>
+        </div>
     );
 }

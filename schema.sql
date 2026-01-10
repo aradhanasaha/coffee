@@ -8,7 +8,8 @@ create table coffee_logs (
   price numeric,
   rating integer check (rating >= 1 and rating <= 5),
   review text,
-  flavor_notes text
+  flavor_notes text,
+  price_feel text check (price_feel in ('steal', 'fair', 'expensive'))
 );
 
 -- Enable Row Level Security (RLS)
@@ -23,6 +24,23 @@ create policy "Users can view their own logs"
 on coffee_logs for select 
 using (auth.uid() = user_id);
 
-create policy "Anyone can view coffee logs"
-on coffee_logs for select
+create policy "Users can update their own logs"
+on coffee_logs for update
+using (auth.uid() = user_id);
+
+create policy "Users can delete their own logs"
+on coffee_logs for delete
+using (auth.uid() = user_id);
+
+-- Locations table policies
+-- Note: locations table is shared, so we allow anyone to view and any authenticated user to insert
+-- but we typically don't allow updates to shared location data from the client.
+alter table locations enable row level security;
+
+create policy "Anyone can view locations"
+on locations for select
 using (true);
+
+create policy "Authenticated users can insert locations"
+on locations for insert
+with check (auth.role() = 'authenticated');

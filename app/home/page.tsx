@@ -19,7 +19,18 @@ export default function AuthenticatedHome() {
             if (!session) {
                 router.push('/login');
             } else {
-                setUser(session.user);
+                // Check if user has a profile
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('user_id', session.user.id)
+                    .single();
+
+                if (!profile) {
+                    router.push('/set-username');
+                } else {
+                    setUser({ ...session.user, username: profile.username });
+                }
             }
             setLoading(false);
         };
@@ -33,7 +44,7 @@ export default function AuthenticatedHome() {
     if (!user) return null;
 
     return (
-        <main className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-background flex flex-col">
             <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
 
             <div className="container mx-auto max-w-5xl px-4 py-8 flex-1 flex flex-col gap-8">
@@ -45,6 +56,6 @@ export default function AuthenticatedHome() {
                     <CoffeeFeed selectedCity={selectedCity} />
                 </section>
             </div>
-        </main>
+        </div>
     );
 }

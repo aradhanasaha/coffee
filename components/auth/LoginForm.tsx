@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { FormContainer, Button, Input, ErrorMessage } from '@/components/common';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -47,53 +48,38 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="w-full max-w-md bg-card p-8 rounded-2xl shadow-lg border-2 border-primary/20">
-            <h2 className="text-2xl font-bold text-center mb-6 text-primary">Welcome Back</h2>
-
+        <FormContainer title="Welcome Back">
             <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-1 text-foreground">
-                        Email
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
-                        placeholder="barista@example.com"
-                    />
-                </div>
+                <Input
+                    id="email"
+                    type="email"
+                    label="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="barista@example.com"
+                />
 
-                <div>
-                    <label htmlFor="password" className="block text-sm font-medium mb-1 text-foreground">
-                        Password
-                    </label>
-                    <input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
-                        placeholder="••••••••"
-                    />
-                </div>
+                <Input
+                    id="password"
+                    type="password"
+                    label="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                />
 
-                {error && (
-                    <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
-                        {error}
-                    </div>
-                )}
+                <ErrorMessage message={error} />
 
-                <button
+                <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 px-4 bg-primary text-primary-foreground font-bold rounded-xl shadow-md hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                    size="lg"
+                    className="mt-2"
                 >
                     {loading ? 'Logging In...' : 'Log In'}
-                </button>
+                </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
@@ -102,6 +88,6 @@ export default function LoginForm() {
                     Sign up
                 </Link>
             </div>
-        </div>
+        </FormContainer>
     );
 }

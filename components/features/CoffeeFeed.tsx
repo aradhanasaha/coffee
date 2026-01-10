@@ -13,6 +13,9 @@ interface CoffeeLog {
     review: string | null;
     flavor_notes: string | null;
     created_at: string;
+    user_id: string;
+    deleted_at: string | null;
+    username?: string; // Optional username from join or separate fetch
 }
 
 interface CoffeeFeedProps {
@@ -29,22 +32,51 @@ export default function CoffeeFeed({ selectedCity, limit }: CoffeeFeedProps) {
             setLoading(true);
             try {
                 // Start building the query
+                // Fetch logs first
                 let query = supabase
                     .from('coffee_logs')
                     .select('*')
+                    .is('deleted_at', null)
                     .order('created_at', { ascending: false });
 
                 if (limit) {
                     query = query.limit(limit);
                 }
 
-                // If selectedCity is "All", we show all logs. 
-                // Currently, we don't filter by city as the schema doesn't have a city column yet.
+                const { data: logsData, error: logsError } = await query;
+                if (logsError) throw logsError;
 
-                const { data, error } = await query;
+                if (logsData && logsData.length > 0) {
+                    // Filter out any deleted logs that might have slipped through (frontend fallback)
+                    const activeLogs = logsData.filter(log => !log.deleted_at);
 
-                if (error) throw error;
-                setLogs(data || []);
+                    if (activeLogs.length === 0) {
+                        setLogs([]);
+                        return;
+                    }
+
+                    // Fetch profiles for these users to get usernames
+                    const userIds = Array.from(new Set(activeLogs.map(log => log.user_id)));
+                    const { data: profilesData, error: profilesError } = await supabase
+                        .from('profiles')
+                        .select('user_id, username')
+                        .in('user_id', userIds);
+
+                    if (!profilesError && profilesData) {
+                        const profileMap = Object.fromEntries(
+                            profilesData.map(p => [p.user_id, p.username])
+                        );
+                        const logsWithUsernames = activeLogs.map(log => ({
+                            ...log,
+                            username: profileMap[log.user_id]
+                        }));
+                        setLogs(logsWithUsernames as CoffeeLog[]);
+                    } else {
+                        setLogs(activeLogs as CoffeeLog[]);
+                    }
+                } else {
+                    setLogs([]);
+                }
             } catch (error) {
                 console.error('Error fetching logs:', error);
             } finally {
@@ -80,7 +112,14 @@ export default function CoffeeFeed({ selectedCity, limit }: CoffeeFeedProps) {
                     <div className="flex justify-between items-start">
                         <div>
                             <h3 className="font-bold text-lg text-primary leading-tight">{log.coffee_name}</h3>
-                            <p className="text-sm text-muted-foreground font-medium">{log.place}</p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm text-muted-foreground font-medium">{log.place}</p>
+                                {log.username && (
+                                    <span className="text-[10px] bg-primary/5 text-primary/60 px-1.5 py-0.5 rounded font-bold">
+                                        @{log.username}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div className="flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-lg">
                             <span className="font-bold text-secondary-foreground">{log.rating}</span>

@@ -31,12 +31,12 @@ export default function LogCoffeePage() {
     if (!user) return null;
 
     return (
-        <main className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-background flex flex-col">
             <Header selectedCity="Delhi" onSelectCity={() => { }} user={user} />
 
             <div className="flex-1 flex items-center justify-center px-4 py-12">
                 <LogCoffeeForm />
             </div>
-        </main>
+        </div>
     );
 }

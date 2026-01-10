@@ -1,23 +1,153 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
-import { Star } from 'lucide-react';
+import { Star, Plus, X, Check } from 'lucide-react';
+import { Button, Textarea, ErrorMessage } from '@/components/common';
+import Fuse from 'fuse.js';
+import MapsProvider from './MapsProvider';
+import LocationAutocomplete from './LocationAutocomplete';
 
-export default function LogCoffeeForm() {
+const COMMON_COFFEE_NAMES = [
+    'Espresso', 'Doppio', 'Ristretto', 'Lungo', 'Americano',
+    'Cappuccino', 'Latte', 'Flat White', 'Cortado', 'Gibraltar',
+    'Macchiato', 'Piccolo', 'Mocha', 'Affogato', 'Irish Coffee',
+    'Turkish Coffee', 'Greek Coffee', 'Cold Brew', 'Nitro Cold Brew',
+    'Iced Coffee', 'Iced Latte', 'Iced Americano', 'Pour Over',
+    'Drip Coffee', 'French Press', 'AeroPress', 'Moka Pot', 'Siphon',
+    'Chemex', 'V60', 'Kalita Wave', 'Single Origin Brew',
+    'Espresso Tonic', 'Red Eye', 'Black Eye', 'Long Black',
+    'Café au Lait', 'Vienna Coffee'
+];
+
+const PREDEFINED_TAGS = ['Nutty', 'Chocolatey', 'Fruity', 'Floral', 'Bitter', 'Sweet'];
+
+interface LogCoffeeFormProps {
+    initialData?: {
+        id: string;
+        coffee_name: string;
+        place: string;
+        price_feel: 'steal' | 'fair' | 'expensive' | '';
+        rating: number;
+        review: string | null;
+        flavor_notes: string | null;
+        location_id?: string | null;
+    };
+    onSuccess?: () => void;
+    submitLabel?: string;
+}
+
+export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: LogCoffeeFormProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     const [formData, setFormData] = useState({
-        coffee_name: '',
-        place: '',
-        price: '',
-        rating: 0,
-        review: '',
-        flavor_notes: ''
+        coffee_name: initialData?.coffee_name || '',
+        place: initialData?.place || '',
+        price_feel: (initialData?.price_feel as 'steal' | 'fair' | 'expensive' | '') || '',
+        rating: initialData?.rating || 0,
+        review: initialData?.review || ''
     });
+
+    const [isHomeBrew, setIsHomeBrew] = useState(initialData?.place === 'Home Brew');
+
+    // V2.1 Features State
+    const [selectedTags, setSelectedTags] = useState<string[]>(
+        initialData?.flavor_notes ? initialData.flavor_notes.split(', ').filter(Boolean) : []
+    );
+    const [customTag, setCustomTag] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
+
+    const coffeeRef = useRef<HTMLDivElement>(null);
+
+    const [filteredCoffee, setFilteredCoffee] = useState<string[]>([]);
+    const [showCoffeeDropdown, setShowCoffeeDropdown] = useState(false);
+    const [spellSuggestion, setSpellSuggestion] = useState<string | null>(null);
+    const [selectedLocation, setSelectedLocation] = useState<{
+        place_name: string;
+        place_address: string;
+        lat: number;
+        lng: number;
+        google_place_id: string;
+    } | null>(null);
+
+    useEffect(() => {
+        // Close dropdowns on click outside
+        const handleClickOutside = (event: MouseEvent) => {
+            if (coffeeRef.current && !coffeeRef.current.contains(event.target as Node)) {
+                setShowCoffeeDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleCoffeeChange = (val: string) => {
+        setFormData({ ...formData, coffee_name: val });
+        setSpellSuggestion(null); // Clear suggestion on change
+        if (val.trim()) {
+            // Suggest ONLY from the curated canonical list
+            const filtered = COMMON_COFFEE_NAMES.filter(s =>
+                s.toLowerCase().includes(val.toLowerCase()) && s.toLowerCase() !== val.toLowerCase()
+            );
+            setFilteredCoffee(filtered);
+            setShowCoffeeDropdown(true);
+        } else {
+            setShowCoffeeDropdown(false);
+        }
+    };
+
+    const runSpellCheck = (val: string) => {
+        if (!val.trim()) return;
+
+        // Don't suggest if it's already an exact match in common names
+        const lowerVal = val.toLowerCase();
+        if (COMMON_COFFEE_NAMES.some(s => s.toLowerCase() === lowerVal)) return;
+
+        const fuse = new Fuse(COMMON_COFFEE_NAMES, {
+            threshold: 0.4, // Adjust for sensitivity
+        });
+
+        const results = fuse.search(val);
+        if (results.length > 0) {
+            const bestMatch = results[0].item;
+            if (bestMatch.toLowerCase() !== lowerVal) {
+                setSpellSuggestion(bestMatch);
+            }
+        }
+    };
+
+    const handlePlaceChange = (val: string) => {
+        setFormData({ ...formData, place: val });
+    };
+
+    const toggleHomeBrew = () => {
+        const newHomeBrew = !isHomeBrew;
+        setIsHomeBrew(newHomeBrew);
+        if (newHomeBrew) {
+            setFormData({ ...formData, place: 'Home Brew' });
+            setSelectedLocation(null);
+        } else {
+            setFormData({ ...formData, place: '' });
+        }
+    };
+
+    const toggleTag = (tag: string) => {
+        setSelectedTags(prev =>
+            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+        );
+    };
+
+    const addCustomTag = (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+        if (e) e.preventDefault();
+        if (customTag.trim() && !selectedTags.includes(customTag.trim())) {
+            setSelectedTags([...selectedTags, customTag.trim()]);
+            setCustomTag('');
+            setShowCustomInput(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,24 +158,84 @@ export default function LogCoffeeForm() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
-            const { error } = await supabase
-                .from('coffee_logs')
-                .insert([
-                    {
-                        user_id: user.id,
+            let locationId = initialData?.location_id || null;
+
+            // 1. If a google_place_id exists AND it's not a home brew, get or create location
+            if (!isHomeBrew && selectedLocation?.google_place_id) {
+                // First, try to find the location by google_place_id
+                const { data: existingLoc, error: findError } = await supabase
+                    .from('locations')
+                    .select('id')
+                    .eq('google_place_id', selectedLocation.google_place_id)
+                    .maybeSingle();
+
+                if (findError) throw findError;
+
+                if (existingLoc) {
+                    locationId = existingLoc.id;
+                } else {
+                    // If not found, insert it
+                    const { data: newLoc, error: insertError } = await supabase
+                        .from('locations')
+                        .insert({
+                            place_name: selectedLocation.place_name,
+                            place_address: selectedLocation.place_address,
+                            lat: selectedLocation.lat,
+                            lng: selectedLocation.lng,
+                            google_place_id: selectedLocation.google_place_id
+                        })
+                        .select()
+                        .single();
+
+                    if (insertError) throw insertError;
+                    locationId = newLoc.id;
+                }
+            } else if (isHomeBrew) {
+                locationId = null;
+            }
+
+            if (initialData?.id) {
+                // Update existing entry
+                const { error } = await supabase
+                    .from('coffee_logs')
+                    .update({
                         coffee_name: formData.coffee_name,
                         place: formData.place,
-                        price: formData.price ? parseFloat(formData.price) : null,
+                        price_feel: formData.price_feel || null,
                         rating: formData.rating,
                         review: formData.review,
-                        flavor_notes: formData.flavor_notes
-                    }
-                ]);
+                        flavor_notes: selectedTags.join(', '),
+                        location_id: locationId
+                    })
+                    .eq('id', initialData.id);
 
-            if (error) throw error;
+                if (error) throw error;
+            } else {
+                // Insert new entry
+                const { error } = await supabase
+                    .from('coffee_logs')
+                    .insert([
+                        {
+                            user_id: user.id,
+                            coffee_name: formData.coffee_name,
+                            place: formData.place,
+                            price_feel: formData.price_feel || null,
+                            rating: formData.rating,
+                            review: formData.review,
+                            flavor_notes: selectedTags.join(', '),
+                            location_id: locationId
+                        }
+                    ]);
 
-            router.push('/home');
-            router.refresh();
+                if (error) throw error;
+            }
+
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                router.push('/home');
+                router.refresh();
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -54,110 +244,238 @@ export default function LogCoffeeForm() {
     };
 
     return (
-        <div className="w-full max-w-2xl bg-card p-8 rounded-2xl shadow-lg border-2 border-primary/20">
-            <h2 className="text-2xl font-bold text-center mb-6 text-primary">Log a Coffee</h2>
+        <MapsProvider>
+            <div className={`w-full ${initialData ? '' : 'max-w-2xl bg-card p-8 rounded-2xl shadow-lg border-2 border-primary/20'}`}>
+                {!initialData && <h2 className="text-2xl font-bold text-center mb-6 text-primary">Log a Coffee</h2>}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">Coffee Name</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.coffee_name}
-                            onChange={e => setFormData({ ...formData, coffee_name: e.target.value })}
-                            className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
-                            placeholder="e.g. Iced Latte"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">Place</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.place}
-                            onChange={e => setFormData({ ...formData, place: e.target.value })}
-                            className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
-                            placeholder="e.g. Blue Tokai"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">Price (₹)</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            value={formData.price}
-                            onChange={e => setFormData({ ...formData, price: e.target.value })}
-                            className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
-                            placeholder="250"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">Rating</label>
-                        <div className="flex gap-2 items-center h-[42px]">
-                            {[1, 2, 3, 4, 5].map((star) => (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="relative" ref={coffeeRef}>
+                            <label className="block text-sm font-medium mb-1 text-foreground">Coffee Name</label>
+                            <input
+                                type="text"
+                                required
+                                spellCheck="true"
+                                value={formData.coffee_name}
+                                onChange={e => handleCoffeeChange(e.target.value)}
+                                onBlur={(e) => {
+                                    // Delay to allow clicking dropdown
+                                    setTimeout(() => {
+                                        setShowCoffeeDropdown(false);
+                                        runSpellCheck(e.target.value);
+                                    }, 200);
+                                }}
+                                onFocus={() => formData.coffee_name && setShowCoffeeDropdown(true)}
+                                className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
+                                placeholder="e.g. Iced Latte"
+                            />
+                            {spellSuggestion && (
+                                <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                                    <span>Did you mean </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFormData({ ...formData, coffee_name: spellSuggestion });
+                                            setSpellSuggestion(null);
+                                        }}
+                                        className="text-primary font-bold hover:underline"
+                                    >
+                                        '{spellSuggestion}'
+                                    </button>
+                                    <span>?</span>
+                                </div>
+                            )}
+                            {showCoffeeDropdown && filteredCoffee.length > 0 && (
+                                <div className="absolute z-10 w-full mt-1 bg-card border-2 border-primary/20 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                    {filteredCoffee.map(suggestion => (
+                                        <button
+                                            key={suggestion}
+                                            type="button"
+                                            onClick={() => {
+                                                setFormData({ ...formData, coffee_name: suggestion });
+                                                setShowCoffeeDropdown(false);
+                                            }}
+                                            className="w-full text-left px-4 py-2 hover:bg-primary/10 transition-colors text-sm"
+                                        >
+                                            {suggestion}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="relative">
+                            <div className="flex justify-between items-end mb-1">
+                                <label className="block text-sm font-medium text-foreground">Place</label>
                                 <button
-                                    key={star}
                                     type="button"
-                                    onClick={() => setFormData({ ...formData, rating: star })}
-                                    className={`transition-transform hover:scale-110 focus:outline-none ${formData.rating >= star ? 'text-primary' : 'text-muted-foreground/30'
+                                    onClick={toggleHomeBrew}
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${isHomeBrew
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-secondary/50 text-muted-foreground border-primary/10 hover:border-primary/30'
                                         }`}
                                 >
-                                    <Star className="w-8 h-8 fill-current" />
+                                    {isHomeBrew ? '✓ Home Brew' : 'Home Brew?'}
                                 </button>
-                            ))}
+                            </div>
+                            <LocationAutocomplete
+                                defaultValue={formData.place}
+                                onChange={(val) => handlePlaceChange(val)}
+                                onLocationSelect={(loc) => {
+                                    setSelectedLocation(loc);
+                                    if (loc.place_name) {
+                                        setFormData(prev => ({ ...prev, place: loc.place_name as string }));
+                                    }
+                                }}
+                                disabled={isHomeBrew}
+                                className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
+                                placeholder={isHomeBrew ? "Brewed at home" : "e.g. Blue Tokai"}
+                            />
                         </div>
                     </div>
-                </div>
+                    {/* ... rest of the form ... */}
 
-                <div>
-                    <label className="block text-sm font-medium mb-1 text-foreground">Review</label>
-                    <textarea
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-foreground">Price felt...</label>
+                            <div className="flex gap-2">
+                                {[
+                                    { label: 'What a steal!', value: 'steal' },
+                                    { label: 'Just right', value: 'fair' },
+                                    { label: 'Felt expensive', value: 'expensive' }
+                                ].map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, price_feel: option.value as any })}
+                                        className={`flex-1 px-2 py-2 rounded-xl border-2 text-xs font-bold transition-all ${formData.price_feel === option.value
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-background text-foreground border-primary/20 hover:border-primary/40'
+                                            }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-1.5 text-[10px] text-muted-foreground leading-tight">
+                                Based on taste, portion & experience — not just the bill.
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-foreground">Rating</label>
+                            <div className="flex gap-2 items-center h-[42px]">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, rating: star })}
+                                        className={`transition-transform hover:scale-110 focus:outline-none ${formData.rating >= star ? 'text-primary' : 'text-muted-foreground/30'
+                                            }`}
+                                    >
+                                        <Star className="w-8 h-8 fill-current" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <Textarea
+                        id="review"
+                        label="Review"
                         rows={3}
                         value={formData.review}
                         onChange={e => setFormData({ ...formData, review: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors resize-none"
                         placeholder="How was it?"
                     />
-                </div>
 
-                <div>
-                    <label className="block text-sm font-medium mb-1 text-foreground">Flavor Notes</label>
-                    <input
-                        type="text"
-                        value={formData.flavor_notes}
-                        onChange={e => setFormData({ ...formData, flavor_notes: e.target.value })}
-                        className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-background focus:outline-none focus:border-primary transition-colors"
-                        placeholder="e.g. Nutty, Chocolatey, Fruity"
-                    />
-                </div>
-
-                {error && (
-                    <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
-                        {error}
+                    <div>
+                        <label className="block text-sm font-medium mb-2 text-foreground">Flavor Notes</label>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {PREDEFINED_TAGS.map(tag => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => toggleTag(tag)}
+                                    className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${selectedTags.includes(tag)
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-secondary/50 text-secondary-foreground border-primary/10 hover:border-primary/30'
+                                        }`}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                            {selectedTags.filter(t => !PREDEFINED_TAGS.includes(t)).map(tag => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => toggleTag(tag)}
+                                    className="px-4 py-1.5 rounded-full text-sm font-bold bg-primary text-primary-foreground border-2 border-primary flex items-center gap-2"
+                                >
+                                    {tag}
+                                    <X className="w-3 h-3" />
+                                </button>
+                            ))}
+                            {!showCustomInput ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCustomInput(true)}
+                                    className="px-4 py-1.5 rounded-full text-sm font-bold border-2 border-dashed border-primary/30 text-primary/60 hover:border-primary/60 hover:text-primary transition-all flex items-center gap-1"
+                                >
+                                    <Plus className="w-3 h-3" /> Add your own
+                                </button>
+                            ) : (
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        value={customTag}
+                                        onChange={e => setCustomTag(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addCustomTag(e)}
+                                        className="px-3 py-1 rounded-full text-sm border-2 border-primary bg-background focus:outline-none w-32"
+                                        placeholder="e.g. Nutty"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={addCustomTag}
+                                        className="p-1.5 rounded-full bg-primary text-primary-foreground"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowCustomInput(false); setCustomTag(''); }}
+                                        className="p-1.5 rounded-full bg-secondary text-secondary-foreground"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
 
-                <div className="flex gap-4 pt-2">
-                    <button
-                        type="button"
-                        onClick={() => router.back()}
-                        className="flex-1 py-3 px-4 bg-secondary text-secondary-foreground font-bold rounded-xl shadow-sm hover:bg-secondary/80 transition-all"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-[2] py-3 px-4 bg-primary text-primary-foreground font-bold rounded-xl shadow-md hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? 'Logging...' : 'Log Coffee'}
-                    </button>
-                </div>
-            </form>
-        </div>
+                    <ErrorMessage message={error} />
+
+                    <div className="flex gap-4 pt-2">
+                        <Button
+                            type="button"
+                            onClick={() => onSuccess ? onSuccess() : router.back()}
+                            variant="secondary"
+                            size="lg"
+                            className="flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                            size="lg"
+                            className="flex-[2]"
+                        >
+                            {loading ? (initialData ? 'Saving...' : 'Logging...') : (submitLabel || (initialData ? 'Save Changes' : 'Log Coffee'))}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </MapsProvider>
     );
 }

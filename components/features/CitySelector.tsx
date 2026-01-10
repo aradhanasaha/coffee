@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/common";
 
 interface CitySelectorProps {
     selectedCity: string;
@@ -15,13 +16,15 @@ export default function CitySelector({ selectedCity, onSelectCity }: CitySelecto
 
     return (
         <div className="relative">
-            <button
+            <Button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-full text-sm font-bold hover:bg-secondary/80 transition-colors border-2 border-primary/20 shadow-sm"
+                variant="secondary"
+                size="md"
+                className="flex items-center gap-2 rounded-full"
             >
                 {selectedCity === "All" ? "Select City" : selectedCity}
                 <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-            </button>
+            </Button>
 
             {isOpen && (
                 <>
