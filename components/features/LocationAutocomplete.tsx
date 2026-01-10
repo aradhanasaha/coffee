@@ -5,11 +5,11 @@ import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
 
 interface LocationAutocompleteProps {
     onLocationSelect: (data: {
-        place_name?: string;
-        place_address?: string;
-        lat?: number;
-        lng?: number;
-        google_place_id?: string;
+        place_name: string;
+        place_address: string;
+        lat: number;
+        lng: number;
+        google_place_id: string;
     }) => void;
     defaultValue?: string;
     onChange?: (value: string) => void;
