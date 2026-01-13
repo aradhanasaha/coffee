@@ -37,6 +37,11 @@ export default function AuthenticatedHome() {
         checkSession();
     }, [router]);
 
+    // Navigation handler for username clicks
+    const handleUsernameClick = (username: string) => {
+        router.push(`/user/${username}`);
+    };
+
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
     }
@@ -53,7 +58,10 @@ export default function AuthenticatedHome() {
                 </section>
 
                 <section className="flex-1">
-                    <CoffeeFeed selectedCity={selectedCity} />
+                    <CoffeeFeed
+                        selectedCity={selectedCity}
+                        onUsernameClick={handleUsernameClick}
+                    />
                 </section>
             </div>
         </div>

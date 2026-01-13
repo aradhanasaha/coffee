@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import CoffeeFeed from "@/components/features/CoffeeFeed";
 import Image from "next/image";
@@ -11,10 +12,16 @@ import { Button } from "@/components/common";
 export default function Home() {
     const [selectedCity, setSelectedCity] = useState("Delhi");
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         setLoading(false);
     }, []);
+
+    // Navigation handler for username clicks
+    const handleUsernameClick = (username: string) => {
+        router.push(`/user/${username}`);
+    };
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
@@ -62,7 +69,11 @@ export default function Home() {
                     </div>
 
                     <div className="w-full">
-                        <CoffeeFeed selectedCity="All" limit={3} />
+                        <CoffeeFeed
+                            selectedCity="All"
+                            limit={3}
+                            onUsernameClick={handleUsernameClick}
+                        />
                     </div>
 
                     <div className="flex justify-center pt-8">

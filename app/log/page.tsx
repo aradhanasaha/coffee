@@ -24,6 +24,10 @@ export default function LogCoffeePage() {
         checkSession();
     }, [router]);
 
+    const handleLogSuccess = () => {
+        router.push('/home');
+    };
+
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
     }
@@ -35,7 +39,7 @@ export default function LogCoffeePage() {
             <Header selectedCity="Delhi" onSelectCity={() => { }} user={user} />
 
             <div className="flex-1 flex items-center justify-center px-4 py-12">
-                <LogCoffeeForm />
+                <LogCoffeeForm onSuccess={handleLogSuccess} />
             </div>
         </div>
     );

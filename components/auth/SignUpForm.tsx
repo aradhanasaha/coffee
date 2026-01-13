@@ -1,105 +1,79 @@
 "use client";
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { validateSignupData } from '@/core/domain/authDomain';
 import Link from 'next/link';
 import { FormContainer, Button, Input, ErrorMessage } from '@/components/common';
-import { validateUsername } from '@/lib/usernameValidation';
-import { useEffect } from 'react';
 
-export default function SignUpForm() {
+interface SignUpFormProps {
+    onSuccess?: () => void;
+}
+
+export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
-    const [usernameError, setUsernameError] = useState<string | null>(null);
-    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
+    const { signup, loading: authLoading } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
 
+    // Use useUserProfile for username validation (pass null for userId since we're signing up)
+    const {
+        usernameAvailable,
+        usernameError,
+        checkUsernameAvailability
+    } = useUserProfile(null);
+
+    // Debounced username availability check
     useEffect(() => {
-        const checkUsername = async () => {
-            if (username.length < 3) {
-                setUsernameError(null);
-                setIsUsernameAvailable(null);
-                return;
+        const timeoutId = setTimeout(() => {
+            if (username.length >= 3) {
+                checkUsernameAvailability(username);
             }
-
-            const validation = validateUsername(username);
-            if (!validation.isValid) {
-                setUsernameError(validation.error || 'Invalid username');
-                setIsUsernameAvailable(null);
-                return;
-            }
-
-            setUsernameError(null);
-
-            // Live availability check
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('username', username.toLowerCase());
-
-            if (error) {
-                // If table doesn't exist or other error, don't block but don't say available
-                console.error('Error checking username availability:', error);
-                setIsUsernameAvailable(null);
-                return;
-            }
-
-            if (data && data.length > 0) {
-                setIsUsernameAvailable(false);
-                setUsernameError('Username is already taken');
-            } else {
-                setIsUsernameAvailable(true);
-                setUsernameError(null);
-            }
-        };
-
-        const timeoutId = setTimeout(checkUsername, 500);
+        }, 500);
         return () => clearTimeout(timeoutId);
-    }, [username]);
+    }, [username, checkUsernameAvailability]);
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
 
+        // Validate signup data using domain logic
+        const validation = validateSignupData(email, password, username);
+        if (!validation.isValid) {
+            setError(validation.error || 'Invalid signup data');
+            return;
+        }
+
+        // Check username is available
+        if (usernameAvailable === false) {
+            setError('Username is already taken');
+            return;
+        }
+
+        setSubmitting(true);
+
         try {
-            // Validate username one last time
-            const validation = validateUsername(username);
-            if (!validation.isValid) throw new Error(validation.error);
-            if (isUsernameAvailable === false) throw new Error('Username is already taken');
+            const result = await signup(email, password, username);
 
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email,
-                password,
-            });
-
-            if (authError) throw authError;
-
-            if (authData.user) {
-                // Insert into profiles
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        user_id: authData.user.id,
-                        username: username.toLowerCase(),
-                        username_last_changed_at: new Date().toISOString(),
-                    });
-
-                if (profileError) throw profileError;
+            if (result.success) {
+                // Call success callback (parent handles navigation)
+                if (onSuccess) {
+                    onSuccess();
+                }
+            } else {
+                setError(result.error || 'Signup failed');
             }
-
-            // Successful signup
-            router.push('/home');
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'Signup failed');
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
+
+    const loading = submitting || authLoading;
 
     return (
         <FormContainer title="Join the Club">
@@ -114,7 +88,7 @@ export default function SignUpForm() {
                     placeholder="coffee_lover"
                     error={usernameError || undefined}
                 />
-                {isUsernameAvailable && !usernameError && (
+                {usernameAvailable && !usernameError && (
                     <p className="text-xs text-green-500 -mt-3">Username is available!</p>
                 )}
 

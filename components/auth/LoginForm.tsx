@@ -1,51 +1,54 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { validateLoginCredentials } from '@/core/domain/authDomain';
 import Link from 'next/link';
 import { FormContainer, Button, Input, ErrorMessage } from '@/components/common';
 
-export default function LoginForm() {
+interface LoginFormProps {
+    onSuccess?: () => void;
+}
+
+export default function LoginForm({ onSuccess }: LoginFormProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
-
-    useEffect(() => {
-        // Check if user is already logged in
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                router.push('/home');
-            }
-        };
-        checkSession();
-    }, [router]);
+    const { login, loading: authLoading } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
 
+        // Client-side validation using domain logic
+        const validation = validateLoginCredentials(email, password);
+        if (!validation.isValid) {
+            setError(validation.error || 'Invalid credentials');
+            return;
+        }
+
+        setSubmitting(true);
+
         try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            const result = await login(email, password);
 
-            if (error) throw error;
-
-            // Successful login
-            router.push('/home');
-            router.refresh(); // Refresh to update server components if any
+            if (result.success) {
+                // Call success callback (parent handles navigation)
+                if (onSuccess) {
+                    onSuccess();
+                }
+            } else {
+                setError(result.error || 'Login failed');
+            }
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'Login failed');
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
+
+    const loading = submitting || authLoading;
 
     return (
         <FormContainer title="Welcome Back">

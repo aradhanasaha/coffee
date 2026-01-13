@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
+import { useLocationSearch } from "@/hooks/useLocationSearch";
 
 interface LocationAutocompleteProps {
     onLocationSelect: (data: {
@@ -31,13 +31,13 @@ export default function LocationAutocomplete({
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {
-        predictions,
+        suggestions,
         loading,
         onInputFocus,
         onInputChange,
         onPlaceSelect,
         clearSession
-    } = usePlacesAutocomplete();
+    } = useLocationSearch();
 
     useEffect(() => {
         setInputValue(defaultValue || "");
@@ -79,7 +79,7 @@ export default function LocationAutocomplete({
                 onFocus={() => {
                     if (disabled) return;
                     onInputFocus();
-                    if (predictions.length > 0) setShowDropdown(true);
+                    if (suggestions.length > 0) setShowDropdown(true);
                 }}
                 onChange={handleInputChange}
                 placeholder={placeholder || "Enter cafe or location"}
@@ -88,25 +88,25 @@ export default function LocationAutocomplete({
                 readOnly={disabled}
             />
 
-            {showDropdown && (predictions.length > 0 || loading) && (
+            {showDropdown && (suggestions.length > 0 || loading) && (
                 <div className="absolute z-50 w-full mt-1 bg-card border-2 border-primary/20 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                    {loading && predictions.length === 0 && (
+                    {loading && suggestions.length === 0 && (
                         <div className="px-4 py-3 text-sm text-muted-foreground animate-pulse">
                             Searching cafes...
                         </div>
                     )}
-                    {predictions.map((prediction) => (
+                    {suggestions.map((suggestion) => (
                         <button
-                            key={prediction.place_id}
+                            key={suggestion.place_id}
                             type="button"
-                            onClick={() => handleSelect(prediction.place_id, prediction.description)}
+                            onClick={() => handleSelect(suggestion.place_id, suggestion.description)}
                             className="w-full text-left px-4 py-3 hover:bg-primary/10 transition-colors border-b border-primary/5 last:border-0"
                         >
                             <div className="font-bold text-sm text-foreground">
-                                {prediction.structured_formatting.main_text}
+                                {suggestion.main_text}
                             </div>
                             <div className="text-xs text-muted-foreground truncate">
-                                {prediction.structured_formatting.secondary_text}
+                                {suggestion.secondary_text}
                             </div>
                         </button>
                     ))}

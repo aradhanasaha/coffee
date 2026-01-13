@@ -1,27 +1,24 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
-import { Star, Plus, X, Check } from 'lucide-react';
+import { Star, Plus, X } from 'lucide-react';
 import { Button, Textarea, ErrorMessage } from '@/components/common';
-import Fuse from 'fuse.js';
 import MapsProvider from './MapsProvider';
 import LocationAutocomplete from './LocationAutocomplete';
+import { useAuth } from '@/hooks/useAuth';
+import { useCoffeeLogs } from '@/hooks/useCoffeeLogs';
+import { findOrCreateLocation } from '@/services/locationService';
+import {
+    COMMON_COFFEE_NAMES,
+    PREDEFINED_FLAVOR_TAGS,
+    filterCoffeeNames,
+    getCoffeeNameSpellSuggestion,
+    normalizeFlavorNotes,
+    parseFlavorNotes
+} from '@/core/domain/coffeeDomain';
+import type { LocationDetails } from '@/core/types/types';
 
-const COMMON_COFFEE_NAMES = [
-    'Espresso', 'Doppio', 'Ristretto', 'Lungo', 'Americano',
-    'Cappuccino', 'Latte', 'Flat White', 'Cortado', 'Gibraltar',
-    'Macchiato', 'Piccolo', 'Mocha', 'Affogato', 'Irish Coffee',
-    'Turkish Coffee', 'Greek Coffee', 'Cold Brew', 'Nitro Cold Brew',
-    'Iced Coffee', 'Iced Latte', 'Iced Americano', 'Pour Over',
-    'Drip Coffee', 'French Press', 'AeroPress', 'Moka Pot', 'Siphon',
-    'Chemex', 'V60', 'Kalita Wave', 'Single Origin Brew',
-    'Espresso Tonic', 'Red Eye', 'Black Eye', 'Long Black',
-    'Café au Lait', 'Vienna Coffee'
-];
-
-const PREDEFINED_TAGS = ['Nutty', 'Chocolatey', 'Fruity', 'Floral', 'Bitter', 'Sweet'];
+// Constants moved to coffeeDomain
 
 interface LogCoffeeFormProps {
     initialData?: {
@@ -39,9 +36,10 @@ interface LogCoffeeFormProps {
 }
 
 export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: LogCoffeeFormProps) {
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
+    const { user } = useAuth();
+    const { createLog, updateLog } = useCoffeeLogs(user?.id || null);
+    const [submitting, setSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         coffee_name: initialData?.coffee_name || '',
@@ -55,7 +53,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
 
     // V2.1 Features State
     const [selectedTags, setSelectedTags] = useState<string[]>(
-        initialData?.flavor_notes ? initialData.flavor_notes.split(', ').filter(Boolean) : []
+        initialData?.flavor_notes ? parseFlavorNotes(initialData.flavor_notes) : []
     );
     const [customTag, setCustomTag] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
@@ -65,13 +63,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
     const [filteredCoffee, setFilteredCoffee] = useState<string[]>([]);
     const [showCoffeeDropdown, setShowCoffeeDropdown] = useState(false);
     const [spellSuggestion, setSpellSuggestion] = useState<string | null>(null);
-    const [selectedLocation, setSelectedLocation] = useState<{
-        place_name: string;
-        place_address: string;
-        lat: number;
-        lng: number;
-        google_place_id: string;
-    } | null>(null);
+    const [selectedLocation, setSelectedLocation] = useState<LocationDetails | null>(null);
 
     useEffect(() => {
         // Close dropdowns on click outside
@@ -88,10 +80,8 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
         setFormData({ ...formData, coffee_name: val });
         setSpellSuggestion(null); // Clear suggestion on change
         if (val.trim()) {
-            // Suggest ONLY from the curated canonical list
-            const filtered = COMMON_COFFEE_NAMES.filter(s =>
-                s.toLowerCase().includes(val.toLowerCase()) && s.toLowerCase() !== val.toLowerCase()
-            );
+            // Use domain logic for filtering
+            const filtered = filterCoffeeNames(val);
             setFilteredCoffee(filtered);
             setShowCoffeeDropdown(true);
         } else {
@@ -100,22 +90,10 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
     };
 
     const runSpellCheck = (val: string) => {
-        if (!val.trim()) return;
-
-        // Don't suggest if it's already an exact match in common names
-        const lowerVal = val.toLowerCase();
-        if (COMMON_COFFEE_NAMES.some(s => s.toLowerCase() === lowerVal)) return;
-
-        const fuse = new Fuse(COMMON_COFFEE_NAMES, {
-            threshold: 0.4, // Adjust for sensitivity
-        });
-
-        const results = fuse.search(val);
-        if (results.length > 0) {
-            const bestMatch = results[0].item;
-            if (bestMatch.toLowerCase() !== lowerVal) {
-                setSpellSuggestion(bestMatch);
-            }
+        // Use domain logic for spell checking
+        const suggestion = getCoffeeNameSpellSuggestion(val);
+        if (suggestion) {
+            setSpellSuggestion(suggestion);
         }
     };
 
@@ -151,95 +129,60 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSubmitting(true);
         setError(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('Not authenticated');
+            if (!user) {
+                throw new Error('Not authenticated');
+            }
 
             let locationId = initialData?.location_id || null;
 
-            // 1. If a google_place_id exists AND it's not a home brew, get or create location
+            // Handle location if not home brew
             if (!isHomeBrew && selectedLocation?.google_place_id) {
-                // First, try to find the location by google_place_id
-                const { data: existingLoc, error: findError } = await supabase
-                    .from('locations')
-                    .select('id')
-                    .eq('google_place_id', selectedLocation.google_place_id)
-                    .maybeSingle();
-
-                if (findError) throw findError;
-
-                if (existingLoc) {
-                    locationId = existingLoc.id;
+                const locationResult = await findOrCreateLocation(selectedLocation);
+                if (locationResult.success && locationResult.data) {
+                    locationId = locationResult.data.id;
                 } else {
-                    // If not found, insert it
-                    const { data: newLoc, error: insertError } = await supabase
-                        .from('locations')
-                        .insert({
-                            place_name: selectedLocation.place_name,
-                            place_address: selectedLocation.place_address,
-                            lat: selectedLocation.lat,
-                            lng: selectedLocation.lng,
-                            google_place_id: selectedLocation.google_place_id
-                        })
-                        .select()
-                        .single();
-
-                    if (insertError) throw insertError;
-                    locationId = newLoc.id;
+                    throw new Error(locationResult.error || 'Failed to process location');
                 }
             } else if (isHomeBrew) {
                 locationId = null;
             }
 
+            // Prepare log data
+            const logData = {
+                coffee_name: formData.coffee_name,
+                place: formData.place,
+                price_feel: formData.price_feel as any,  // Type assertion for Supabase
+                rating: formData.rating,
+                review: formData.review,
+                flavor_notes: normalizeFlavorNotes(selectedTags),
+                location_id: locationId,
+            };
+
+            // Create or update log
             if (initialData?.id) {
-                // Update existing entry
-                const { error } = await supabase
-                    .from('coffee_logs')
-                    .update({
-                        coffee_name: formData.coffee_name,
-                        place: formData.place,
-                        price_feel: formData.price_feel || null,
-                        rating: formData.rating,
-                        review: formData.review,
-                        flavor_notes: selectedTags.join(', '),
-                        location_id: locationId
-                    })
-                    .eq('id', initialData.id);
-
-                if (error) throw error;
+                const result = await updateLog(initialData.id, logData);
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to update log');
+                }
             } else {
-                // Insert new entry
-                const { error } = await supabase
-                    .from('coffee_logs')
-                    .insert([
-                        {
-                            user_id: user.id,
-                            coffee_name: formData.coffee_name,
-                            place: formData.place,
-                            price_feel: formData.price_feel || null,
-                            rating: formData.rating,
-                            review: formData.review,
-                            flavor_notes: selectedTags.join(', '),
-                            location_id: locationId
-                        }
-                    ]);
-
-                if (error) throw error;
+                const result = await createLog(logData);
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to create log');
+                }
             }
 
+            // Call success callback
             if (onSuccess) {
                 onSuccess();
-            } else {
-                router.push('/home');
-                router.refresh();
             }
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || 'An error occurred');
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
 
@@ -391,7 +334,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                     <div>
                         <label className="block text-sm font-medium mb-2 text-foreground">Flavor Notes</label>
                         <div className="flex flex-wrap gap-2 mb-3">
-                            {PREDEFINED_TAGS.map(tag => (
+                            {PREDEFINED_FLAVOR_TAGS.map(tag => (
                                 <button
                                     key={tag}
                                     type="button"
@@ -404,7 +347,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                                     {tag}
                                 </button>
                             ))}
-                            {selectedTags.filter(t => !PREDEFINED_TAGS.includes(t)).map(tag => (
+                            {selectedTags.filter(t => !PREDEFINED_FLAVOR_TAGS.includes(t)).map(tag => (
                                 <button
                                     key={tag}
                                     type="button"
@@ -458,7 +401,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                     <div className="flex gap-4 pt-2">
                         <Button
                             type="button"
-                            onClick={() => onSuccess ? onSuccess() : router.back()}
+                            onClick={() => onSuccess && onSuccess()}
                             variant="secondary"
                             size="lg"
                             className="flex-1"
@@ -467,11 +410,11 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                         </Button>
                         <Button
                             type="submit"
-                            disabled={loading}
+                            disabled={submitting}
                             size="lg"
                             className="flex-[2]"
                         >
-                            {loading ? (initialData ? 'Saving...' : 'Logging...') : (submitLabel || (initialData ? 'Save Changes' : 'Log Coffee'))}
+                            {submitting ? (initialData ? 'Saving...' : 'Logging...') : (submitLabel || (initialData ? 'Save Changes' : 'Log Coffee'))}
                         </Button>
                     </div>
                 </form>
