@@ -47,7 +47,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
         <div className="min-h-screen bg-background flex flex-col">
             <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} />
 
-            <div className="container mx-auto max-w-4xl px-4 py-8 space-y-8">
+            <div className="container mx-auto max-w-4xl px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-8">
                 {/* Profile Card */}
                 <UserProfileCard profile={profile} stats={stats} />
 
