@@ -9,6 +9,10 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
+                // Brand colors - Indie café aesthetic
+                cream: "#FFF6E5",
+                espresso: "#4A2E25",
+                berry: "#7A2E2A",
                 // Neutral placeholders
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",
@@ -43,6 +47,9 @@ const config: Config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+            },
+            borderRadius: {
+                cozy: "14px",
             },
         },
     },
