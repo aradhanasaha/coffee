@@ -367,23 +367,19 @@ export default function UserDashboard() {
                                                     {new Date(log.created_at).toLocaleDateString()}
                                                 </div>
                                                 <div className="flex items-center gap-2 ml-auto">
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="sm"
-                                                        className="h-8 w-8 p-0"
+                                                    <button
+                                                        className="p-2 text-muted-foreground hover:text-primary transition-colors"
                                                         onClick={() => handleEditClick(log)}
                                                     >
-                                                        <Edit2 className="w-3 h-3" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="sm"
-                                                        className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                                                         onClick={() => handleDeleteLog(log.id)}
                                                         disabled={isDeleting === log.id}
                                                     >
-                                                        <X className="w-3 h-3" />
-                                                    </Button>
+                                                        <X className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
