@@ -38,7 +38,7 @@ export default function LogCoffeePage() {
         <div className="min-h-screen bg-background flex flex-col">
             <Header selectedCity="Delhi" onSelectCity={() => { }} user={user} />
 
-            <div className="flex-1 flex items-center justify-center px-4 py-12">
+            <div className="flex-1 flex items-center justify-center px-3 md:px-4 py-6 md:py-12">
                 <LogCoffeeForm onSuccess={handleLogSuccess} />
             </div>
         </div>

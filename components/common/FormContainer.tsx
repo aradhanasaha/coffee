@@ -9,8 +9,8 @@ interface FormContainerProps {
 
 export default function FormContainer({ title, children }: FormContainerProps) {
     return (
-        <div className="w-full max-w-md bg-card p-8 rounded-2xl shadow-lg border-2 border-primary/20">
-            <h2 className="text-2xl font-bold text-center mb-6 text-primary">{title}</h2>
+        <div className="w-full max-w-md bg-card p-4 md:p-8 rounded-2xl shadow-lg border-2 border-primary/20">
+            <h2 className="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6 text-primary">{title}</h2>
             {children}
         </div>
     );

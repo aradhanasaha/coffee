@@ -52,7 +52,7 @@ export default function AuthenticatedHome() {
         <div className="min-h-screen bg-background flex flex-col">
             <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
 
-            <div className="container mx-auto max-w-5xl px-4 py-8 flex-1 flex flex-col gap-8">
+            <div className="container mx-auto max-w-5xl px-3 md:px-4 py-4 md:py-8 flex-1 flex flex-col gap-4 md:gap-8">
                 <section>
                     <LogCoffeeAction />
                 </section>

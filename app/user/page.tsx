@@ -206,22 +206,22 @@ export default function UserDashboard() {
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
             {/* Top Bar */}
-            <header className="sticky top-0 z-10 w-full py-4 px-6 bg-background/80 backdrop-blur-md border-b border-primary/10 flex items-center justify-between">
+            <header className="sticky top-0 z-10 w-full py-3 md:py-4 px-3 md:px-6 bg-background/80 backdrop-blur-md border-b border-primary/10 flex items-center justify-between gap-2">
                 <Link href="/home">
-                    <Button variant="secondary" size="sm" className="flex items-center gap-2">
-                        <ArrowLeft className="w-4 h-4" />
-                        Back
+                    <Button variant="secondary" size="sm" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                        <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" />
+                        <span className="hidden xs:inline">Back</span>
                     </Button>
                 </Link>
-                <span className="text-sm font-bold text-primary truncate max-w-[200px]">
+                <span className="text-xs md:text-sm font-bold text-primary truncate max-w-[120px] md:max-w-[200px]">
                     @{user?.username}
                 </span>
-                <Button onClick={handleLogout} variant="secondary" size="sm" className="text-destructive hover:bg-destructive/10">
-                    <LogOut className="w-4 h-4" />
+                <Button onClick={handleLogout} variant="secondary" size="sm" className="text-destructive hover:bg-destructive/10 px-2 md:px-3 text-xs md:text-sm">
+                    <LogOut className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
             </header>
 
-            <main className="container mx-auto max-w-4xl px-4 py-8 space-y-12">
+            <main className="container mx-auto max-w-4xl px-3 md:px-4 py-4 md:py-8 space-y-6 md:space-y-12">
                 {/* User Info Section */}
                 <section className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm">
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2">

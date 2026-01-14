@@ -16,7 +16,7 @@ export default function LoginPage() {
             {/* Header with default props */}
             <Header selectedCity="Delhi" onSelectCity={() => { }} />
 
-            <div className="flex-1 flex items-center justify-center px-4 py-12">
+            <div className="flex-1 flex items-center justify-center px-3 md:px-4 py-6 md:py-12">
                 <LoginForm onSuccess={handleLoginSuccess} />
             </div>
         </main>

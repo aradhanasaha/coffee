@@ -115,9 +115,9 @@ export default function SetUsernamePage() {
         <main className="min-h-screen bg-background flex flex-col">
             <Header selectedCity="Delhi" onSelectCity={() => { }} />
 
-            <div className="flex-1 flex items-center justify-center px-4 py-12">
+            <div className="flex-1 flex items-center justify-center px-3 md:px-4 py-6 md:py-12">
                 <FormContainer title="Choose Your Username">
-                    <p className="text-sm text-muted-foreground mb-6 text-center">
+                    <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-6 text-center">
                         You must choose a username to continue. This is your public name shown on your coffee entries.
                     </p>
 
