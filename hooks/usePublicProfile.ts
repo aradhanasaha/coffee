@@ -1,10 +1,4 @@
-/**
- * usePublicProfile Hook
- * React hook for fetching public user profiles by username
- * Platform-agnostic - delegates to userProfileService
- */
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as userProfileService from '@/services/userProfileService';
 import type {
     PublicUserProfile,
@@ -18,6 +12,7 @@ interface UsePublicProfileReturn {
     recentLogs: CoffeeLog[];
     loading: boolean;
     error: string | null;
+    refreshStats: () => Promise<void>;
 }
 
 export function usePublicProfile(username: string): UsePublicProfileReturn {
@@ -57,11 +52,20 @@ export function usePublicProfile(username: string): UsePublicProfileReturn {
         fetchProfile();
     }, [username]);
 
+    // Function to refresh just the stats (for after follow/unfollow)
+    const refreshStats = useCallback(async () => {
+        if (!profile) return;
+
+        const statsData = await userProfileService.getUserStats(profile.user_id);
+        setStats(statsData);
+    }, [profile]);
+
     return {
         profile,
         stats,
         recentLogs,
         loading,
-        error
+        error,
+        refreshStats
     };
 }

@@ -70,14 +70,15 @@ export async function signup(
             return { success: false, error: 'Signup failed' };
         }
 
-        // Create profile
+        // Profile is auto-created by database trigger with default username
+        // We just need to UPDATE it with the user's chosen username
         const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
-                user_id: authData.user.id,
+            .update({
                 username: username.toLowerCase(),
                 username_last_changed_at: new Date().toISOString(),
-            });
+            })
+            .eq('user_id', authData.user.id);
 
         if (profileError) {
             return { success: false, error: profileError.message };

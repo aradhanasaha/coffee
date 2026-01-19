@@ -9,7 +9,8 @@
     /* Brown Text */
     --foreground: 25 70% 25%;
 
-    --card: 42 68% 65%;
+    /* Journal Card Color - #FFF6E5 */
+    --card: 42 100% 96%;
     --card-foreground: 25 70% 25%;
 
     --popover: 42 68% 65%;

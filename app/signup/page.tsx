@@ -12,7 +12,7 @@ export default function SignUpPage() {
     };
 
     return (
-        <main className="min-h-screen bg-background flex flex-col">
+        <main className="min-h-screen bg-cream flex flex-col">
             {/* Header with default props since we don't need city selection here */}
             <Header selectedCity="Delhi" onSelectCity={() => { }} />
 

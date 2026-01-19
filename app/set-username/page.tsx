@@ -112,7 +112,7 @@ export default function SetUsernamePage() {
     if (!user) return null;
 
     return (
-        <main className="min-h-screen bg-background flex flex-col">
+        <main className="min-h-screen bg-cream flex flex-col">
             <Header selectedCity="Delhi" onSelectCity={() => { }} />
 
             <div className="flex-1 flex items-center justify-center px-3 md:px-4 py-6 md:py-12">

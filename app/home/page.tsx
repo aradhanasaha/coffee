@@ -3,15 +3,27 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import Header from "@/components/layout/Header";
-import CoffeeFeed from "@/components/features/CoffeeFeed";
-import LogCoffeeAction from "@/components/features/LogCoffeeAction";
+import JournalLayout from "@/components/layout/JournalLayout";
+import JournalFeedCard from "@/components/features/JournalFeedCard";
+import Modal from "@/components/common/Modal";
+import PhotoFirstLogCoffeeForm from "@/components/features/PhotoFirstLogCoffeeForm";
+import { usePublicCoffeeFeed } from '@/hooks/useCoffeeLogs';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthenticatedHome() {
-    const [selectedCity, setSelectedCity] = useState("Delhi");
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedCity, setSelectedCity] = useState('Delhi');
+    const [showLogModal, setShowLogModal] = useState(false);
     const router = useRouter();
+    const { user: authUser } = useAuth();
+
+    // Fetch public coffee feed with city filter
+    const cityFilter = selectedCity === 'All' ? undefined : selectedCity;
+    const { logs, loading: feedLoading } = usePublicCoffeeFeed({
+        city: cityFilter,
+        currentUserId: authUser?.id || null
+    });
 
     useEffect(() => {
         const checkSession = async () => {
@@ -37,33 +49,91 @@ export default function AuthenticatedHome() {
         checkSession();
     }, [router]);
 
-    // Navigation handler for username clicks
+    // Navigation handlers
     const handleUsernameClick = (username: string) => {
         router.push(`/user/${username}`);
     };
 
+    const handleLogCoffeeClick = () => {
+        setShowLogModal(true);
+    };
+
+    const handleCafeClick = (cafe: string) => {
+        // TODO: Filter feed by café
+        console.log('Filter by café:', cafe);
+    };
+
+    const handleListClick = (listId: string) => {
+        // TODO: Navigate to curated list
+        console.log('View list:', listId);
+    };
+
+    const handleShareClick = () => {
+        // TODO: Implement share functionality
+        console.log('Share with friends');
+    };
+
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-journal-bg lowercase">
+                <p className="text-journal-text">loading...</p>
+            </div>
+        );
     }
 
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
-            <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
+        <>
+            <JournalLayout
+                selectedCity={selectedCity}
+                onCityChange={setSelectedCity}
+                onLogCoffeeClick={handleLogCoffeeClick}
+                onCafeClick={handleCafeClick}
+                onListClick={handleListClick}
+                onShareClick={handleShareClick}
+            >
+                {/* Feed Cards */}
+                <div className="space-y-8">
+                    {feedLoading ? (
+                        // Loading skeleton
+                        <div className="space-y-8">
+                            {[1, 2, 3].map((i) => (
+                                <div
+                                    key={i}
+                                    className="bg-journal-card rounded-2xl h-96 animate-pulse"
+                                />
+                            ))}
+                        </div>
+                    ) : logs.length === 0 ? (
+                        <div className="text-center py-16 text-journal-text/60 lowercase">
+                            <p>no coffee logs yet. be the first to log one!</p>
+                        </div>
+                    ) : (
+                        logs.map((log) => (
+                            <JournalFeedCard
+                                key={log.id}
+                                log={log}
+                                onUsernameClick={handleUsernameClick}
+                            />
+                        ))
+                    )}
+                </div>
+            </JournalLayout>
 
-            <div className="container mx-auto max-w-5xl px-3 md:px-4 py-4 md:py-8 flex-1 flex flex-col gap-4 md:gap-8">
-                <section>
-                    <LogCoffeeAction />
-                </section>
-
-                <section className="flex-1">
-                    <CoffeeFeed
-                        selectedCity={selectedCity}
-                        onUsernameClick={handleUsernameClick}
-                    />
-                </section>
-            </div>
-        </div>
+            {/* Log Coffee Modal */}
+            <Modal
+                isOpen={showLogModal}
+                onClose={() => setShowLogModal(false)}
+            >
+                <PhotoFirstLogCoffeeForm
+                    onSuccess={() => {
+                        setShowLogModal(false);
+                        window.location.reload();
+                    }}
+                    onCancel={() => setShowLogModal(false)}
+                />
+            </Modal>
+        </>
     );
 }

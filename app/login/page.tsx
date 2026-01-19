@@ -12,7 +12,7 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen bg-background flex flex-col">
+        <main className="min-h-screen bg-cream flex flex-col">
             {/* Header with default props */}
             <Header selectedCity="Delhi" onSelectCity={() => { }} />
 

@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/common";
-import { ArrowLeft, LogOut, Coffee, MapPin, Calendar, Star, TrendingUp, Map as MapIcon, User as UserIcon, Edit2, Check, X } from "lucide-react";
+import { ArrowLeft, LogOut, Coffee, MapPin, Calendar, Star, TrendingUp, Map as MapIcon, User as UserIcon, Users, Edit2, Check, X } from "lucide-react";
 import Link from "next/link";
 import { validateUsername } from "@/lib/usernameValidation";
 import LogCoffeeForm from "@/components/features/LogCoffeeForm";
+import UserProfileCard from "@/components/features/UserProfileCard";
 
 interface CoffeeLog {
     id: string;
@@ -187,7 +188,7 @@ export default function UserDashboard() {
     };
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
+        return <div className="min-h-screen flex items-center justify-center bg-cream">Loading...</div>;
     }
 
     const totalEntries = logs.length;
@@ -204,9 +205,9 @@ export default function UserDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground pb-20">
+        <div className="min-h-screen bg-cream text-espresso pb-20">
             {/* Top Bar */}
-            <header className="sticky top-0 z-10 w-full py-3 md:py-4 px-3 md:px-6 bg-background/80 backdrop-blur-md border-b border-primary/10 flex items-center justify-between gap-2">
+            <header className="sticky top-0 z-10 w-full py-3 md:py-4 px-3 md:px-6 bg-cream/80 backdrop-blur-md border-b border-primary/10 flex items-center justify-between gap-2">
                 <Link href="/home">
                     <Button variant="secondary" size="sm" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                         <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" />
@@ -222,104 +223,21 @@ export default function UserDashboard() {
             </header>
 
             <main className="container mx-auto max-w-4xl px-3 md:px-4 py-4 md:py-8 space-y-6 md:space-y-12">
-                {/* User Info Section */}
-                <section className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm">
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Coffee className="w-5 h-5 text-primary" />
-                        </div>
-                        User Profile
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Email</p>
-                                <p className="font-medium text-muted-foreground">{user?.email}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Joined</p>
-                                <p className="font-medium">{new Date(user?.created_at).toLocaleDateString()}</p>
-                            </div>
-                        </div>
+                {/* Profile Card - Same as other users' pages */}
+                <UserProfileCard
+                    profile={{
+                        user_id: user.id,
+                        username: user.username,
+                        created_at: user.created_at
+                    }}
+                    stats={{
+                        totalLogs: totalEntries,
+                        followerCount: user?.follower_count || 0,
+                        followingCount: user?.following_count || 0
+                    }}
+                    currentUserId={user.id}
+                />
 
-                        <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
-                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-3 flex items-center gap-2">
-                                <UserIcon className="w-3 h-3" />
-                                Username
-                            </p>
-
-                            {isEditingUsername ? (
-                                <div className="space-y-3">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newUsername}
-                                            onChange={(e) => setNewUsername(e.target.value.toLowerCase())}
-                                            className="flex-1 bg-background border-2 border-primary/20 rounded-lg px-3 py-1 text-sm focus:outline-none focus:border-primary"
-                                            placeholder="new_username"
-                                            autoFocus
-                                        />
-                                        <Button
-                                            size="sm"
-                                            onClick={handleUpdateUsername}
-                                            disabled={updateLoading}
-                                        >
-                                            <Check className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={() => setIsEditingUsername(false)}
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                    {usernameError && <p className="text-[10px] text-destructive font-bold">{usernameError}</p>}
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xl font-black text-primary">@{user?.username}</p>
-                                    {canChangeUsername() ? (
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => {
-                                                setNewUsername(user.username);
-                                                setIsEditingUsername(true);
-                                            }}
-                                        >
-                                            <Edit2 className="w-3 h-3" />
-                                        </Button>
-                                    ) : (
-                                        <span className="text-[10px] text-muted-foreground font-medium italic">
-                                            Change in {getDaysUntilNextChange()} days
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-                            <p className="text-[10px] text-muted-foreground mt-2">
-                                This is your public name shown on your coffee entries. You can change it once every 30 days.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Stats Section */}
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">Total Logs</p>
-                        <p className="text-4xl font-black text-primary">{totalEntries}</p>
-                    </div>
-                    <div className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">First Entry</p>
-                        <p className="text-xl font-bold">{firstEntryDate}</p>
-                    </div>
-                    <div className="bg-card p-6 rounded-2xl border-2 border-primary/10 shadow-sm flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2">Latest Entry</p>
-                        <p className="text-xl font-bold">{lastEntryDate}</p>
-                    </div>
-                </section>
 
                 {/* My Coffee Entries Section */}
                 <section>

@@ -61,6 +61,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="barista@example.com"
+                    className="bg-secondary"
                 />
 
                 <Input
@@ -71,6 +72,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
+                    className="bg-secondary"
                 />
 
                 <ErrorMessage message={error} />

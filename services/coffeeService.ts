@@ -16,14 +16,20 @@ import type {
  */
 export async function createCoffeeLog(
     userId: string,
-    logData: LogFormData
+    logData: LogFormData & { image_url?: string }
 ): Promise<ServiceResult<CoffeeLog>> {
     try {
+        // Validate required photo - CHECK REMOVED for V3 (Text posts allowed)
+        // if (!logData.image_url) {
+        //     return { success: false, error: 'Photo is required' };
+        // }
+
         const { data, error } = await supabase
             .from('coffee_logs')
             .insert([
                 {
                     user_id: userId,
+                    image_url: logData.image_url,
                     coffee_name: logData.coffee_name,
                     place: logData.place,
                     price_feel: logData.price_feel || null,
@@ -68,6 +74,7 @@ export async function updateCoffeeLog(
                 review: updates.review || null,
                 flavor_notes: updates.flavor_notes || null,
                 location_id: updates.location_id || null,
+                image_deleted_at: (updates as any).image_deleted_at,
             })
             .eq('id', logId)
             .select()
@@ -129,7 +136,12 @@ export async function fetchUserCoffeeLogs(userId: string): Promise<CoffeeLog[]> 
         if (error || !data) return [];
 
         // Filter out any deleted logs as a frontend fallback
-        return data.filter(log => !log.deleted_at);
+        return data
+            .filter(log => !log.deleted_at)
+            .map(log => ({
+                ...log,
+                image_url: log.image_deleted_at ? null : log.image_url
+            }));
     } catch (err) {
         return [];
     }
@@ -137,13 +149,15 @@ export async function fetchUserCoffeeLogs(userId: string): Promise<CoffeeLog[]> 
 
 /**
  * Fetch public coffee feed with optional filters
+ * If currentUserId is provided, prioritizes posts from followed users
  */
 export async function fetchPublicCoffeeFeed(options?: {
     limit?: number;
     city?: string;
+    currentUserId?: string | null;
 }): Promise<CoffeeLogWithUsername[]> {
     try {
-        // First, try to get logs with location data if city filter is provided
+        // Build base query with location data
         let query = supabase
             .from('coffee_logs')
             .select(`
@@ -152,14 +166,19 @@ export async function fetchPublicCoffeeFeed(options?: {
                     city
                 )
             `)
-            .is('deleted_at', null)
-            .order('created_at', { ascending: false });
+            .is('deleted_at', null);
+
+        // If currentUserId is provided, we'll need to join with follows
+        // to prioritize followed users' posts
+        // Note: Supabase client doesn't support complex joins in the query builder,
+        // so we'll fetch all logs and sort in-memory for now
+        // TODO: Consider using a Postgres view or RPC for better performance
 
         if (options?.limit) {
-            query = query.limit(options.limit);
+            query = query.limit(options.limit * 2); // Fetch more to account for filtering
         }
 
-        const { data: logsData, error: logsError } = await query;
+        const { data: logsData, error: logsError } = await query.order('created_at', { ascending: false });
 
         if (logsError) {
             console.error('Error fetching logs:', logsError);
@@ -190,6 +209,19 @@ export async function fetchPublicCoffeeFeed(options?: {
             return [];
         }
 
+        // If currentUserId is provided, fetch follow relationships and prioritize
+        let followedUserIds = new Set<string>();
+        if (options?.currentUserId) {
+            const { data: followsData, error: followsError } = await supabase
+                .from('follows')
+                .select('following_id')
+                .eq('follower_id', options.currentUserId);
+
+            if (!followsError && followsData) {
+                followedUserIds = new Set(followsData.map(f => f.following_id));
+            }
+        }
+
         // Fetch usernames for these logs
         const userIds = Array.from(new Set(activeLogs.map(log => log.user_id)));
         const { data: profilesData, error: profilesError } = await supabase
@@ -197,18 +229,45 @@ export async function fetchPublicCoffeeFeed(options?: {
             .select('user_id, username')
             .in('user_id', userIds);
 
+        let enrichedLogs: CoffeeLogWithUsername[] = activeLogs;
+
         if (!profilesError && profilesData) {
             const profileMap = Object.fromEntries(
                 profilesData.map(p => [p.user_id, p.username])
             );
 
-            return activeLogs.map(log => ({
+            enrichedLogs = activeLogs.map(log => ({
                 ...log,
                 username: profileMap[log.user_id],
             }));
         }
 
-        return activeLogs;
+        // Sort logs: followed users first, then non-followed, both groups by newest first
+        if (followedUserIds.size > 0) {
+            enrichedLogs.sort((a, b) => {
+                const aIsFollowed = followedUserIds.has(a.user_id);
+                const bIsFollowed = followedUserIds.has(b.user_id);
+
+                // If follow status differs, prioritize followed
+                if (aIsFollowed !== bIsFollowed) {
+                    return aIsFollowed ? -1 : 1;
+                }
+
+                // Within same follow status, sort by newest first
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+        }
+
+        // Apply limit after sorting if specified
+        if (options?.limit) {
+            enrichedLogs = enrichedLogs.slice(0, options.limit);
+        }
+
+        // Filter out soft-deleted images from the result
+        return enrichedLogs.map(log => ({
+            ...log,
+            image_url: log.image_deleted_at ? null : log.image_url
+        }));
     } catch (err) {
         console.error('Error fetching public feed:', err);
         return [];

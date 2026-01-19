@@ -1,6 +1,7 @@
 "use client";
 
 import { usePublicCoffeeFeed } from '@/hooks/useCoffeeLogs';
+import { useAuth } from '@/hooks/useAuth';
 import { useLikes } from '@/hooks/useLikes';
 import { Star } from 'lucide-react';
 import UsernameLink from '../common/UsernameLink';
@@ -13,9 +14,14 @@ interface CoffeeFeedProps {
 }
 
 export default function CoffeeFeed({ selectedCity, limit, onUsernameClick }: CoffeeFeedProps) {
+    const { user } = useAuth();
     // Don't filter by city if "All" is selected
     const cityFilter = selectedCity === "All" ? undefined : selectedCity;
-    const { logs, loading } = usePublicCoffeeFeed({ limit, city: cityFilter });
+    const { logs, loading } = usePublicCoffeeFeed({
+        limit,
+        city: cityFilter,
+        currentUserId: user?.id || null
+    });
 
     if (loading) {
         return (

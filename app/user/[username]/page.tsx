@@ -1,6 +1,7 @@
 "use client";
 
 import { usePublicProfile } from '@/hooks/usePublicProfile';
+import { useAuth } from '@/hooks/useAuth';
 import UserProfileCard from '@/components/features/UserProfileCard';
 import Header from '@/components/layout/Header';
 import { useState } from 'react';
@@ -13,13 +14,14 @@ interface UserProfilePageProps {
 
 export default function UserProfilePage({ params }: UserProfilePageProps) {
     const { username } = params;
-    const { profile, stats, recentLogs, loading, error } = usePublicProfile(username);
+    const { user } = useAuth();
+    const { profile, stats, recentLogs, loading, error, refreshStats } = usePublicProfile(username);
     const [selectedCity, setSelectedCity] = useState("Delhi");
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background flex flex-col">
-                <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+            <div className="min-h-screen bg-cream flex flex-col">
+                <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-primary font-bold">Loading profile...</div>
                 </div>
@@ -30,7 +32,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     if (error || !profile || !stats) {
         return (
             <div className="min-h-screen bg-background flex flex-col">
-                <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+                <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
                         <h1 className="text-2xl font-bold text-primary mb-2">User Not Found</h1>
@@ -44,12 +46,17 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
-            <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+        <div className="min-h-screen bg-cream flex flex-col">
+            <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
 
             <div className="container mx-auto max-w-4xl px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-8">
                 {/* Profile Card */}
-                <UserProfileCard profile={profile} stats={stats} />
+                <UserProfileCard
+                    profile={profile}
+                    stats={stats}
+                    currentUserId={user?.id || null}
+                    onFollowChange={refreshStats}
+                />
 
                 {/* Recent Coffee Logs */}
                 <section>

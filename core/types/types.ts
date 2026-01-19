@@ -49,11 +49,13 @@ export interface CoffeeLog {
     review: string | null;
     flavor_notes: string | null;
     location_id: string | null;
+    image_url?: string | null;
     created_at: string;
     updated_at?: string;
     deleted_at: string | null;
     deleted_by?: string | null;
     deletion_reason?: string | null;
+    image_deleted_at?: string | null;
 }
 
 export interface CoffeeLogWithUsername extends CoffeeLog {
@@ -68,6 +70,7 @@ export interface LogFormData {
     review: string;
     flavor_notes?: string;
     location_id?: string | null;
+    image_url?: string | null;
 }
 
 export interface LogUpdateData extends Partial<LogFormData> {
@@ -168,7 +171,22 @@ export interface PublicUserProfile {
 
 export interface UserStats {
     totalLogs: number;
-    followerCount: number;  // Placeholder for future
-    followingCount: number; // Placeholder for future
+    followerCount: number;
+    followingCount: number;
+}
+
+// ============================================================================
+// Follow System Types (V4)
+// ============================================================================
+
+export interface FollowRelationship {
+    id: string;
+    follower_id: string;
+    following_id: string;
+    created_at: string;
+}
+
+export interface FollowStatus {
+    isFollowing: boolean;
 }
 

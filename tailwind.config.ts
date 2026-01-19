@@ -9,7 +9,15 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // Brand colors - Indie café aesthetic
+                // Journal color system - calm, warm, minimal
+                journal: {
+                    bg: "#F7E9C9",        // Page background
+                    card: "#FFF6E5",      // Card background
+                    text: "#4A2E25",      // Primary text
+                    heart: "#B35C5C",     // Like/heart
+                    star: "#F4C430",      // Star rating
+                },
+                // Legacy colors (keep for backward compatibility)
                 cream: "#FFF6E5",
                 espresso: "#4A2E25",
                 berry: "#7A2E2A",
@@ -47,6 +55,9 @@ const config: Config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+            },
+            fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
             },
             borderRadius: {
                 cozy: "14px",

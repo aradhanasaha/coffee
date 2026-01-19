@@ -111,21 +111,22 @@ interface UsePublicFeedReturn {
 export function usePublicCoffeeFeed(options?: {
     limit?: number;
     city?: string;
+    currentUserId?: string | null;
 }): UsePublicFeedReturn {
     const [logs, setLogs] = useState<CoffeeLogWithUsername[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Destructure options to avoid object reference issues in dependency array
-    const { limit, city } = options || {};
+    const { limit, city, currentUserId } = options || {};
 
     const fetchFeed = useCallback(async () => {
         setLoading(true);
-        const feedData = await coffeeService.fetchPublicCoffeeFeed({ limit, city });
+        const feedData = await coffeeService.fetchPublicCoffeeFeed({ limit, city, currentUserId });
         setLogs(feedData);
         setError(null);
         setLoading(false);
-    }, [limit, city]); // Use individual values instead of the whole options object
+    }, [limit, city, currentUserId]); // Use individual values instead of the whole options object
 
     useEffect(() => {
         fetchFeed();

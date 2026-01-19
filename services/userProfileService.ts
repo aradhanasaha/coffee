@@ -52,10 +52,17 @@ export async function getUserStats(userId: string): Promise<UserStats> {
             .eq('user_id', userId)
             .is('deleted_at', null);
 
+        // Get follower and following counts from profiles table
+        const { data: profileData } = await supabase
+            .from('profiles')
+            .select('follower_count, following_count')
+            .eq('user_id', userId)
+            .single();
+
         return {
             totalLogs: logCount || 0,
-            followerCount: 0,  // Placeholder for future
-            followingCount: 0  // Placeholder for future
+            followerCount: profileData?.follower_count || 0,
+            followingCount: profileData?.following_count || 0
         };
     } catch (err) {
         console.error('Error fetching user stats:', err);

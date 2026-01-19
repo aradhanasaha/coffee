@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Star, Plus, X, Trash2 } from 'lucide-react';
+import { Star, Plus, X } from 'lucide-react';
 import { Button, Textarea, ErrorMessage } from '@/components/common';
 import MapsProvider from './MapsProvider';
 import LocationAutocomplete from './LocationAutocomplete';
+import PhotoUpload from './PhotoUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { useCoffeeLogs } from '@/hooks/useCoffeeLogs';
 import { findOrCreateLocation } from '@/services/locationService';
@@ -30,14 +31,12 @@ interface LogCoffeeFormProps {
         review: string | null;
         flavor_notes: string | null;
         location_id?: string | null;
-        image_url?: string | null;
-        image_deleted_at?: string | null;
     };
     onSuccess?: () => void;
     submitLabel?: string;
 }
 
-export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: LogCoffeeFormProps) {
+export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, submitLabel }: LogCoffeeFormProps) {
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
     const { createLog, updateLog } = useCoffeeLogs(user?.id || null);
@@ -51,12 +50,10 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
         review: initialData?.review || ''
     });
 
-    const [isHomeBrew, setIsHomeBrew] = useState(initialData?.place === 'Home Brew');
+    // Photo state
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
-    // Image Soft Delete State
-    // Only show image if it exists AND wasn't already soft-deleted in DB
-    const [imageDeleted, setImageDeleted] = useState(false);
-    const hasActiveImage = initialData?.image_url && !initialData.image_deleted_at && !imageDeleted;
+    const [isHomeBrew, setIsHomeBrew] = useState(initialData?.place === 'Home Brew');
 
     // V2.1 Features State
     const [selectedTags, setSelectedTags] = useState<string[]>(
@@ -139,6 +136,10 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
         setSubmitting(true);
         setError(null);
 
+        if (!photoUrl && false) { // Kept 'false' to minimize diff, or just remove block. Removing block is better.
+            // removed validation
+        }
+
         try {
             if (!user) {
                 throw new Error('Not authenticated');
@@ -160,6 +161,8 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
 
             // Prepare log data
             const logData = {
+                user_id: user.id,
+                image_url: photoUrl || null,
                 coffee_name: formData.coffee_name,
                 place: formData.place,
                 price_feel: formData.price_feel as any,  // Type assertion for Supabase
@@ -167,8 +170,6 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                 review: formData.review,
                 flavor_notes: normalizeFlavorNotes(selectedTags),
                 location_id: locationId,
-                // Add soft delete flag if image was deleted in this session
-                ...(imageDeleted && { image_deleted_at: new Date().toISOString() })
             };
 
             // Create or update log
@@ -195,15 +196,21 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
         }
     };
 
-    // Styling constants for consistency
-    const inputBaseClasses = "w-full px-4 py-2 rounded-xl border-2 transition-colors focus:outline-none focus:border-primary bg-secondary/50 border-primary/10 hover:border-primary/30";
-
     return (
         <MapsProvider>
             <div className={`w-full ${initialData ? '' : 'max-w-2xl bg-card p-8 rounded-2xl shadow-lg border-2 border-primary/20'}`}>
                 {!initialData && <h2 className="text-2xl font-bold text-center mb-6 text-primary">Log a Coffee</h2>}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Photo Upload Section */}
+                    <div className="mb-8">
+                        <PhotoUpload
+                            userId={user?.id || ''}
+                            onPhotoUrlChange={setPhotoUrl}
+                            required={false}
+                        />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="relative" ref={coffeeRef}>
                             <label className="block text-sm font-medium mb-1 text-foreground">Coffee Name</label>
@@ -221,7 +228,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                                     }, 200);
                                 }}
                                 onFocus={() => formData.coffee_name && setShowCoffeeDropdown(true)}
-                                className={inputBaseClasses}
+                                className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-secondary/50 focus:outline-none focus:border-primary transition-colors"
                                 placeholder="e.g. Iced Latte"
                             />
                             {spellSuggestion && (
@@ -282,7 +289,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                                     }
                                 }}
                                 disabled={isHomeBrew}
-                                className={inputBaseClasses}
+                                className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-secondary/50 focus:outline-none focus:border-primary transition-colors"
                                 placeholder={isHomeBrew ? "Brewed at home" : "e.g. Blue Tokai"}
                             />
                         </div>
@@ -305,7 +312,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                                         onClick={() => setFormData({ ...formData, price_feel: option.value as any })}
                                         className={`flex-1 px-2 py-2 rounded-xl border-2 text-xs font-bold transition-all ${formData.price_feel === option.value
                                             ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-secondary/50 text-foreground border-primary/10 hover:border-primary/30'
+                                            : 'bg-secondary/50 text-foreground border-primary/20 hover:border-primary/40'
                                             }`}
                                     >
                                         {option.label}
@@ -341,7 +348,7 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                         value={formData.review}
                         onChange={e => setFormData({ ...formData, review: e.target.value })}
                         placeholder="How was it?"
-                        className="bg-secondary/50 border-primary/10 hover:border-primary/30 focus:border-primary"
+                        className="bg-secondary/50"
                     />
 
                     <div>
@@ -408,28 +415,6 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                             )}
                         </div>
                     </div>
-
-                    {/* Image Thumbnail for Edit Mode */}
-                    {hasActiveImage && (
-                        <div className="flex items-center gap-4">
-                            <div className="relative group cursor-pointer w-16 h-12 rounded-lg overflow-hidden border-2 border-primary/10 hover:border-red-500/50 transition-colors">
-                                <img
-                                    src={initialData?.image_url!}
-                                    alt="Attached coffee photo"
-                                    className="w-full h-full object-cover opacity-100 group-hover:opacity-50 transition-opacity"
-                                />
-                                <div
-                                    onClick={() => setImageDeleted(true)}
-                                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20"
-                                >
-                                    <Trash2 className="w-5 h-5 text-red-600 drop-shadow-sm" />
-                                </div>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                                Attached photo
-                            </span>
-                        </div>
-                    )}
 
                     <ErrorMessage message={error} />
 

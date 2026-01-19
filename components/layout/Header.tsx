@@ -8,9 +8,10 @@ interface HeaderProps {
     selectedCity: string;
     onSelectCity: (city: string) => void;
     user?: any; // We'll refine this type later if needed
+    showUserButtons?: boolean; // Controls whether to show username/logout
 }
 
-export default function Header({ selectedCity, onSelectCity, user }: HeaderProps) {
+export default function Header({ selectedCity, onSelectCity, user, showUserButtons = false }: HeaderProps) {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -30,43 +31,12 @@ export default function Header({ selectedCity, onSelectCity, user }: HeaderProps
             <div className="flex items-center gap-2 md:gap-4 flex-wrap">
                 <CitySelector selectedCity={selectedCity} onSelectCity={onSelectCity} />
 
-                {user ? (
-                    <div className="flex items-center gap-2 md:gap-4">
-                        <Link href="/user">
-                            <span className="text-xs md:text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">
-                                {user.username ? `@${user.username}` : user.email}
-                            </span>
-                        </Link>
-                        <Button
-                            onClick={handleLogout}
-                            variant="secondary"
-                            size="sm"
-                            className="text-xs md:text-sm"
-                        >
-                            Log out
-                        </Button>
-                    </div>
-                ) : (
-                    <>
-                        <Link href="/login">
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                className="text-xs md:text-sm px-3 md:px-4"
-                            >
-                                Log in
-                            </Button>
-                        </Link>
-                        <Link href="/signup">
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                className="text-xs md:text-sm px-3 md:px-4"
-                            >
-                                Sign up
-                            </Button>
-                        </Link>
-                    </>
+                {showUserButtons && user && (
+                    <Link href="/user">
+                        <span className="text-xs md:text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">
+                            @{user.username}
+                        </span>
+                    </Link>
                 )}
             </div>
         </header>

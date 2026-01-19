@@ -29,13 +29,13 @@ export default function LogCoffeePage() {
     };
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
+        return <div className="min-h-screen flex items-center justify-center bg-cream">Loading...</div>;
     }
 
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-cream flex flex-col">
             <Header selectedCity="Delhi" onSelectCity={() => { }} user={user} />
 
             <div className="flex-1 flex items-center justify-center px-3 md:px-4 py-6 md:py-12">

@@ -6,13 +6,16 @@
 
 import type { PublicUserProfile, UserStats } from '@/core/types/types';
 import { User, Calendar, Coffee, Users } from 'lucide-react';
+import FollowButton from '@/components/features/FollowButton';
 
 interface UserProfileCardProps {
     profile: PublicUserProfile;
     stats: UserStats;
+    currentUserId?: string | null;
+    onFollowChange?: () => void;
 }
 
-export default function UserProfileCard({ profile, stats }: UserProfileCardProps) {
+export default function UserProfileCard({ profile, stats, currentUserId, onFollowChange }: UserProfileCardProps) {
     const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
         month: 'long',
         year: 'numeric'
@@ -28,9 +31,18 @@ export default function UserProfileCard({ profile, stats }: UserProfileCardProps
 
                 {/* Profile Info */}
                 <div className="flex-1 text-center md:text-left w-full">
-                    <h1 className="text-2xl md:text-3xl font-black text-primary mb-1">
-                        @{profile.username}
-                    </h1>
+                    <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-3 mb-1">
+                        <h1 className="text-2xl md:text-3xl font-black text-primary">
+                            @{profile.username}
+                        </h1>
+                        <FollowButton
+                            targetUserId={profile.user_id}
+                            currentUserId={currentUserId || null}
+                            variant="primary"
+                            size="sm"
+                            onFollowChange={onFollowChange}
+                        />
+                    </div>
 
                     <div className="flex items-center justify-center md:justify-start gap-2 text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                         <Calendar className="w-3 h-3 md:w-4 md:h-4" />
@@ -47,8 +59,8 @@ export default function UserProfileCard({ profile, stats }: UserProfileCardProps
                             </div>
                         </div>
 
-                        {/* Placeholder stats for future */}
-                        <div className="flex items-center gap-2 opacity-50">
+                        {/* Follower stats - now fully visible */}
+                        <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                             <div>
                                 <div className="text-lg md:text-xl font-bold">{stats.followerCount}</div>
@@ -56,7 +68,7 @@ export default function UserProfileCard({ profile, stats }: UserProfileCardProps
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 opacity-50">
+                        <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                             <div>
                                 <div className="text-lg md:text-xl font-bold">{stats.followingCount}</div>
