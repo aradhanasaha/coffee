@@ -40,7 +40,8 @@ export default function JournalFeedCard({ log, onUsernameClick }: JournalFeedCar
         log.image_url &&
         log.image_url.trim().length > 0 &&
         log.image_url !== 'null' &&
-        log.image_url !== 'undefined'
+        log.image_url !== 'undefined' &&
+        (log.image_url.startsWith('http') || log.image_url.startsWith('/'))
     );
 
     return (

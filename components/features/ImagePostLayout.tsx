@@ -57,11 +57,11 @@ export default function ImagePostLayout({
 
             {/* 2. Image Container (Primary Focus) */}
             {log.image_url && (
-                <div className="w-full aspect-[4/3] bg-secondary/20 relative overflow-hidden">
+                <div className="w-full relative overflow-hidden">
                     <img
                         src={log.image_url}
                         alt={`${log.coffee_name} at ${log.place}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-auto max-h-[500px] object-cover"
                         onError={onImageError}
                     />
                 </div>
