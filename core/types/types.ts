@@ -190,3 +190,48 @@ export interface FollowStatus {
     isFollowing: boolean;
 }
 
+// ============================================================================
+// List System Types (V1)
+// ============================================================================
+
+export type ListVisibility = 'private' | 'public';
+
+export interface List {
+    id: string;
+    owner_id: string;
+    title: string;
+    description: string | null;
+    visibility: ListVisibility;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+}
+
+export interface ListItem {
+    id: string;
+    list_id: string;
+    coffee_log_id: string;
+    added_at: string;
+}
+
+export interface ListSave {
+    user_id: string;
+    list_id: string;
+    saved_at: string;
+}
+
+export interface ListFormData {
+    title: string;
+    description?: string;
+    visibility: ListVisibility;
+}
+
+export interface ListWithItems extends List {
+    items: ListItem[];
+    logs?: CoffeeLog[]; // Hydrated logs
+    owner?: { username: string };
+    save_count?: number;
+    is_saved?: boolean;
+    item_count?: number;
+}
+

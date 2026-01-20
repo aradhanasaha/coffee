@@ -3,6 +3,7 @@
 import StarRating from '../common/StarRating';
 import HeartButton from '../common/HeartButton';
 import UsernameLink from '../common/UsernameLink';
+import SaveToListButton from './lists/SaveToListButton';
 
 interface ImagePostLayoutProps {
     log: {
@@ -85,12 +86,15 @@ export default function ImagePostLayout({
             {/* 4. Action Row (Rating + Heart) */}
             <div className="px-4 py-2 flex justify-between items-center">
                 <StarRating rating={log.rating} size="sm" />
-                <HeartButton
-                    isLiked={isLiked}
-                    onToggle={onToggleLike}
-                    loading={likeLoading}
-                    count={likeCount}
-                />
+                <div className="flex items-center gap-3">
+                    <SaveToListButton coffeeLogId={log.id} />
+                    <HeartButton
+                        isLiked={isLiked}
+                        onToggle={onToggleLike}
+                        loading={likeLoading}
+                        count={likeCount}
+                    />
+                </div>
             </div>
 
             {/* 5. Review Text */}

@@ -22,13 +22,10 @@ export default function TopHeader({ selectedCity = 'Delhi', onCityChange, onShar
 
     return (
         <header className="fixed top-0 left-0 right-0 h-16 bg-journal-bg flex items-center justify-between px-8 lowercase z-50">
-            {/* Empty left side for balance */}
-            <div className="flex-1" />
-
-            {/* Logo + Title - centered */}
-            <div className="flex items-center gap-2 text-journal-text">
-                <Image src="/logo.png" alt="imnotupyet logo" width={20} height={20} />
-                <span className="font-semibold text-base">imnotupyet</span>
+            {/* Logo + Title - Left Aligned */}
+            <div className="flex items-center gap-3 text-journal-text pl-2">
+                <Image src="/logo.png" alt="imnotupyet logo" width={32} height={32} className="object-contain" />
+                <span className="font-bold text-xl tracking-tight">imnotupyet</span>
             </div>
 
             {/* Right side actions */}
@@ -50,8 +47,8 @@ export default function TopHeader({ selectedCity = 'Delhi', onCityChange, onShar
                                     key={city}
                                     onClick={() => handleCitySelect(city)}
                                     className={`w-full px-4 py-2 text-left text-sm hover:bg-journal-text/5 transition-colors ${city === selectedCity
-                                            ? 'text-journal-text font-semibold'
-                                            : 'text-journal-text/70'
+                                        ? 'text-journal-text font-semibold'
+                                        : 'text-journal-text/70'
                                         }`}
                                 >
                                     {city.toLowerCase()}

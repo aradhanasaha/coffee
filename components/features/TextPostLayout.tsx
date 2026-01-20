@@ -3,6 +3,7 @@
 import StarRating from '../common/StarRating';
 import HeartButton from '../common/HeartButton';
 import UsernameLink from '../common/UsernameLink';
+import SaveToListButton from './lists/SaveToListButton';
 
 interface TextPostLayoutProps {
     log: {
@@ -84,12 +85,15 @@ export default function TextPostLayout({
                 <div className="opacity-80 scale-90 origin-left">
                     <StarRating rating={log.rating} size="sm" />
                 </div>
-                <HeartButton
-                    isLiked={isLiked}
-                    onToggle={onToggleLike}
-                    loading={likeLoading}
-                    count={likeCount}
-                />
+                <div className="flex items-center gap-3">
+                    <SaveToListButton coffeeLogId={log.id} />
+                    <HeartButton
+                        isLiked={isLiked}
+                        onToggle={onToggleLike}
+                        loading={likeLoading}
+                        count={likeCount}
+                    />
+                </div>
             </div>
         </div>
     );

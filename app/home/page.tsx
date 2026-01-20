@@ -64,8 +64,7 @@ export default function AuthenticatedHome() {
     };
 
     const handleListClick = (listId: string) => {
-        // TODO: Navigate to curated list
-        console.log('View list:', listId);
+        router.push(`/lists/${listId}`);
     };
 
     const handleShareClick = () => {

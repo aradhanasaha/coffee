@@ -1,7 +1,8 @@
-"use client";
-
+import { useEffect, useState } from 'react';
 import CafeRecommendationCard from '../discovery/CafeRecommendationCard';
 import ExploreListCard from '../discovery/ExploreListCard';
+import * as listService from '@/services/listService';
+import type { ListWithItems } from '@/core/types/types';
 
 interface DiscoveryPanelProps {
     onCafeClick?: (cafe: string) => void;
@@ -16,13 +17,17 @@ export default function DiscoveryPanel({ onCafeClick, onListClick }: DiscoveryPa
         { name: 'First Coffee', area: 'Priya Market' },
     ];
 
-    const exploreLists = [
-        { id: '1', title: 'quiet cafés to sit with yourself', subtitle: '12 cafés · updated this week' },
-        { id: '2', title: 'first coffees logged this month', subtitle: '28 cafés · daily updated' },
-        { id: '3', title: 'most photographed mugs', subtitle: '45 logs · trending' },
-        { id: '4', title: 'cafés people lingered at', subtitle: '19 cafés · curated' },
-        { id: '5', title: 'south delhi regulars', subtitle: '31 cafés · by area' },
-    ];
+    const [exploreLists, setExploreLists] = useState<ListWithItems[]>([]);
+
+    useEffect(() => {
+        const fetchLists = async () => {
+            const result = await listService.fetchPublicLists();
+            if (result.success && result.data) {
+                setExploreLists(result.data);
+            }
+        };
+        fetchLists();
+    }, []);
 
     return (
         <aside className="w-full space-y-6 lowercase">
@@ -52,18 +57,26 @@ export default function DiscoveryPanel({ onCafeClick, onListClick }: DiscoveryPa
                     explore lists
                 </h2>
                 <div className="space-y-1">
-                    {exploreLists.slice(0, 3).map((list) => (
-                        <ExploreListCard
-                            key={list.id}
-                            title={list.title}
-                            subtitle={list.subtitle}
-                            onClick={() => onListClick?.(list.id)}
-                        />
-                    ))}
+                    {exploreLists.length > 0 ? (
+                        exploreLists.map((list) => (
+                            <ExploreListCard
+                                key={list.id}
+                                title={list.title}
+                                subtitle={`${list.item_count || 0} items`}
+                                onClick={() => onListClick?.(list.id)}
+                            />
+                        ))
+                    ) : (
+                        <div className="px-3 py-4 text-xs text-journal-text/40 text-center italic">
+                            no public lists yet... be the first?
+                        </div>
+                    )}
                 </div>
-                <button className="w-full text-center text-journal-text/60 text-xs mt-3 hover:text-journal-text transition-colors">
-                    see more lists
-                </button>
+                {exploreLists.length > 0 && (
+                    <button className="w-full text-center text-journal-text/60 text-xs mt-3 hover:text-journal-text transition-colors">
+                        see more lists
+                    </button>
+                )}
             </section>
         </aside>
     );
