@@ -33,10 +33,11 @@ interface LogCoffeeFormProps {
         location_id?: string | null;
     };
     onSuccess?: () => void;
+    onCancel?: () => void;
     submitLabel?: string;
 }
 
-export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, submitLabel }: LogCoffeeFormProps) {
+export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCancel, submitLabel }: LogCoffeeFormProps) {
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
     const { createLog, updateLog } = useCoffeeLogs(user?.id || null);
@@ -421,7 +422,7 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, submit
                     <div className="flex gap-4 pt-2">
                         <Button
                             type="button"
-                            onClick={() => onSuccess && onSuccess()}
+                            onClick={() => onCancel ? onCancel() : onSuccess?.()}
                             variant="secondary"
                             size="lg"
                             className="flex-1"

@@ -16,7 +16,7 @@ import type {
  */
 export async function createCoffeeLog(
     userId: string,
-    logData: LogFormData & { image_url?: string }
+    logData: LogFormData
 ): Promise<ServiceResult<CoffeeLog>> {
     try {
         // Validate required photo - CHECK REMOVED for V3 (Text posts allowed)
