@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, User, Plus } from 'lucide-react';
+import { Home, User, Plus, List } from 'lucide-react';
 import classNames from 'classnames';
 
 interface BottomNavProps {
@@ -18,14 +18,14 @@ export default function BottomNav({ onLogCoffeeClick }: BottomNavProps) {
     return (
         <nav className="fixed bottom-0 left-0 right-0 h-16 bg-journal-bg border-t border-journal-text/10 flex items-center justify-around px-4 z-50 md:hidden">
             <Link
-                href="/home"
+                href="/lists/discover"
                 className={classNames(
                     "flex flex-col items-center justify-center gap-1 p-2 text-xs font-medium transition-colors",
-                    isActive('/home') ? "text-journal-text" : "text-journal-text/40 hover:text-journal-text/60"
+                    isActive('/lists/discover') ? "text-journal-text" : "text-journal-text/40 hover:text-journal-text/60"
                 )}
             >
-                <Home className="w-5 h-5" />
-                <span>explore</span>
+                <List className="w-6 h-6" />
+                <span>lists</span>
             </Link>
 
             <button

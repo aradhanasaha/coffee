@@ -8,8 +8,6 @@ import BottomNav from './BottomNav';
 
 interface JournalLayoutProps {
     children: ReactNode;
-    selectedCity?: string;
-    onCityChange?: (city: string) => void;
     onLogCoffeeClick?: () => void;
     onCafeClick?: (cafe: string) => void;
     onListClick?: (listId: string) => void;
@@ -18,8 +16,6 @@ interface JournalLayoutProps {
 
 export default function JournalLayout({
     children,
-    selectedCity,
-    onCityChange,
     onLogCoffeeClick,
     onCafeClick,
     onListClick,
@@ -29,8 +25,6 @@ export default function JournalLayout({
         <div className="min-h-screen bg-journal-bg">
             {/* Top Header - Fixed */}
             <TopHeader
-                selectedCity={selectedCity}
-                onCityChange={onCityChange}
                 onShareClick={onShareClick}
             />
 

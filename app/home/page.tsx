@@ -13,15 +13,12 @@ import { useAuth } from '@/hooks/useAuth';
 export default function AuthenticatedHome() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedCity, setSelectedCity] = useState('Delhi');
     const [showLogModal, setShowLogModal] = useState(false);
     const router = useRouter();
     const { user: authUser } = useAuth();
 
-    // Fetch public coffee feed with city filter
-    const cityFilter = selectedCity === 'All' ? undefined : selectedCity;
+    // Fetch public coffee feed (no city filter)
     const { logs, loading: feedLoading } = usePublicCoffeeFeed({
-        city: cityFilter,
         currentUserId: authUser?.id || null
     });
 
@@ -67,9 +64,23 @@ export default function AuthenticatedHome() {
         router.push(`/lists/${listId}`);
     };
 
-    const handleShareClick = () => {
-        // TODO: Implement share functionality
-        console.log('Share with friends');
+    const handleShareClick = async () => {
+        const shareData = {
+            title: 'imnotupyet',
+            text: 'Check out imnotupyet - your quiet space to log coffee.',
+            url: window.location.origin
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareData.url);
+                alert('link copied!');
+            }
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
     };
 
     if (loading) {
@@ -85,8 +96,6 @@ export default function AuthenticatedHome() {
     return (
         <>
             <JournalLayout
-                selectedCity={selectedCity}
-                onCityChange={setSelectedCity}
                 onLogCoffeeClick={handleLogCoffeeClick}
                 onCafeClick={handleCafeClick}
                 onListClick={handleListClick}
