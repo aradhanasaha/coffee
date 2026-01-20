@@ -5,13 +5,13 @@ import { Plus, Check, Lock, Globe } from 'lucide-react';
 import Modal from '@/components/common/Modal';
 import CreateListForm from './CreateListForm';
 import { useAuth } from '@/hooks/useAuth';
-import type { ListFormData } from '@/core/types/types';
+import type { ListFormData, ListWithItems } from '@/core/types/types';
 
 interface SaveToListModalProps {
     isOpen: boolean;
     onClose: () => void;
     coffeeLogId: string;
-    lists: any[];
+    lists: ListWithItems[];
     loading: boolean;
     createList: (data: ListFormData) => Promise<any>;
     addToList: (listId: string, logId: string) => Promise<any>;
