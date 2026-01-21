@@ -1,33 +1,24 @@
-"use client";
-
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, MapPin } from 'lucide-react';
 
 interface CafeRecommendationCardProps {
     name: string;
-    area: string;
-    image?: string;
     onClick?: () => void;
 }
 
-export default function CafeRecommendationCard({ name, area, image, onClick }: CafeRecommendationCardProps) {
+export default function CafeRecommendationCard({ name, onClick }: CafeRecommendationCardProps) {
     return (
         <button
             onClick={onClick}
             className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-journal-card/50 transition-colors text-left lowercase group"
         >
-            {/* Square Image */}
-            <div className="w-10 h-10 rounded-lg bg-journal-card flex-shrink-0 overflow-hidden">
-                {image ? (
-                    <img src={image} alt={name} className="w-full h-full object-cover" />
-                ) : (
-                    <div className="w-full h-full bg-journal-text/10" />
-                )}
+            {/* Icon Only */}
+            <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center bg-journal-card/50">
+                <MapPin className="w-5 h-5 text-journal-text/40" />
             </div>
 
             {/* Text */}
             <div className="flex-1 min-w-0">
                 <p className="font-semibold text-journal-text text-sm truncate">{name.toLowerCase()}</p>
-                <p className="text-journal-text/60 text-xs truncate">{area.toLowerCase()}</p>
             </div>
 
             {/* Arrow */}

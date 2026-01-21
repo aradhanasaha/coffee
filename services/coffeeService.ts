@@ -8,7 +8,8 @@ import type {
     CoffeeLog,
     CoffeeLogWithUsername,
     LogFormData,
-    ServiceResult
+    ServiceResult,
+    TopLocation
 } from '@/core/types/types';
 
 /**
@@ -270,6 +271,71 @@ export async function fetchPublicCoffeeFeed(options?: {
         }));
     } catch (err) {
         console.error('Error fetching public feed:', err);
+        return [];
+    }
+}
+
+/**
+ * Fetch top locations based on log count
+ */
+export async function fetchTopLocations(limit: number = 5): Promise<TopLocation[]> {
+    try {
+        const { data, error } = await supabase
+            .from('coffee_logs')
+            .select(`
+                place,
+                image_url,
+                image_deleted_at,
+                locations:location_id (
+                    city
+                )
+            `)
+            .is('deleted_at', null);
+
+        if (error || !data) return [];
+
+        // Aggregate by place name
+        const placeCounts: Record<string, { count: number; area: string; image?: string }> = {};
+
+        data.forEach((log: any) => {
+            const placeName = log.place.toLowerCase().trim();
+            if (!placeName) return;
+
+            if (!placeCounts[placeName]) {
+                placeCounts[placeName] = {
+                    count: 0,
+                    area: log.locations?.city || 'Unknown Area',
+                    image: (!log.image_deleted_at && log.image_url) ? log.image_url : undefined
+                };
+            }
+
+            placeCounts[placeName].count++;
+
+            // Prefer keeping an image if we found one
+            if (!placeCounts[placeName].image && !log.image_deleted_at && log.image_url) {
+                placeCounts[placeName].image = log.image_url;
+            }
+
+            // Update area if we found a better one (e.g. not null/unknown)
+            if (placeCounts[placeName].area === 'Unknown Area' && log.locations?.city) {
+                placeCounts[placeName].area = log.locations.city;
+            }
+        });
+
+        const sortedPlaces = Object.entries(placeCounts)
+            .map(([name, stats]) => ({
+                id: name, // Using name as ID for now since we aggregate by name
+                name: name,
+                area: stats.area,
+                count: stats.count,
+                image: stats.image
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, limit);
+
+        return sortedPlaces;
+    } catch (err) {
+        console.error('Error fetching top locations:', err);
         return [];
     }
 }

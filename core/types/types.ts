@@ -106,6 +106,14 @@ export interface LocationSuggestion {
     secondary_text: string;
 }
 
+export interface TopLocation {
+    id: string; // location_id or place name if no ID
+    name: string;
+    area: string;
+    count: number;
+    image?: string;
+}
+
 // ============================================================================
 // Validation Types
 // ============================================================================
