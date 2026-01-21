@@ -656,6 +656,43 @@ All tables use Row Level Security. The Android app authenticates via Supabase Au
 | Follows | `follows`, `profiles` | follow/unfollow, counts |
 | Lists | `lists`, `list_items`, `list_saves` | CRUD, public discovery |
 
+
+### Public Feed Pagination Strategy
+
+The public coffee feed uses cursor-based pagination to ensure stable ordering and scalability.
+
+- Ordering:
+  - Sorted by `created_at` in descending order (newest first)
+
+- Page Size:
+  - Default page size: 20 coffee logs per request
+
+- Cursor:
+  - The cursor is the `created_at` value of the last item in the currently loaded page
+  - Subsequent requests fetch records where:
+    `created_at < last_cursor`
+
+- Initial Load:
+  - Fetch the first 20 records with no cursor applied
+
+- Load More (Infinite Scroll):
+  - When the user scrolls near the end of the list:
+    - Pass the last item's `created_at` as the cursor
+    - Append the next page to the existing feed
+
+- Pull-to-Refresh:
+  - Clears the local feed state
+  - Resets the cursor
+  - Refetches the first page from the top
+
+- Deleted Records:
+  - Records with `deleted_at IS NOT NULL` are always excluded
+
+- Consistency Guarantee:
+  - Cursor-based pagination prevents duplicate or missing items
+    when new coffee logs are created while scrolling
+
+
 ---
 
 ## Contact

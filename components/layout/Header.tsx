@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/common';
 
 interface HeaderProps {
-    selectedCity: string;
-    onSelectCity: (city: string) => void;
+    selectedCity?: string;
+    onSelectCity?: (city: string) => void;
     user?: any; // We'll refine this type later if needed
     showUserButtons?: boolean; // Controls whether to show username/logout
+    hideCitySelector?: boolean; // Hide city selector on auth pages
 }
 
-export default function Header({ selectedCity, onSelectCity, user, showUserButtons = false }: HeaderProps) {
+export default function Header({ selectedCity, onSelectCity, user, showUserButtons = false, hideCitySelector = false }: HeaderProps) {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -29,7 +30,9 @@ export default function Header({ selectedCity, onSelectCity, user, showUserButto
 
             </div>
             <div className="flex items-center gap-2 md:gap-4 flex-wrap">
-                <CitySelector selectedCity={selectedCity} onSelectCity={onSelectCity} />
+                {!hideCitySelector && selectedCity && onSelectCity && (
+                    <CitySelector selectedCity={selectedCity} onSelectCity={onSelectCity} />
+                )}
 
                 {showUserButtons && user && (
                     <Link href="/user">
@@ -42,3 +45,4 @@ export default function Header({ selectedCity, onSelectCity, user, showUserButto
         </header>
     );
 }
+

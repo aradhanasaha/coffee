@@ -13,9 +13,12 @@ interface UseAuthReturn {
     session: Session | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+    loginWithUsername: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
     signup: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
     refreshSession: () => Promise<void>;
+    sendPasswordResetEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+    updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -57,6 +60,18 @@ export function useAuth(): UseAuthReturn {
         return { success: false, error: result.error };
     }, []);
 
+    const loginWithUsername = useCallback(async (username: string, password: string) => {
+        const result = await authService.loginWithUsername(username, password);
+
+        if (result.success && result.user && result.session) {
+            setUser(result.user);
+            setSession(result.session);
+            return { success: true };
+        }
+
+        return { success: false, error: result.error };
+    }, []);
+
     const signup = useCallback(async (email: string, password: string, username: string) => {
         const result = await authService.signup(email, password, username);
 
@@ -85,13 +100,24 @@ export function useAuth(): UseAuthReturn {
         }
     }, []);
 
+    const sendPasswordResetEmail = useCallback(async (email: string) => {
+        return await authService.sendPasswordResetEmail(email);
+    }, []);
+
+    const updatePassword = useCallback(async (newPassword: string) => {
+        return await authService.updatePassword(newPassword);
+    }, []);
+
     return {
         user,
         session,
         loading,
         login,
+        loginWithUsername,
         signup,
         logout,
         refreshSession,
+        sendPasswordResetEmail,
+        updatePassword,
     };
 }

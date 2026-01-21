@@ -48,6 +48,110 @@ export async function login(email: string, password: string): Promise<AuthResult
 }
 
 /**
+ * Get email by username from profiles table
+ * Used for username-based login
+ */
+export async function getEmailByUsername(username: string): Promise<{ email: string | null; error?: string }> {
+    try {
+        // First get the user_id from profiles
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('username', username.toLowerCase())
+            .single();
+
+        if (profileError || !profile) {
+            return { email: null, error: 'Username not found' };
+        }
+
+        // Get user email from auth.users via the admin API or stored email
+        // Since we can't directly query auth.users, we need to get email from the session
+        // We'll use the approach of looking up via a view or storing email in profiles
+        // For now, we'll query the user's email by attempting to find it in our stored data
+
+        // Alternative approach: We'll use a database function or RPC call
+        // But simpler approach is to join with auth.users which isn't directly possible
+        // So we'll store/cache email in profiles or use a different approach
+
+        // Best approach: Query auth.users via the admin API or use Supabase's built-in lookup
+        // Since profiles doesn't have email, we need to call an RPC function
+        const { data: userEmail, error: emailError } = await supabase
+            .rpc('get_user_email_by_username', { p_username: username.toLowerCase() });
+
+        if (emailError) {
+            // Fallback: Try to get from auth if the RPC doesn't exist
+            // This won't work directly, so we'll return an error
+            console.error('Error getting email:', emailError);
+            return { email: null, error: 'Could not retrieve email for this username' };
+        }
+
+        return { email: userEmail };
+    } catch (err: any) {
+        return { email: null, error: err.message || 'Failed to lookup username' };
+    }
+}
+
+/**
+ * Login with username and password
+ * Looks up email by username, then authenticates with email/password
+ */
+export async function loginWithUsername(username: string, password: string): Promise<AuthResult> {
+    try {
+        // First, get the email associated with this username
+        const { email, error: lookupError } = await getEmailByUsername(username);
+
+        if (lookupError || !email) {
+            return { success: false, error: 'Invalid username or password' };
+        }
+
+        // Now login with the email and password
+        return await login(email, password);
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Login failed' };
+    }
+}
+
+/**
+ * Send password reset email
+ * Uses Supabase's built-in password reset functionality
+ */
+export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Failed to send reset email' };
+    }
+}
+
+/**
+ * Update password after reset
+ * Called when user lands on reset-password page with valid token
+ */
+export async function updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword,
+        });
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Failed to update password' };
+    }
+}
+
+/**
  * Sign up with email, password, and username
  */
 export async function signup(

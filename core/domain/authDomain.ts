@@ -78,3 +78,64 @@ export function validateSignupData(
 
     return { isValid: true };
 }
+
+/**
+ * Validates username for login (different from signup validation)
+ */
+export function validateUsername(username: string): ValidationResult {
+    if (!username || username.trim().length === 0) {
+        return { isValid: false, error: 'Username is required' };
+    }
+
+    if (username.trim().length < 3) {
+        return { isValid: false, error: 'Username must be at least 3 characters' };
+    }
+
+    // Username should only contain alphanumeric characters, underscores, and hyphens
+    const usernamePattern = /^[a-zA-Z0-9_-]+$/;
+    if (!usernamePattern.test(username)) {
+        return { isValid: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
+    }
+
+    return { isValid: true };
+}
+
+/**
+ * Validates username login credentials
+ */
+export function validateUsernameLoginCredentials(username: string, password: string): ValidationResult {
+    const usernameValidation = validateUsername(username);
+    if (!usernameValidation.isValid) {
+        return usernameValidation;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+        return passwordValidation;
+    }
+
+    return { isValid: true };
+}
+
+/**
+ * Validates password reset email
+ */
+export function validatePasswordResetEmail(email: string): ValidationResult {
+    return validateEmail(email);
+}
+
+/**
+ * Validates new password for reset
+ */
+export function validateNewPassword(password: string, confirmPassword: string): ValidationResult {
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+        return passwordValidation;
+    }
+
+    if (password !== confirmPassword) {
+        return { isValid: false, error: 'Passwords do not match' };
+    }
+
+    return { isValid: true };
+}
