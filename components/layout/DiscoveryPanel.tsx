@@ -76,6 +76,7 @@ export default function DiscoveryPanel({ onCafeClick, onListClick }: DiscoveryPa
                                 key={list.id}
                                 title={list.title}
                                 subtitle={`${list.item_count || 0} items`}
+                                curatedBy={list.owner?.username}
                                 onClick={() => onListClick?.(list.id)}
                             />
                         ))

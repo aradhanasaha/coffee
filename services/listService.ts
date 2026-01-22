@@ -38,23 +38,25 @@ export async function createList(
  */
 export async function fetchUserLists(userId: string): Promise<ServiceResult<ListWithItems[]>> {
     try {
-        // Fetch lists and check if specific logs are in them is hard in one query without a specific log ID context.
-        // For "Your Lists" in the modal, we usually want to know if a specific log is in them.
-        // But this is a general fetch.
-
         const { data, error } = await supabase
             .from('lists')
-            .select('*, items:list_items(coffee_log_id)')
+            .select(`
+                *,
+                owner:profiles!lists_owner_id_fkey(username),
+                items:list_items(count)
+            `)
             .eq('owner_id', userId)
             .is('deleted_at', null)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // Map to ListWithItems structure (simplified items for check)
-        const lists = data.map((list: any) => ({
+        // Map to ListWithItems structure
+        const lists = (data as any[]).map((list) => ({
             ...list,
-            items: list.items || []
+            items: [],
+            item_count: list.items?.[0]?.count || 0,
+            owner: list.owner
         }));
 
         return { success: true, data: lists };
@@ -211,6 +213,80 @@ export async function saveList(userId: string, listId: string): Promise<ServiceR
         const { error } = await supabase
             .from('list_saves')
             .insert([{ user_id: userId, list_id: listId }]);
+
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Fetch lists saved by a user
+ */
+export async function fetchSavedLists(userId: string): Promise<ServiceResult<ListWithItems[]>> {
+    try {
+        const { data, error } = await supabase
+            .from('list_saves')
+            .select(`
+                list:lists(
+                    *,
+                    owner:profiles!lists_owner_id_fkey(username),
+                    items:list_items(count)
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Transform the nested result to match ListWithItems
+        const lists = (data as any[]).map((item) => {
+            const list = item.list;
+            return {
+                ...list,
+                items: [],
+                item_count: list.items?.[0]?.count || 0,
+                owner: list.owner
+            };
+        });
+
+        return { success: true, data: lists };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Update a list's details
+ */
+export async function updateList(
+    listId: string,
+    updates: Partial<{ title: string; description: string; visibility: 'public' | 'private' }>
+): Promise<ServiceResult<void>> {
+    try {
+        const { error } = await supabase
+            .from('lists')
+            .update({
+                ...updates,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', listId);
+
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Soft delete a list (using RPC)
+ */
+export async function deleteList(listId: string): Promise<ServiceResult<void>> {
+    try {
+        const { error } = await supabase
+            .rpc('delete_list', { target_list_id: listId });
 
         if (error) throw error;
         return { success: true };

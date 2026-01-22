@@ -9,6 +9,9 @@ import Link from "next/link";
 import { validateUsername } from "@/lib/usernameValidation";
 import LogCoffeeForm from "@/components/features/LogCoffeeForm";
 import UserProfileCard from "@/components/features/UserProfileCard";
+import * as listService from '@/services/listService';
+import ExploreListCard from '@/components/discovery/ExploreListCard';
+import type { ListWithItems } from '@/core/types/types';
 
 interface CoffeeLog {
     id: string;
@@ -66,6 +69,41 @@ export default function UserDashboard() {
         };
         fetchData();
     }, [router]);
+
+    const [activeTab, setActiveTab] = useState<'history' | 'lists'>('history');
+    const [myLists, setMyLists] = useState<ListWithItems[]>([]);
+    const [listsLoading, setListsLoading] = useState(false);
+
+    // Fetch lists when tab changes to 'lists'
+    useEffect(() => {
+        const fetchLists = async () => {
+            if (activeTab === 'lists' && user) {
+                setListsLoading(true);
+                try {
+                    // Fetch own lists (public & private)
+                    const ownListsResult = await listService.fetchUserLists(user.id);
+                    // Fetch saved lists
+                    const savedListsResult = await listService.fetchSavedLists(user.id);
+
+                    const combinedLists = [
+                        ...(ownListsResult.data || []),
+                        ...(savedListsResult.data || [])
+                    ];
+
+                    // Remove duplicates
+                    const uniqueLists = Array.from(new Map(combinedLists.map(list => [list.id, list])).values());
+
+                    setMyLists(uniqueLists);
+                } catch (err) {
+                    console.error("Failed to fetch lists", err);
+                } finally {
+                    setListsLoading(false);
+                }
+            }
+        };
+
+        fetchLists();
+    }, [activeTab, user]);
 
     const [isEditingUsername, setIsEditingUsername] = useState(false);
     const [newUsername, setNewUsername] = useState("");
@@ -239,74 +277,134 @@ export default function UserDashboard() {
                 />
 
 
-                {/* My Coffee Entries Section */}
-                <section>
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-primary" />
-                        </div>
-                        My Coffee History
-                    </h2>
-                    {logs.length === 0 ? (
-                        <div className="bg-card/50 border-2 border-dashed border-primary/10 rounded-2xl p-12 text-center">
-                            <p className="text-muted-foreground">You haven’t logged any coffees yet.</p>
-                            <Link href="/log" className="mt-4 inline-block">
-                                <Button size="md">Log your first coffee</Button>
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {logs.map((log) => (
-                                <div key={log.id} className="bg-card p-5 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
-                                    {editingLogId === log.id ? (
-                                        <LogCoffeeForm
-                                            initialData={log}
-                                            onSuccess={handleUpdateLog}
-                                            submitLabel="Save Changes"
-                                        />
-                                    ) : (
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                            <div className="space-y-1">
-                                                <h3 className="font-bold text-lg">{log.coffee_name}</h3>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <MapPin className="w-3 h-3" />
-                                                    <span>{log.place} • Delhi</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-4">
-                                                <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-                                                    <Star className="w-4 h-4 text-primary fill-primary" />
-                                                    <span className="font-bold text-primary">{log.rating}</span>
-                                                </div>
-                                                <div className="text-xs font-bold px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
-                                                    {getPriceLabel(log.price_feel)}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground font-medium">
-                                                    {new Date(log.created_at).toLocaleDateString()}
-                                                </div>
-                                                <div className="flex items-center gap-2 ml-auto">
-                                                    <button
-                                                        className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                                                        onClick={() => handleEditClick(log)}
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                                                        onClick={() => handleDeleteLog(log.id)}
-                                                        disabled={isDeleting === log.id}
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                {/* Tabs */}
+                <div>
+                    <div className="flex items-center gap-6 border-b border-primary/10 mb-6">
+                        <button
+                            onClick={() => setActiveTab('history')}
+                            className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'history'
+                                    ? 'text-primary'
+                                    : 'text-muted-foreground hover:text-primary/70'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === 'history' ? 'bg-primary/10' : 'bg-transparent'}`}>
+                                    <Calendar className={`w-5 h-5 ${activeTab === 'history' ? 'text-primary' : 'text-muted-foreground'}`} />
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
+                                My Coffee History
+                            </span>
+                            {activeTab === 'history' && (
+                                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('lists')}
+                            className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'lists'
+                                    ? 'text-primary'
+                                    : 'text-muted-foreground hover:text-primary/70'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === 'lists' ? 'bg-primary/10' : 'bg-transparent'}`}>
+                                    <TrendingUp className={`w-5 h-5 ${activeTab === 'lists' ? 'text-primary' : 'text-muted-foreground'}`} />
+                                </div>
+                                My Lists
+                            </span>
+                            {activeTab === 'lists' && (
+                                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <section>
+                        {activeTab === 'history' ? (
+                            <>
+                                {logs.length === 0 ? (
+                                    <div className="bg-card/50 border-2 border-dashed border-primary/10 rounded-2xl p-12 text-center">
+                                        <p className="text-muted-foreground">You haven’t logged any coffees yet.</p>
+                                        <Link href="/log" className="mt-4 inline-block">
+                                            <Button size="md">Log your first coffee</Button>
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {logs.map((log) => (
+                                            <div key={log.id} className="bg-card p-5 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
+                                                {editingLogId === log.id ? (
+                                                    <LogCoffeeForm
+                                                        initialData={log}
+                                                        onSuccess={handleUpdateLog}
+                                                        submitLabel="Save Changes"
+                                                    />
+                                                ) : (
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                        <div className="space-y-1">
+                                                            <h3 className="font-bold text-lg">{log.coffee_name}</h3>
+                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                                <MapPin className="w-3 h-3" />
+                                                                <span>{log.place} • Delhi</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-4">
+                                                            <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+                                                                <Star className="w-4 h-4 text-primary fill-primary" />
+                                                                <span className="font-bold text-primary">{log.rating}</span>
+                                                            </div>
+                                                            <div className="text-xs font-bold px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
+                                                                {getPriceLabel(log.price_feel)}
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground font-medium">
+                                                                {new Date(log.created_at).toLocaleDateString()}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 ml-auto">
+                                                                <button
+                                                                    className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                                                                    onClick={() => handleEditClick(log)}
+                                                                >
+                                                                    <Edit2 className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                                                                    onClick={() => handleDeleteLog(log.id)}
+                                                                    disabled={isDeleting === log.id}
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {listsLoading ? (
+                                    <div className="text-center py-12 text-muted-foreground">Loading lists...</div>
+                                ) : myLists.length === 0 ? (
+                                    <div className="bg-card rounded-2xl border-2 border-dashed border-primary/20 p-12 text-center text-muted-foreground">
+                                        No lists found
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {myLists.map((list) => (
+                                            <ExploreListCard
+                                                key={list.id}
+                                                title={list.title}
+                                                subtitle={`${list.item_count || 0} items`}
+                                                curatedBy={list.owner?.username}
+                                                onClick={() => router.push(`/lists/${list.id}`)}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </section>
+                </div>
 
                 {/* Placeholder Sections */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">

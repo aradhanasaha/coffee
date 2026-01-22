@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bookmark, Share2, ArrowLeft } from 'lucide-react';
+import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import * as listService from '@/services/listService';
 import JournalLayout from '@/components/layout/JournalLayout';
@@ -18,12 +18,18 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     const [saving, setSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
 
+    // Edit State
+    const [isEditing, setIsEditing] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [updating, setUpdating] = useState(false);
+
     useEffect(() => {
         const fetchList = async () => {
             setLoading(true);
             const result = await listService.fetchListDetails(params.id);
             if (result.success && result.data) {
                 setList(result.data);
+                setEditTitle(result.data.title);
             } else {
                 setError(result.error || 'Failed to load list');
             }
@@ -35,8 +41,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     const handleSaveList = async () => {
         if (!user || !list) return;
         setSaving(true);
-        // Toggle save logic here (create/delete list_save)
-        // For V1 just implement save
         const result = await listService.saveList(user.id, list.id);
         if (result.success) {
             setIsSaved(true);
@@ -51,9 +55,40 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                 url: window.location.href
             });
         } else {
-            // Fallback copy to clipboard
             navigator.clipboard.writeText(window.location.href);
-            // toast('Link copied');
+        }
+    };
+
+    const handleUpdateTitle = async () => {
+        if (!list || !editTitle.trim()) return;
+
+        if (editTitle.trim() === list.title) {
+            setIsEditing(false);
+            return;
+        }
+
+        setUpdating(true);
+        const result = await listService.updateList(list.id, { title: editTitle.trim() });
+
+        if (result.success) {
+            setList(prev => prev ? { ...prev, title: editTitle.trim() } : null);
+            setIsEditing(false);
+        } else {
+            alert('Failed to update list name');
+        }
+        setUpdating(false);
+    };
+
+    const handleDeleteList = async () => {
+        if (!list || !confirm('Are you sure you want to delete this list?')) return;
+
+        const result = await listService.deleteList(list.id);
+
+        if (result.success) {
+            router.push('/user'); // Redirect to user profile
+            router.refresh();
+        } else {
+            alert('Failed to delete list: ' + (result.error || 'Unknown error'));
         }
     };
 
@@ -103,7 +138,17 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
                 {/* Header Section */}
                 <div className="text-center mb-12 space-y-4 relative">
-                    {/* Action Buttons - Absolute positioned on desktop, stacked on mobile? Wireframe shows them top right relative to content or container */}
+                    {/* Action Buttons - Absolute positioned on desktop */}
+                    {isOwner && (
+                        <button
+                            onClick={handleDeleteList}
+                            className="absolute left-0 top-1 p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                            title="Delete List"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    )}
+
                     <div className="flex justify-center md:absolute md:right-0 md:top-0 gap-2 mb-4 md:mb-0">
                         {!isOwner && (
                             <button
@@ -117,6 +162,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                                 {isSaved ? 'Saved' : 'Save this list'}
                             </button>
                         )}
+
                         <button
                             onClick={handleShare}
                             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-journal-text text-journal-text hover:bg-journal-text/5 transition-all"
@@ -126,9 +172,52 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                         </button>
                     </div>
 
-                    <h1 className="text-4xl font-bold text-journal-text lowercase tracking-tight mb-2">
-                        {list.title}
-                    </h1>
+                    <div className="flex items-center justify-center gap-3">
+                        {isEditing ? (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={editTitle}
+                                    onChange={(e) => setEditTitle(e.target.value)}
+                                    className="text-3xl md:text-4xl font-bold text-journal-text text-center bg-transparent border-b-2 border-primary focus:outline-none w-full max-w-md"
+                                    autoFocus
+                                    onBlur={handleUpdateTitle}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
+                                />
+                                <button
+                                    onClick={handleUpdateTitle}
+                                    className="p-1 text-green-600 hover:bg-green-100 rounded-full"
+                                    disabled={updating}
+                                >
+                                    <Check className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setEditTitle(list.title);
+                                        setIsEditing(false);
+                                    }}
+                                    className="p-1 text-red-500 hover:bg-red-100 rounded-full"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-3 group relative">
+                                <h1 className="text-4xl font-bold text-journal-text lowercase tracking-tight mb-2">
+                                    {list.title}
+                                </h1>
+                                {isOwner && (
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="text-journal-text/30 hover:text-primary transition-colors p-2"
+                                        title="Edit list name"
+                                    >
+                                        <Pencil className="w-5 h-5" />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     <div className="text-journal-text/60 font-medium">
                         curated by: <span className="text-journal-text hover:underline cursor-pointer" onClick={() => list.owner?.username && router.push(`/user/${list.owner.username}`)}>@{list.owner?.username || 'unknown'}</span>
