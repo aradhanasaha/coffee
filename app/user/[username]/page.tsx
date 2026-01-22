@@ -55,7 +55,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                         // Viewing someone else: Fetch ONLY their PUBLIC lists
                         // We reuse fetchUserLists but filter by visibility
                         const result = await listService.fetchUserLists(profile.user_id);
-                        if (result.sales && result.data) {
+                        if (result.success && result.data) {
                             setMyLists(result.data.filter(l => l.visibility === 'public'));
                         } else if (result.data) {
                             setMyLists(result.data.filter(l => l.visibility === 'public'));
@@ -118,8 +118,8 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                         <button
                             onClick={() => setActiveTab('history')}
                             className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'history'
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground hover:text-primary/70'
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
@@ -132,8 +132,8 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                         <button
                             onClick={() => setActiveTab('lists')}
                             className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'lists'
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground hover:text-primary/70'
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
