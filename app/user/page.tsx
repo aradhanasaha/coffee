@@ -274,6 +274,23 @@ export default function UserDashboard() {
                         followingCount: user?.following_count || 0
                     }}
                     currentUserId={user.id}
+                    // Edit Props
+                    isEditing={isEditingUsername}
+                    editUsername={newUsername}
+                    onEditUsernameChange={setNewUsername}
+                    onStartEdit={() => {
+                        setNewUsername(user.username);
+                        setIsEditingUsername(true);
+                        setUsernameError(null);
+                    }}
+                    onCancelEdit={() => {
+                        setIsEditingUsername(false);
+                        setNewUsername("");
+                        setUsernameError(null);
+                    }}
+                    onSaveEdit={handleUpdateUsername}
+                    editLoading={updateLoading}
+                    editError={usernameError}
                 />
 
 
@@ -283,8 +300,8 @@ export default function UserDashboard() {
                         <button
                             onClick={() => setActiveTab('history')}
                             className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'history'
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground hover:text-primary/70'
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
@@ -300,8 +317,8 @@ export default function UserDashboard() {
                         <button
                             onClick={() => setActiveTab('lists')}
                             className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'lists'
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground hover:text-primary/70'
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span className="flex items-center gap-2">

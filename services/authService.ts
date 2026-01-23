@@ -164,6 +164,11 @@ export async function signup(
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
+            options: {
+                data: {
+                    username: username.toLowerCase(),
+                }
+            }
         });
 
         if (authError) {
