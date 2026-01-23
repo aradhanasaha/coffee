@@ -5,6 +5,9 @@ import HeartButton from '../common/HeartButton';
 import UsernameLink from '../common/UsernameLink';
 import SaveToListButton from './lists/SaveToListButton';
 
+// Import Trash2
+import { Trash2 } from 'lucide-react';
+
 interface TextPostLayoutProps {
     log: {
         id: string;
@@ -22,6 +25,10 @@ interface TextPostLayoutProps {
     likeLoading: boolean;
     likeCount: number;
     priceFeel?: string | null;
+    // Admin Props
+    isAdmin?: boolean;
+    onDelete?: () => void;
+    isDeleting?: boolean;
 }
 
 export default function TextPostLayout({
@@ -31,7 +38,10 @@ export default function TextPostLayout({
     onToggleLike,
     likeLoading,
     likeCount,
-    priceFeel
+    priceFeel,
+    isAdmin,
+    onDelete,
+    isDeleting
 }: TextPostLayoutProps) {
     // Truncate review logic
     const maxLength = 280; // Longer for text posts (Twitter style)
@@ -41,7 +51,22 @@ export default function TextPostLayout({
         : log.review;
 
     return (
-        <div className="flex flex-col p-6">
+        <div className="flex flex-col p-6 relative group/card">
+            {/* Admin Delete Button - Overlay */}
+            {isAdmin && onDelete && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                    }}
+                    disabled={isDeleting}
+                    className="absolute top-2 right-2 z-10 bg-destructive/90 text-white p-2 rounded-full shadow-lg opacity-0 group-hover/card:opacity-100 transition-opacity hover:bg-destructive"
+                    title="Admin Delete"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            )}
+
             {/* 1. Header: Username */}
             <div className="mb-1">
                 {log.username && (

@@ -17,6 +17,7 @@ export interface UserProfile {
     user_id: string;
     username: string;
     username_last_changed_at: string | null;
+    is_admin: boolean;
     created_at: string;
 }
 

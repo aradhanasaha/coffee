@@ -31,14 +31,18 @@ export default function AuthenticatedHome() {
                 // Check if user has a profile
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('username')
+                    .select('username, is_admin')
                     .eq('user_id', session.user.id)
                     .single();
 
                 if (!profile) {
                     router.push('/set-username');
                 } else {
-                    setUser({ ...session.user, username: profile.username });
+                    setUser({
+                        ...session.user,
+                        username: profile.username,
+                        is_admin: profile.is_admin
+                    });
                 }
             }
             setLoading(false);
@@ -123,6 +127,11 @@ export default function AuthenticatedHome() {
                                 key={log.id}
                                 log={log}
                                 onUsernameClick={handleUsernameClick}
+                                isAdmin={user?.is_admin}
+                                onAdminDelete={() => {
+                                    // Refresh feed after delete
+                                    window.location.reload();
+                                }}
                             />
                         ))
                     )}
