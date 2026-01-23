@@ -14,7 +14,7 @@ interface UseAuthReturn {
     loading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     loginWithUsername: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    signup: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
+    signup: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string; session?: Session }>;
     logout: () => Promise<void>;
     refreshSession: () => Promise<void>;
     sendPasswordResetEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -77,7 +77,10 @@ export function useAuth(): UseAuthReturn {
 
         if (result.success && result.user) {
             setUser(result.user);
-            return { success: true };
+            if (result.session) {
+                setSession(result.session);
+            }
+            return { success: true, session: result.session };
         }
 
         return { success: false, error: result.error };
