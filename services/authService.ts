@@ -195,6 +195,15 @@ export async function signup(
                 email: authData.user.email || '',
                 created_at: authData.user.created_at || new Date().toISOString(),
             },
+            session: authData.session ? {
+                user: {
+                    id: authData.user.id,
+                    email: authData.user.email || '',
+                    created_at: authData.user.created_at || new Date().toISOString(),
+                },
+                access_token: authData.session.access_token,
+                expires_at: authData.session.expires_at,
+            } : undefined,
         };
     } catch (err: any) {
         return { success: false, error: err.message || 'Signup failed' };

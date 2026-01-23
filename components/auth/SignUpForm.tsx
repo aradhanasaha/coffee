@@ -18,6 +18,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     const [error, setError] = useState<string | null>(null);
     const { signup, loading: authLoading } = useAuth();
     const [submitting, setSubmitting] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     // Use useUserProfile for username validation (pass null for userId since we're signing up)
     const {
@@ -59,9 +60,17 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
             const result = await signup(email, password, username);
 
             if (result.success) {
-                // Call success callback (parent handles navigation)
-                if (onSuccess) {
-                    onSuccess();
+                // If we have a session, the user is logged in automatically
+                if (result.session) {
+                    if (onSuccess) {
+                        onSuccess();
+                    }
+                } else {
+                    // Otherwise, we need email confirmation
+                    setSuccess(true);
+                    setEmail('');
+                    setPassword('');
+                    setUsername('');
                 }
             } else {
                 setError(result.error || 'Signup failed');
@@ -74,6 +83,23 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     };
 
     const loading = submitting || authLoading;
+
+    if (success) {
+        return (
+            <FormContainer title="Check Your Email">
+                <div className="space-y-6">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 text-sm lowercase">
+                        account created successfully! please check your email to confirm your account. check your spam folder just in case.
+                    </div>
+                    <Link href="/login" className="block w-full">
+                        <Button size="lg" className="w-full">
+                            go to login
+                        </Button>
+                    </Link>
+                </div>
+            </FormContainer>
+        );
+    }
 
     return (
         <FormContainer title="Join the Club">
