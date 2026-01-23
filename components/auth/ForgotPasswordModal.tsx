@@ -74,7 +74,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                 {success ? (
                     <div className="space-y-4">
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 text-sm lowercase">
-                            check your email for a password reset link. it may take a few minutes to arrive.
+                            check your email for a password reset link. it may take a few minutes to arrive. please check your spam folder.
                         </div>
                         <Button
                             type="button"
