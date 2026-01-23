@@ -243,19 +243,20 @@ export async function fetchPublicCoffeeFeed(options?: {
             }));
         }
 
-        // Sort logs: followed users first, then non-followed, both groups by newest first
-        if (followedUserIds.size > 0) {
+        // Sort logs: Weighted Chronological
+        // Concept: Give "Following" and "Self" posts a time boost so they compete better against new stranger posts.
+        // This solves "Following 2h ago > Stranger 1h ago" while preventing "Self post 1 year ago > Stranger now".
+        if (options?.currentUserId) {
+            const BOOST_MS = 12 * 60 * 60 * 1000; // 12 Hours Boost
+
             enrichedLogs.sort((a, b) => {
-                const aIsFollowed = followedUserIds.has(a.user_id);
-                const bIsFollowed = followedUserIds.has(b.user_id);
+                const getTimeScore = (log: CoffeeLogWithUsername) => {
+                    const timestamp = new Date(log.created_at).getTime();
+                    const isRelevant = log.user_id === options.currentUserId || followedUserIds.has(log.user_id);
+                    return timestamp + (isRelevant ? BOOST_MS : 0);
+                };
 
-                // If follow status differs, prioritize followed
-                if (aIsFollowed !== bIsFollowed) {
-                    return aIsFollowed ? -1 : 1;
-                }
-
-                // Within same follow status, sort by newest first
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                return getTimeScore(b) - getTimeScore(a);
             });
         }
 
@@ -299,7 +300,7 @@ export async function fetchTopLocations(limit: number = 5): Promise<TopLocation[
 
         data.forEach((log: any) => {
             const placeName = log.place.toLowerCase().trim();
-            if (!placeName) return;
+            if (!placeName || placeName === 'home') return;
 
             if (!placeCounts[placeName]) {
                 placeCounts[placeName] = {
