@@ -243,3 +243,20 @@ export interface ListWithItems extends List {
     item_count?: number;
 }
 
+
+// ============================================================================
+// Notification System Types
+// ============================================================================
+
+export type NotificationType = 'follow' | 'post' | 'save_list';
+
+export interface Notification {
+    id: string;
+    recipient_id: string;
+    sender_id: string;
+    type: NotificationType;
+    entity_id: string | null;
+    read: boolean;
+    created_at: string;
+    sender?: { username: string }; // Hydrated sender info
+}

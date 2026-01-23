@@ -4,8 +4,10 @@ import type {
     ListItem,
     ListFormData,
     ServiceResult,
-    ListWithItems
+    ListWithItems,
+    CoffeeLog
 } from '@/core/types/types';
+import { createNotification } from './notificationService';
 
 /**
  * Create a new list
@@ -121,6 +123,27 @@ export async function addListItem(
             .single();
 
         if (error) throw error;
+        if (error) throw error;
+
+        // Fetch coffee log details to get owner and trigger notification
+        const { data: logData } = await supabase
+            .from('coffee_logs')
+            .select('user_id')
+            .eq('id', coffeeLogId)
+            .single();
+
+        // Fetch list owner (who is performing the action usually)
+        const { data: listOwner } = await supabase
+            .from('lists')
+            .select('owner_id')
+            .eq('id', listId)
+            .single();
+
+        if (logData && listOwner && logData.user_id !== listOwner.owner_id) {
+            // Create notification: Recipient=LogOwner, Sender=ListOwner(Saver)
+            await createNotification(logData.user_id, listOwner.owner_id, 'save_list', coffeeLogId);
+        }
+
         return { success: true, data };
     } catch (err: any) {
         // Check for duplicate error code if needed, but UI should prevent it
