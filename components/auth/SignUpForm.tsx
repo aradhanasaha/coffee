@@ -48,6 +48,18 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
             return;
         }
 
+        // Content Moderation
+        try {
+            const { validateText } = await import('@/lib/moderation');
+            const checkUsername = validateText(username);
+            if (!checkUsername.isSafe) {
+                setError(checkUsername.error || 'Username is inappropriate');
+                return;
+            }
+        } catch (err) {
+            console.error('Moderation check failed', err);
+        }
+
         // Check username is available
         if (usernameAvailable === false) {
             setError('Username is already taken');

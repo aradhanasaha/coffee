@@ -139,6 +139,27 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
         setSubmitting(true);
         setError(null);
 
+        // Content Moderation
+        try {
+            const { validateText } = await import('@/lib/moderation');
+
+            const checkName = validateText(formData.coffee_name);
+            if (!checkName.isSafe) { throw new Error(checkName.error); }
+
+            const checkReview = validateText(formData.review);
+            if (!checkReview.isSafe) { throw new Error(checkReview.error); }
+
+            // Check custom tags (only if any are custom, but checking all is fine)
+            for (const tag of selectedTags) {
+                const checkTag = validateText(tag);
+                if (!checkTag.isSafe) { throw new Error(`Tag "${tag}" contains inappropriate language.`); }
+            }
+        } catch (err: any) {
+            setError(err.message || 'Validation failed');
+            setSubmitting(false);
+            return;
+        }
+
         try {
             if (!user) {
                 throw new Error('Not authenticated');

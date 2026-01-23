@@ -26,6 +26,21 @@ export default function CreateListForm({ onSubmit, onCancel }: CreateListFormPro
         setSubmitting(true);
         setError(null);
 
+        // Content Moderation
+        try {
+            const { validateText } = await import('@/lib/moderation');
+
+            const checkTitle = validateText(title);
+            if (!checkTitle.isSafe) { throw new Error(checkTitle.error); }
+
+            const checkDesc = validateText(description);
+            if (!checkDesc.isSafe) { throw new Error(checkDesc.error); }
+        } catch (err: any) {
+            setError(err.message || 'Validation failed');
+            setSubmitting(false);
+            return;
+        }
+
         try {
             await onSubmit({
                 title: title.trim(),

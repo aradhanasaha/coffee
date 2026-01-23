@@ -137,6 +137,26 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
         setSubmitting(true);
         setError(null);
 
+        // Content Moderation
+        try {
+            const { validateText } = await import('@/lib/moderation');
+
+            const checkName = validateText(formData.coffee_name);
+            if (!checkName.isSafe) { throw new Error(checkName.error); }
+
+            const checkReview = validateText(formData.review);
+            if (!checkReview.isSafe) { throw new Error(checkReview.error); }
+
+            for (const tag of selectedTags) {
+                const checkTag = validateText(tag);
+                if (!checkTag.isSafe) { throw new Error(`Tag "${tag}" contains inappropriate language.`); }
+            }
+        } catch (err: any) {
+            setError(err.message || 'Validation failed');
+            setSubmitting(false);
+            return;
+        }
+
         if (!photoUrl && false) { // Kept 'false' to minimize diff, or just remove block. Removing block is better.
             // removed validation
         }

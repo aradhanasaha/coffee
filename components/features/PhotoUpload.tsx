@@ -36,6 +36,22 @@ export default function PhotoUpload({ userId, onPhotoUrlChange, required = true 
         setUploading(true);
         setError(null);
 
+        // Content Moderation
+        try {
+            // dynamic import to avoid server-side issues if any, though this is a client component
+            const { validateImage } = await import('@/lib/moderation');
+            const validation = await validateImage(file);
+
+            if (!validation.isSafe) {
+                setError(validation.error || 'Image contains inappropriate content');
+                setUploading(false);
+                return;
+            }
+        } catch (err) {
+            console.error('Moderation check failed', err);
+            // Fail open or closed? proceeding for now to not block safe users on tech errors
+        }
+
         // Upload image
         const { url, error: uploadError } = await uploadCoffeePhoto(userId, file);
 
