@@ -21,7 +21,6 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     const { user } = useAuth();
     const router = useRouter(); // Hook for navigation
     const { profile, stats, recentLogs, loading, error, refreshStats } = usePublicProfile(username);
-    const [selectedCity, setSelectedCity] = useState("Delhi");
     const [activeTab, setActiveTab] = useState<'history' | 'lists'>('history');
     const [myLists, setMyLists] = useState<ListWithItems[]>([]);
     const [listsLoading, setListsLoading] = useState(false);
@@ -75,7 +74,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     if (loading) {
         return (
             <div className="min-h-screen bg-cream flex flex-col">
-                <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
+                <Header user={user} hideCitySelector />
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-primary font-bold">Loading profile...</div>
                 </div>
@@ -86,7 +85,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     if (error || !profile || !stats) {
         return (
             <div className="min-h-screen bg-background flex flex-col">
-                <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
+                <Header user={user} hideCitySelector />
                 <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
                         <h1 className="text-2xl font-bold text-primary mb-2">User Not Found</h1>
@@ -101,7 +100,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
 
     return (
         <div className="min-h-screen bg-cream flex flex-col">
-            <Header selectedCity={selectedCity} onSelectCity={setSelectedCity} user={user} />
+            <Header user={user} hideCitySelector />
 
             <div className="container mx-auto max-w-4xl px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-8">
                 {/* Profile Card */}
