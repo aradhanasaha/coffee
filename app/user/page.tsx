@@ -113,21 +113,27 @@ export default function UserDashboard() {
     const canChangeUsername = () => {
         if (!user?.username_last_changed_at) return true;
         const lastChanged = new Date(user.username_last_changed_at);
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        return lastChanged < thirtyDaysAgo;
+        const fifteenDaysAgo = new Date();
+        fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+        return lastChanged < fifteenDaysAgo;
     };
 
     const getDaysUntilNextChange = () => {
         if (!user?.username_last_changed_at) return 0;
         const lastChanged = new Date(user.username_last_changed_at);
         const nextAvailable = new Date(lastChanged);
-        nextAvailable.setDate(nextAvailable.getDate() + 30);
+        nextAvailable.setDate(nextAvailable.getDate() + 15);
         const diff = nextAvailable.getTime() - new Date().getTime();
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     };
 
     const handleUpdateUsername = async () => {
+        if (!canChangeUsername()) {
+            const daysWait = getDaysUntilNextChange();
+            setUsernameError(`You can change your username again in ${daysWait} days`);
+            return;
+        }
+
         const validation = validateUsername(newUsername);
         if (!validation.isValid) {
             setUsernameError(validation.error || "Invalid username");
@@ -279,9 +285,14 @@ export default function UserDashboard() {
                     editUsername={newUsername}
                     onEditUsernameChange={setNewUsername}
                     onStartEdit={() => {
-                        setNewUsername(user.username);
-                        setIsEditingUsername(true);
-                        setUsernameError(null);
+                        if (canChangeUsername()) {
+                            setNewUsername(user.username);
+                            setIsEditingUsername(true);
+                            setUsernameError(null);
+                        } else {
+                            const daysWait = getDaysUntilNextChange();
+                            alert(`You can change your username again in ${daysWait} days`);
+                        }
                     }}
                     onCancelEdit={() => {
                         setIsEditingUsername(false);
