@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { validateUsernameLoginCredentials } from '@/core/domain/authDomain';
+import { validateLoginCredentials } from '@/core/domain/authDomain';
 import Link from 'next/link';
 import { FormContainer, Button, Input, ErrorMessage } from '@/components/common';
 import ForgotPasswordModal from './ForgotPasswordModal';
@@ -12,12 +12,12 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [keepSignedIn, setKeepSignedIn] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
-    const { loginWithUsername, loading: authLoading } = useAuth();
+    const { login, loading: authLoading } = useAuth();
     const [submitting, setSubmitting] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -25,7 +25,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         setError(null);
 
         // Client-side validation using domain logic
-        const validation = validateUsernameLoginCredentials(username, password);
+        const validation = validateLoginCredentials(email, password);
         if (!validation.isValid) {
             setError(validation.error || 'Invalid credentials');
             return;
@@ -34,7 +34,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         setSubmitting(true);
 
         try {
-            const result = await loginWithUsername(username, password);
+            const result = await login(email, password);
 
             if (result.success) {
                 // Call success callback (parent handles navigation)
@@ -58,13 +58,13 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             <FormContainer title="Welcome Back">
                 <form onSubmit={handleLogin} className="space-y-4">
                     <Input
-                        id="username"
-                        type="text"
-                        label="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        id="email"
+                        type="email"
+                        label="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
-                        placeholder="your_username"
+                        placeholder="your@email.com"
                         className="bg-secondary"
                     />
 
