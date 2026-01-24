@@ -11,20 +11,7 @@ import LogCoffeeForm from "@/components/features/LogCoffeeForm";
 import UserProfileCard from "@/components/features/UserProfileCard";
 import * as listService from '@/services/listService';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
-import type { ListWithItems } from '@/core/types/types';
-
-interface CoffeeLog {
-    id: string;
-    created_at: string;
-    coffee_name: string;
-    place: string;
-    rating: number;
-    price: number | null;
-    review: string | null;
-    flavor_notes: string | null;
-    price_feel: 'steal' | 'fair' | 'expensive' | '';
-    location_id: string | null;
-}
+import type { ListWithItems, CoffeeLog } from '@/core/types/types';
 
 export default function UserDashboard() {
     const [user, setUser] = useState<any>(null);
