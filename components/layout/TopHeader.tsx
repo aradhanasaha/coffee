@@ -36,18 +36,20 @@ export default function TopHeader({ onShareClick }: TopHeaderProps) {
                     {/* Share with friends */}
                     <button
                         onClick={onShareClick}
+                        className="text-journal-text hover:opacity-70 transition-opacity text-sm font-medium whitespace-nowrap hidden sm:block"
+                    >
                         share with friends
                     </button>
 
-                {/* Notification - Mobile/Desktop */}
-                <Link
-                    href="/notifications"
-                    className="p-2 text-journal-text hover:bg-journal-text/5 rounded-full"
-                >
-                    <Bell className="w-5 h-5" />
-                </Link>
-            </div>
-        </header >
+                    {/* Notification - Mobile/Desktop */}
+                    <Link
+                        href="/notifications"
+                        className="p-2 text-journal-text hover:bg-journal-text/5 rounded-full"
+                    >
+                        <Bell className="w-5 h-5" />
+                    </Link>
+                </div>
+            </header >
 
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
         </>
