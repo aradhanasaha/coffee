@@ -110,13 +110,34 @@ export class GoogleMapsAdapter implements LocationSearchAdapter {
                 {
                     placeId,
                     sessionToken: this.sessionToken || undefined,
-                    fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+                    fields: ['name', 'formatted_address', 'geometry', 'place_id', 'address_components'],
                 },
                 (place, status) => {
                     if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                        // Extract city
+                        let city = '';
+                        if (place.address_components) {
+                            for (const component of place.address_components) {
+                                if (component.types.includes('locality')) {
+                                    city = component.long_name;
+                                    break;
+                                }
+                                if (component.types.includes('postal_town') && !city) {
+                                    city = component.long_name;
+                                }
+                                if (component.types.includes('administrative_area_level_2') && !city) {
+                                    city = component.long_name;
+                                }
+                                if (component.types.includes('sublocality_level_1') && !city) { // Fallback for some areas
+                                    city = component.long_name;
+                                }
+                            }
+                        }
+
                         resolve({
                             place_name: place.name || '',
                             place_address: place.formatted_address || '',
+                            city: city || undefined,
                             lat: place.geometry?.location?.lat() || 0,
                             lng: place.geometry?.location?.lng() || 0,
                             google_place_id: place.place_id || '',

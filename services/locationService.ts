@@ -31,6 +31,19 @@ export async function findOrCreateLocation(
         }
 
         if (existingLoc) {
+            // If existing location doesn't have a city but we have one now, update it
+            if (!existingLoc.city && locationDetails.city) {
+                const { data: updatedLoc, error: updateError } = await supabase
+                    .from('locations')
+                    .update({ city: locationDetails.city })
+                    .eq('id', existingLoc.id)
+                    .select()
+                    .single();
+
+                if (!updateError && updatedLoc) {
+                    return { success: true, data: updatedLoc };
+                }
+            }
             return { success: true, data: existingLoc };
         }
 
@@ -40,6 +53,7 @@ export async function findOrCreateLocation(
             .insert({
                 place_name: locationDetails.place_name,
                 place_address: locationDetails.place_address,
+                city: locationDetails.city || null,
                 lat: locationDetails.lat,
                 lng: locationDetails.lng,
                 google_place_id: locationDetails.google_place_id,

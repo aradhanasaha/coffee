@@ -56,7 +56,10 @@ export default function UserDashboard() {
 
             const { data: logsData, error } = await supabase
                 .from('coffee_logs')
-                .select('*')
+                .select(`
+                    *,
+                    locations:location_id (city)
+                `)
                 .eq('user_id', session.user.id)
                 .is('deleted_at', null)
                 .order('created_at', { ascending: false });
@@ -371,7 +374,7 @@ export default function UserDashboard() {
                                                             <h3 className="font-bold text-lg">{log.coffee_name}</h3>
                                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                                 <MapPin className="w-3 h-3" />
-                                                                <span>{log.place} • Delhi</span>
+                                                                <span>{log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex flex-wrap items-center gap-4">
