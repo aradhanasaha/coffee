@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search, Bell } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import SearchModal from '@/components/features/SearchModal';
 
 interface TopHeaderProps {
@@ -35,12 +36,18 @@ export default function TopHeader({ onShareClick }: TopHeaderProps) {
                     {/* Share with friends */}
                     <button
                         onClick={onShareClick}
-                        className="text-journal-text hover:opacity-70 transition-opacity text-sm font-medium whitespace-nowrap hidden sm:block"
-                    >
                         share with friends
                     </button>
-                </div>
-            </header>
+
+                {/* Notification - Mobile/Desktop */}
+                <Link
+                    href="/notifications"
+                    className="p-2 text-journal-text hover:bg-journal-text/5 rounded-full"
+                >
+                    <Bell className="w-5 h-5" />
+                </Link>
+            </div>
+        </header >
 
             <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
         </>
