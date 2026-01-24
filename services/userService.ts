@@ -23,6 +23,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
             user_id: data.user_id,
             username: data.username,
             username_last_changed_at: data.username_last_changed_at,
+            is_admin: data.is_admin || false,
             created_at: data.created_at,
         };
     } catch (err) {
@@ -92,6 +93,7 @@ export async function updateUsername(
                 user_id: data.user_id,
                 username: data.username,
                 username_last_changed_at: data.username_last_changed_at,
+                is_admin: data.is_admin || false,
                 created_at: data.created_at,
             },
         };
@@ -116,6 +118,7 @@ export async function getUserProfiles(userIds: string[]): Promise<UserProfile[]>
             user_id: profile.user_id,
             username: profile.username,
             username_last_changed_at: profile.username_last_changed_at,
+            is_admin: profile.is_admin || false,
             created_at: profile.created_at,
         }));
     } catch (err) {
