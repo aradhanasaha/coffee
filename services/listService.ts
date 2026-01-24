@@ -362,3 +362,59 @@ export async function deleteList(listId: string): Promise<ServiceResult<void>> {
         return { success: false, error: err.message };
     }
 }
+
+/**
+ * Check which lists contain a specific coffee log
+ */
+export async function checkLogSavedBatch(
+    listIds: string[],
+    coffeeLogId: string
+): Promise<ServiceResult<string[]>> {
+    try {
+        const { data, error } = await supabase
+            .from('list_items')
+            .select('list_id')
+            .in('list_id', listIds)
+            .eq('coffee_log_id', coffeeLogId);
+
+        if (error) throw error;
+
+        const containingListIds = (data || []).map(item => item.list_id);
+        return { success: true, data: containingListIds };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Remove a log from all lists owned by the user
+ */
+export async function removeFromAllLists(
+    userId: string,
+    coffeeLogId: string
+): Promise<ServiceResult<void>> {
+    try {
+        // First get all lists owned by user that contain this log
+        const { data: userLists, error: fetchError } = await supabase
+            .from('lists')
+            .select('id')
+            .eq('owner_id', userId);
+
+        if (fetchError) throw fetchError;
+
+        const listIds = userLists.map(l => l.id);
+
+        if (listIds.length === 0) return { success: true };
+
+        const { error } = await supabase
+            .from('list_items')
+            .delete()
+            .in('list_id', listIds)
+            .eq('coffee_log_id', coffeeLogId);
+
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}

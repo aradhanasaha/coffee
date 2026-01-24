@@ -28,36 +28,60 @@ export default function SaveToListModal({
     addToList,
     removeFromList
 }: SaveToListModalProps) {
-    const { user } = useAuth();
+    const [containingListIds, setContainingListIds] = useState<string[]>([]);
+    const [checkingStatus, setCheckingStatus] = useState(false);
     const [view, setView] = useState<'list' | 'create'>('list');
 
+    // Import checking function at top of file, or pass as prop. 
+    // Since we can't change props easily without changing parent, we'll try to use the passed lists logic 
+    // BUT we found lists don't have items.
+    // So we need to fetch membership.
+
+    // Actually, createList/add/remove are passed as props. Maybe we should import the service directly here for the check?
+    // Or simpler: The modal is a "dumb" component mostly?
+    // Let's import the service.
+
+    // Wait, let's look at imports.
+
     useEffect(() => {
-        if (isOpen) {
-            setView('list');
+        if (isOpen && lists.length > 0) {
+            checkMembership();
         }
-    }, [isOpen]);
+    }, [isOpen, lists, coffeeLogId]);
+
+    const checkMembership = async () => {
+        setCheckingStatus(true);
+        // We'll dynamic import or assume it's available via props if we could change parent... 
+        // ideally we should have added `checkLogSavedBatch` to props.
+        // But for now, let's import the service function directly as it's a client component.
+        const { checkLogSavedBatch } = await import('@/services/listService');
+        const listIds = lists.map(l => l.id);
+        const result = await checkLogSavedBatch(listIds, coffeeLogId);
+        if (result.success && result.data) {
+            setContainingListIds(result.data);
+        }
+        setCheckingStatus(false);
+    };
 
     const handleCreateSubmit = async (data: ListFormData) => {
         const result = await createList(data);
         if (result.success && result.data) {
             // Auto add the log to the new list
             await addToList(result.data.id, coffeeLogId);
+            setContainingListIds(prev => [...prev, result.data!.id]);
             setView('list');
-            // Show toast/feedback?
         }
     };
 
     const handleToggleList = async (listId: string, isPresent: boolean) => {
+        // Optimistic update
         if (isPresent) {
+            setContainingListIds(prev => prev.filter(id => id !== listId));
             await removeFromList(listId, coffeeLogId);
         } else {
+            setContainingListIds(prev => [...prev, listId]);
             await addToList(listId, coffeeLogId);
         }
-    };
-
-    const isLogInList = (listId: string) => {
-        const list = lists.find(l => l.id === listId);
-        return list?.items.some(item => item.coffee_log_id === coffeeLogId);
     };
 
     return (
@@ -91,7 +115,7 @@ export default function SaveToListModal({
                                     </button>
                                 ) : (
                                     lists.map(list => {
-                                        const isPresent = isLogInList(list.id);
+                                        const isPresent = containingListIds.includes(list.id);
                                         return (
                                             <button
                                                 key={list.id}
@@ -104,7 +128,7 @@ export default function SaveToListModal({
                                                     </div>
                                                     <div className="text-left">
                                                         <p className="font-semibold text-sm text-foreground">{list.title}</p>
-                                                        <p className="text-xs text-muted-foreground">{list.items.length} items</p>
+                                                        <p className="text-xs text-muted-foreground">{list.item_count} items</p>
                                                     </div>
                                                 </div>
                                             </button>
