@@ -18,7 +18,7 @@ export default function DiscoveryPanel({ onCafeClick, onListClick }: DiscoveryPa
     useEffect(() => {
         const fetchData = async () => {
             // Fetch lists
-            const listResult = await listService.fetchPublicLists();
+            const listResult = await listService.fetchPublicLists({ limit: 10, sortBy: 'newest' });
             if (listResult.success && listResult.data) {
                 setExploreLists(listResult.data);
             }

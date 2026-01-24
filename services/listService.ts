@@ -70,19 +70,41 @@ export async function fetchUserLists(userId: string): Promise<ServiceResult<List
 /**
  * Fetch public lists for discovery
  */
-export async function fetchPublicLists(): Promise<ServiceResult<ListWithItems[]>> {
+/**
+ * Fetch public lists for discovery
+ */
+export async function fetchPublicLists(options?: {
+    limit?: number;
+    sortBy?: 'newest' | 'popular';
+}): Promise<ServiceResult<ListWithItems[]>> {
     try {
-        const { data, error } = await supabase
+        let query = supabase
             .from('lists')
             .select(`
                 *,
                 owner:profiles!lists_owner_id_fkey(username),
-                items:list_items(count)
+                items:list_items(count),
+                saves:list_saves(count)
             `)
             .eq('visibility', 'public')
-            .is('deleted_at', null)
-            .order('created_at', { ascending: false })
-            .limit(10);
+            .is('deleted_at', null);
+
+        // Sorting logic
+        if (options?.sortBy === 'popular') {
+            // For popular, we fetch more items to sort in memory since we can't easily sort by related count in standard Supabase query
+            // Fetch up to 50 to get a good candidate pool
+            query = query.order('created_at', { ascending: false }).limit(50);
+        } else {
+            // Default: Newest
+            query = query.order('created_at', { ascending: false });
+            if (options?.limit) {
+                query = query.limit(options.limit);
+            } else {
+                query = query.limit(10);
+            }
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -90,14 +112,37 @@ export async function fetchPublicLists(): Promise<ServiceResult<ListWithItems[]>
         interface PublicListResponse extends List {
             owner: { username: string };
             items: { count: number }[];
+            saves: { count: number }[];
         }
 
-        const lists = (data as unknown as PublicListResponse[]).map((list) => ({
+        let lists = (data as unknown as PublicListResponse[]).map((list) => ({
             ...list,
             items: [], // Structure requires items array, but we only fetched count
             item_count: list.items[0]?.count || 0,
+            save_count: list.saves?.[0]?.count || 0,
             owner: list.owner
         }));
+
+        // In-memory sort for popularity
+        if (options?.sortBy === 'popular') {
+            lists.sort((a, b) => {
+                // Secondary sort by item count, then date
+                if (b.save_count !== a.save_count) {
+                    return (b.save_count || 0) - (a.save_count || 0);
+                }
+                if (b.item_count !== a.item_count) {
+                    return (b.item_count || 0) - (a.item_count || 0);
+                }
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+
+            // Apply limit after sorting
+            if (options?.limit) {
+                lists = lists.slice(0, options.limit);
+            } else {
+                lists = lists.slice(0, 10);
+            }
+        }
 
         return { success: true, data: lists };
     } catch (err: any) {

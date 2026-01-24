@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X, Lock, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import * as listService from '@/services/listService';
 import JournalLayout from '@/components/layout/JournalLayout';
@@ -138,18 +138,17 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
                 {/* Header Section */}
                 <div className="text-center mb-12 space-y-4 relative">
-                    {/* Action Buttons - Absolute positioned on desktop */}
-                    {isOwner && (
-                        <button
-                            onClick={handleDeleteList}
-                            className="absolute left-0 top-1 p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                            title="Delete List"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
-                    )}
-
                     <div className="flex justify-center md:absolute md:right-0 md:top-0 gap-2 mb-4 md:mb-0">
+                        {/* Share Button */}
+                        <button
+                            onClick={handleShare}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-journal-text text-journal-text hover:bg-journal-text/5 transition-all"
+                            title="Share List"
+                        >
+                            <Share2 className="w-4 h-4" />
+                        </button>
+
+                        {/* Save Button (non-owners) */}
                         {!isOwner && (
                             <button
                                 onClick={handleSaveList}
@@ -163,43 +162,81 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                             </button>
                         )}
 
-                        <button
-                            onClick={handleShare}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-journal-text text-journal-text hover:bg-journal-text/5 transition-all"
-                        >
-                            <Share2 className="w-4 h-4" />
-                            Share
-                        </button>
+                        {/* Visibility Toggle (owners) */}
+                        {isOwner && (
+                            <button
+                                onClick={async () => {
+                                    if (!list) return;
+                                    const newVisibility = list.visibility === 'public' ? 'private' : 'public';
+                                    const result = await listService.updateList(list.id, { visibility: newVisibility });
+                                    if (result.success) {
+                                        setList({ ...list, visibility: newVisibility });
+                                    }
+                                }}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${list.visibility === 'public'
+                                    ? 'border-green-200 text-green-700 hover:bg-green-50'
+                                    : 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                                    }`}
+                                title={`Make ${list.visibility === 'public' ? 'Private' : 'Public'}`}
+                            >
+                                {list.visibility === 'public' ? (
+                                    <>
+                                        <Globe className="w-4 h-4" />
+                                        Public
+                                    </>
+                                ) : (
+                                    <>
+                                        <Lock className="w-4 h-4" />
+                                        Private
+                                    </>
+                                )}
+                            </button>
+                        )}
+
+                        {/* Delete Button (owners) */}
+                        {isOwner && (
+                            <button
+                                onClick={handleDeleteList}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-all"
+                                title="Delete List"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex items-center justify-center gap-3">
                         {isEditing ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-center gap-2 w-full max-w-md">
                                 <input
                                     type="text"
                                     value={editTitle}
                                     onChange={(e) => setEditTitle(e.target.value)}
-                                    className="text-3xl md:text-4xl font-bold text-journal-text text-center bg-transparent border-b-2 border-primary focus:outline-none w-full max-w-md"
+                                    className="text-3xl md:text-4xl font-bold text-journal-text text-center bg-transparent border-b-2 border-primary focus:outline-none w-full"
                                     autoFocus
                                     onBlur={handleUpdateTitle}
                                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
                                 />
-                                <button
-                                    onClick={handleUpdateTitle}
-                                    className="p-1 text-green-600 hover:bg-green-100 rounded-full"
-                                    disabled={updating}
-                                >
-                                    <Check className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setEditTitle(list.title);
-                                        setIsEditing(false);
-                                    }}
-                                    className="p-1 text-red-500 hover:bg-red-100 rounded-full"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
+                                <div className="flex justify-center gap-2">
+                                    <button
+                                        onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                        onClick={handleUpdateTitle}
+                                        className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors"
+                                        disabled={updating}
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                        onClick={() => {
+                                            setEditTitle(list.title);
+                                            setIsEditing(false);
+                                        }}
+                                        className="p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 group relative">
