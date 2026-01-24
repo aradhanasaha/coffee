@@ -84,7 +84,12 @@ export async function getUserRecentLogs(
     try {
         const { data, error } = await supabase
             .from('coffee_logs')
-            .select('*')
+            .select(`
+                *,
+                locations:location_id (
+                    city
+                )
+            `)
             .eq('user_id', userId)
             .is('deleted_at', null)
             .order('created_at', { ascending: false })

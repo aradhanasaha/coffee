@@ -57,6 +57,7 @@ export interface CoffeeLog {
     deleted_by?: string | null;
     deletion_reason?: string | null;
     image_deleted_at?: string | null;
+    locations?: { city?: string | null }; // Joined data
 }
 
 export interface CoffeeLogWithUsername extends CoffeeLog {
@@ -86,6 +87,7 @@ export interface Location {
     id: string;
     place_name: string;
     place_address: string;
+    city?: string;
     lat: number;
     lng: number;
     google_place_id: string;
@@ -95,6 +97,7 @@ export interface Location {
 export interface LocationDetails {
     place_name: string;
     place_address: string;
+    city?: string;
     lat: number;
     lng: number;
     google_place_id: string;

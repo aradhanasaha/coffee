@@ -3,14 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 
+import type { LocationDetails } from '@/core/types/types';
+
 interface LocationAutocompleteProps {
-    onLocationSelect: (data: {
-        place_name: string;
-        place_address: string;
-        lat: number;
-        lng: number;
-        google_place_id: string;
-    }) => void;
+    onLocationSelect: (data: LocationDetails) => void;
     defaultValue?: string;
     onChange?: (value: string) => void;
     className?: string;

@@ -161,7 +161,9 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                                             <div className="flex justify-between items-start">
                                                 <div>
                                                     <h3 className="font-bold text-lg">{log.coffee_name}</h3>
-                                                    <p className="text-sm text-muted-foreground">{log.place}</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}
+                                                    </p>
                                                 </div>
                                                 <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
                                                     <span className="font-bold text-primary">{log.rating}</span>
