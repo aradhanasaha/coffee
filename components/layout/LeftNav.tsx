@@ -18,7 +18,7 @@ export default function LeftNav({ onLogCoffeeClick }: LeftNavProps) {
 
     return (
         <>
-            <nav className="fixed left-0 top-0 h-screen w-56 bg-journal-bg flex flex-col p-6 lowercase z-50">
+            <nav className="fixed left-0 top-0 h-screen w-56 bg-journal-bg flex flex-col p-6 lowercase z-40">
 
 
                 {/* Centered Navigation Group */}
