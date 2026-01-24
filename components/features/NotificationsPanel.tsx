@@ -106,7 +106,7 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
     return (
         <div
             ref={panelRef}
-            className="absolute top-16 right-4 md:right-20 w-full md:w-80 bg-journal-card rounded-xl shadow-xl border border-journal-text/10 overflow-hidden z-40 animate-in fade-in slide-in-from-top-2"
+            className="absolute left-full top-0 ml-4 w-full md:w-80 bg-journal-card rounded-xl shadow-xl border border-journal-text/10 overflow-hidden z-40 animate-in fade-in slide-in-from-left-2 h-[calc(100vh-3rem)]"
         >
             <div className="p-3 border-b border-journal-text/5 flex justify-between items-center bg-cream/50">
                 <h3 className="font-bold text-sm text-journal-text">Notifications</h3>
