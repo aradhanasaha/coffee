@@ -124,6 +124,7 @@ export default function SaveToListButton({ coffeeLogId, iconClassName = "w-5 h-5
                     createList={createList}
                     addToList={addToList}
                     removeFromList={removeFromList}
+                    onStatusChange={(hasSaved) => setIsSaved(hasSaved)}
                 />
             )}
         </>
