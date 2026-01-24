@@ -424,7 +424,7 @@ export default function UserDashboard() {
                                                 title={list.title}
                                                 subtitle={`${list.item_count || 0} items`}
                                                 curatedBy={list.owner?.username}
-                                                onClick={() => router.push(`/lists/${list.id}`)}
+                                                onClick={() => router.push(`/lists/${list.id}?from=profile`)}
                                             />
                                         ))}
                                     </div>

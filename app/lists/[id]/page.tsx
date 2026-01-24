@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X, Lock, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import * as listService from '@/services/listService';
@@ -11,6 +11,8 @@ import type { ListWithItems } from '@/core/types/types';
 
 export default function ListDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const fromProfile = searchParams.get('from') === 'profile';
     const { user } = useAuth();
     const [list, setList] = useState<ListWithItems | null>(null);
     const [loading, setLoading] = useState(true);
@@ -127,13 +129,13 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     return (
         <JournalLayout>
             <div className="max-w-2xl mx-auto py-8">
-                {/* Back to Feed */}
+                {/* Back to Feed/Profile */}
                 <button
-                    onClick={() => router.push('/home')}
+                    onClick={() => fromProfile ? router.push('/user') : router.push('/home')}
                     className="flex items-center gap-2 text-journal-text/60 hover:text-journal-text transition-colors mb-8 text-sm lowercase"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    back to feed
+                    {fromProfile ? 'back to profile' : 'back to feed'}
                 </button>
 
                 {/* Header Section */}
@@ -162,36 +164,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                             </button>
                         )}
 
-                        {/* Visibility Toggle (owners) */}
-                        {isOwner && (
-                            <button
-                                onClick={async () => {
-                                    if (!list) return;
-                                    const newVisibility = list.visibility === 'public' ? 'private' : 'public';
-                                    const result = await listService.updateList(list.id, { visibility: newVisibility });
-                                    if (result.success) {
-                                        setList({ ...list, visibility: newVisibility });
-                                    }
-                                }}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${list.visibility === 'public'
-                                    ? 'border-green-200 text-green-700 hover:bg-green-50'
-                                    : 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                                    }`}
-                                title={`Make ${list.visibility === 'public' ? 'Private' : 'Public'}`}
-                            >
-                                {list.visibility === 'public' ? (
-                                    <>
-                                        <Globe className="w-4 h-4" />
-                                        Public
-                                    </>
-                                ) : (
-                                    <>
-                                        <Lock className="w-4 h-4" />
-                                        Private
-                                    </>
-                                )}
-                            </button>
-                        )}
+
 
                         {/* Delete Button (owners) */}
                         {isOwner && (
@@ -256,8 +229,39 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                         )}
                     </div>
 
-                    <div className="text-journal-text/60 font-medium">
-                        curated by: <span className="text-journal-text hover:underline cursor-pointer" onClick={() => list.owner?.username && router.push(`/user/${list.owner.username}`)}>@{list.owner?.username || 'unknown'}</span>
+                    <div className="relative flex items-center justify-center w-full">
+                        {isOwner && (
+                            <button
+                                onClick={async () => {
+                                    if (!list) return;
+                                    const newVisibility = list.visibility === 'public' ? 'private' : 'public';
+                                    const result = await listService.updateList(list.id, { visibility: newVisibility });
+                                    if (result.success) {
+                                        setList({ ...list, visibility: newVisibility });
+                                    }
+                                }}
+                                className={`absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${list.visibility === 'public'
+                                    ? 'border-green-200 text-green-700 hover:bg-green-50'
+                                    : 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                                    }`}
+                                title={`Make ${list.visibility === 'public' ? 'Private' : 'Public'}`}
+                            >
+                                {list.visibility === 'public' ? (
+                                    <>
+                                        <Globe className="w-3.5 h-3.5" />
+                                        Public
+                                    </>
+                                ) : (
+                                    <>
+                                        <Lock className="w-3.5 h-3.5" />
+                                        Private
+                                    </>
+                                )}
+                            </button>
+                        )}
+                        <div className="text-journal-text/60 font-medium">
+                            curated by: <span className="text-journal-text hover:underline cursor-pointer" onClick={() => list.owner?.username && router.push(`/user/${list.owner.username}`)}>@{list.owner?.username || 'unknown'}</span>
+                        </div>
                     </div>
 
                     {list.description && (
