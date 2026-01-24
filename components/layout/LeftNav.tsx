@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Coffee, Search } from 'lucide-react';
+import { Coffee, Search, Bell } from 'lucide-react';
 import SearchModal from '@/components/features/SearchModal';
+import NotificationsPanel from '@/components/features/NotificationsPanel';
 
 interface LeftNavProps {
     onLogCoffeeClick?: () => void;
@@ -13,10 +14,11 @@ interface LeftNavProps {
 export default function LeftNav({ onLogCoffeeClick }: LeftNavProps) {
     const router = useRouter();
     const [showSearch, setShowSearch] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     return (
         <>
-            <nav className="fixed left-0 top-0 h-screen w-56 bg-journal-bg flex flex-col p-6 lowercase">
+            <nav className="fixed left-0 top-0 h-screen w-56 bg-journal-bg flex flex-col p-6 lowercase z-40">
 
 
                 {/* Centered Navigation Group */}
@@ -43,6 +45,20 @@ export default function LeftNav({ onLogCoffeeClick }: LeftNavProps) {
                     >
                         + log your coffee
                     </button>
+
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowNotifications(!showNotifications)}
+                            className="flex items-center gap-3 text-journal-text text-sm font-medium hover:opacity-70 transition-opacity pl-1 w-full text-left"
+                        >
+                            <Bell className="w-5 h-5" />
+                            <span>notifications</span>
+                        </button>
+                        <NotificationsPanel
+                            isOpen={showNotifications}
+                            onClose={() => setShowNotifications(false)}
+                        />
+                    </div>
 
                     <div className="relative group">
                         <button
