@@ -16,6 +16,7 @@ interface SaveToListModalProps {
     createList: (data: ListFormData) => Promise<any>;
     addToList: (listId: string, logId: string) => Promise<any>;
     removeFromList: (listId: string, logId: string) => Promise<any>;
+    onStatusChange?: (hasSavedLists: boolean) => void;
 }
 
 export default function SaveToListModal({
@@ -26,7 +27,8 @@ export default function SaveToListModal({
     loading,
     createList,
     addToList,
-    removeFromList
+    removeFromList,
+    onStatusChange
 }: SaveToListModalProps) {
     const [containingListIds, setContainingListIds] = useState<string[]>([]);
     const [checkingStatus, setCheckingStatus] = useState(false);
@@ -68,20 +70,28 @@ export default function SaveToListModal({
         if (result.success && result.data) {
             // Auto add the log to the new list
             await addToList(result.data.id, coffeeLogId);
-            setContainingListIds(prev => [...prev, result.data!.id]);
+            const newIds = [...containingListIds, result.data!.id];
+            setContainingListIds(newIds);
+            onStatusChange?.(true); // Definitely saved now
             setView('list');
         }
     };
 
     const handleToggleList = async (listId: string, isPresent: boolean) => {
         // Optimistic update
+        let newContainingIds: string[] = [];
         if (isPresent) {
-            setContainingListIds(prev => prev.filter(id => id !== listId));
+            newContainingIds = containingListIds.filter(id => id !== listId);
+            setContainingListIds(newContainingIds);
             await removeFromList(listId, coffeeLogId);
         } else {
-            setContainingListIds(prev => [...prev, listId]);
+            newContainingIds = [...containingListIds, listId];
+            setContainingListIds(newContainingIds);
             await addToList(listId, coffeeLogId);
         }
+
+        // Notify parent if saved state changes (saved if count > 0)
+        onStatusChange?.(newContainingIds.length > 0);
     };
 
     return (
