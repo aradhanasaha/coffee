@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import StarRating from '../common/StarRating';
 import HeartButton from '../common/HeartButton';
 import UsernameLink from '../common/UsernameLink';
@@ -47,10 +48,15 @@ export default function ImagePostLayout({
 }: ImagePostLayoutProps) {
     // Truncate review logic
     const maxLength = 120; // Shorter for image posts (2-3 lines)
-    const shouldTruncate = log.review && log.review.length > maxLength;
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Safety check: log.review might be null/undefined but type says string | null
+    const reviewText = log.review || "";
+    const shouldTruncate = reviewText.length > maxLength && !isExpanded;
+
     const displayReview = shouldTruncate
-        ? log.review!.substring(0, maxLength) + '...'
-        : log.review;
+        ? reviewText.substring(0, maxLength) + '...'
+        : reviewText;
 
     return (
         <div className="flex flex-col relative group/card">
@@ -128,7 +134,12 @@ export default function ImagePostLayout({
                     <p className="text-journal-text text-sm leading-relaxed">
                         {displayReview.toLowerCase()}
                         {shouldTruncate && (
-                            <span className="opacity-60 ml-1 cursor-pointer hover:opacity-100">more</span>
+                            <span
+                                onClick={() => setIsExpanded(true)}
+                                className="opacity-60 ml-1 cursor-pointer hover:opacity-100 hover:underline"
+                            >
+                                more
+                            </span>
                         )}
                     </p>
                 </div>
