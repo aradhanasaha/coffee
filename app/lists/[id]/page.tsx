@@ -17,8 +17,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     const [list, setList] = useState<ListWithItems | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [saving, setSaving] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+
 
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -33,13 +32,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                 setList(result.data);
                 setEditTitle(result.data.title);
 
-                // Check if saved
-                if (user) {
-                    const savedResult = await listService.checkListSavedStatus(user.id, params.id);
-                    if (savedResult.success) {
-                        setIsSaved(!!savedResult.data);
-                    }
-                }
+
             } else {
                 setError(result.error || 'Failed to load list');
             }
@@ -48,25 +41,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
         fetchList();
     }, [params.id, user]);
 
-    const handleSaveList = async () => {
-        if (!user || !list) return;
-        setSaving(true);
 
-        if (isSaved) {
-            // Unsave
-            const result = await listService.unsaveList(user.id, list.id);
-            if (result.success) {
-                setIsSaved(false);
-            }
-        } else {
-            // Save
-            const result = await listService.saveList(user.id, list.id);
-            if (result.success) {
-                setIsSaved(true);
-            }
-        }
-        setSaving(false);
-    };
 
     const handleShare = () => {
         if (typeof navigator !== 'undefined' && navigator.share) {
@@ -167,20 +142,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                         >
                             <Share2 className="w-4 h-4" />
                         </button>
-
-                        {/* Save Button (non-owners) */}
-                        {!isOwner && (
-                            <button
-                                onClick={handleSaveList}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${isSaved
-                                    ? 'bg-journal-text text-journal-card border-journal-text'
-                                    : 'border-journal-text text-journal-text hover:bg-journal-text/5'
-                                    }`}
-                            >
-                                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                                {isSaved ? 'Saved' : 'Save this list'}
-                            </button>
-                        )}
 
 
 
