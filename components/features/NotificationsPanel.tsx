@@ -11,9 +11,10 @@ interface NotificationsPanelProps {
     isOpen: boolean;
     onClose: () => void;
     anchorRef?: React.RefObject<HTMLElement>;
+    mobile?: boolean;
 }
 
-export default function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
+export default function NotificationsPanel({ isOpen, onClose, mobile = false }: NotificationsPanelProps) {
     const router = useRouter();
     const { user } = useAuth();
     const panelRef = useRef<HTMLDivElement>(null);
@@ -140,10 +141,16 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
 
     if (!isOpen) return null;
 
+    const positionClasses = mobile
+        ? "fixed top-16 right-4 w-[90vw] md:w-80 h-[80vh]"
+        : "absolute left-full top-0 ml-4 w-full md:w-80 h-[calc(100vh-3rem)]";
+
+    const fadeClass = mobile ? "slide-in-from-top-2" : "slide-in-from-left-2";
+
     return (
         <div
             ref={panelRef}
-            className="absolute left-full top-0 ml-4 w-full md:w-80 bg-journal-card rounded-xl shadow-xl border border-journal-text/10 overflow-hidden z-40 animate-in fade-in slide-in-from-left-2 h-[calc(100vh-3rem)]"
+            className={`${positionClasses} bg-journal-card rounded-xl shadow-xl border border-journal-text/10 overflow-hidden z-50 animate-in fade-in ${fadeClass}`}
         >
             <div className="p-3 border-b border-journal-text/5 flex justify-between items-center bg-cream/50">
                 <h3 className="font-bold text-sm text-journal-text">Notifications</h3>
