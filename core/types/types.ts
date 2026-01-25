@@ -252,15 +252,19 @@ export interface ListWithItems extends List {
 // Notification System Types
 // ============================================================================
 
-export type NotificationType = 'follow' | 'post' | 'save_list';
+export type NotificationType = 'follow' | 'post' | 'save_list' | 'like';
 
 export interface Notification {
     id: string;
     recipient_id: string;
-    sender_id: string;
+    sender_id: string; // Deprecated, use trigger_actor_id
+    trigger_actor_id?: string;
     type: NotificationType;
     entity_id: string | null;
     read: boolean;
     created_at: string;
-    sender?: { username: string }; // Hydrated sender info
+    sender?: { username: string }; // Hydrated sender info (now uses trigger_actor_id)
+    actor_count?: number;
+    actor_names?: string[];
+    group_key?: string;
 }

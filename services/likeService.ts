@@ -69,6 +69,8 @@ export async function toggleLike(
                 return { success: false, error: insertError.message };
             }
 
+            // Notification Logic moved to Database Triggers
+
             return { success: true, data: true }; // true = liked
         }
     } catch (err: any) {

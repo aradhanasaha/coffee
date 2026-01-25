@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Heart, MessageCircle, UserPlus, Bookmark, Bell } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, Bookmark, Bell, Coffee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchNotifications, markAllAsRead, markAsRead } from '@/services/notificationService';
@@ -77,6 +77,8 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
             // Assuming post notification links to the post
             // Since we don't have a dedicated post page yet, going to user profile is safest
             router.push(`/user/${notification.sender?.username}`);
+        } else if (notification.type === 'like') {
+            router.push(`/user/${notification.sender?.username}`);
         } else if (notification.type === 'save_list') {
             // Navigate to the list? Or the user who saved it?
             // Let's go to the user for now
@@ -99,6 +101,41 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
         interval = seconds / 60;
         if (interval > 1) return Math.floor(interval) + "m ago";
         return Math.floor(seconds) + "s ago";
+    };
+
+    const getNotificationText = (notification: Notification) => {
+        const actors = notification.actor_names || [];
+        const count = notification.actor_count || 1;
+        const triggerUser = notification.sender?.username || 'Someone';
+
+        // Helper to format: "A, B and 2 others"
+        let actorText = '';
+        if (count === 1) {
+            actorText = `@${triggerUser}`;
+        } else if (count === 2) {
+            // If we have names, use them
+            const other = actors.find(a => a !== triggerUser) || 'someone';
+            actorText = `@${triggerUser} and @${other}`;
+        } else {
+            // count > 2
+            actorText = `@${triggerUser} and ${count - 1} others`;
+        }
+
+        // Bold the actor text
+        const actorSpan = <span className="font-bold">{actorText}</span>;
+
+        switch (notification.type) {
+            case 'follow':
+                return <>{actorSpan} started following you</>;
+            case 'post':
+                return <>{actorSpan} posted a new coffee log</>;
+            case 'like':
+                return <>{actorSpan} liked your coffee log</>;
+            case 'save_list':
+                return <>{actorSpan} saved your coffee log</>;
+            default:
+                return <>{actorSpan} interacted with you</>;
+        }
     };
 
     if (!isOpen) return null;
@@ -138,15 +175,13 @@ export default function NotificationsPanel({ isOpen, onClose }: NotificationsPan
                             >
                                 <div className="mt-1">
                                     {notification.type === 'follow' && <UserPlus className="w-4 h-4 text-blue-500" />}
-                                    {notification.type === 'post' && <Heart className="w-4 h-4 text-red-500" />} {/* Using Heart for post for now, maybe Coffee icon better? */}
+                                    {notification.type === 'post' && <Coffee className="w-4 h-4 text-amber-700" />}
+                                    {notification.type === 'like' && <Heart className="w-4 h-4 text-red-500 fill-red-500" />}
                                     {notification.type === 'save_list' && <Bookmark className="w-4 h-4 text-orange-500 fill-orange-500" />}
                                 </div>
                                 <div>
                                     <p className="text-sm text-journal-text">
-                                        <span className="font-bold">@{notification.sender?.username || 'user'}</span>
-                                        {notification.type === 'follow' && ' started following you'}
-                                        {notification.type === 'post' && ' posted a new coffee log'}
-                                        {notification.type === 'save_list' && ' saved your coffee log'}
+                                        {getNotificationText(notification)}
                                     </p>
                                     <p className="text-xs text-journal-text/40 mt-1">{getTimeAgo(notification.created_at)}</p>
                                 </div>
