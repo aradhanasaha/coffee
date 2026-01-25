@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/adapters/supabaseClient';
 import { getUnreadCount } from '@/services/notificationService';
 import { useAuth } from './useAuth';
-import { Notification } from '@/core/types/types';
 
 export function useUnreadNotifications() {
     const { user } = useAuth();
     const [unreadCount, setUnreadCount] = useState(0);
-    const [latestNotification, setLatestNotification] = useState<Notification | null>(null);
 
     useEffect(() => {
         if (!user) {
@@ -27,47 +25,16 @@ export function useUnreadNotifications() {
 
         // 2. Subscribe to realtime changes
         const channel = supabase
-            .channel(`notifications:${user.id}`) // Unique channel name
+            .channel(`notifications:${user.id}`)
             .on(
                 'postgres_changes',
                 {
-                    event: 'INSERT', // Listen for new notifications specifically for toasts
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `recipient_id=eq.${user.id}`
-                },
-                async (payload) => {
-                    fetchCount();
-
-                    // Hydrate sender username for the toast
-                    const newNotif = payload.new as any;
-                    let username = 'Someone';
-
-                    if (newNotif.trigger_actor_id) {
-                        const { data } = await supabase
-                            .from('profiles')
-                            .select('username')
-                            .eq('user_id', newNotif.trigger_actor_id)
-                            .single();
-                        if (data) username = data.username;
-                    }
-
-                    setLatestNotification({
-                        ...newNotif,
-                        sender: { username }
-                    });
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: '*', // Listen for other changes to update count
+                    event: '*', // Listen for INSERT, UPDATE, DELETE
                     schema: 'public',
                     table: 'notifications',
                     filter: `recipient_id=eq.${user.id}`
                 },
                 () => {
-                    // Just update count for other events (UPDATE, DELETE)
                     fetchCount();
                 }
             )
@@ -80,8 +47,6 @@ export function useUnreadNotifications() {
 
     return {
         unreadCount,
-        hasUnread: unreadCount > 0,
-        latestNotification,
-        clearLatestNotification: () => setLatestNotification(null)
+        hasUnread: unreadCount > 0
     };
 }

@@ -22,6 +22,7 @@ export const viewport: Viewport = {
     userScalable: true,
 };
 
+
 export default function RootLayout({
     children,
 }: Readonly<{
