@@ -62,11 +62,12 @@ export default function NotificationToast({ notification, onDismiss }: Notificat
 
     return (
         <div
-            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] md:w-auto md:min-w-[320px] transition-all duration-300 ease-in-out transform ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}`}
+            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[5000] w-[90%] md:w-auto md:min-w-[320px] transition-all duration-300 ease-in-out transform ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}`}
         >
             <div
                 onClick={handleClick}
-                className="bg-journal-card border border-journal-text/10 shadow-lg rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-journal-text/5 transition-colors"
+                className="bg-journal-card border border-journal-text/10 shadow-2xl rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-journal-text/5 transition-colors"
+                style={{ boxShadow: '0 10px 30px -10px rgba(0,0,0,0.2)' }}
             >
                 <div>
                     {getIcon()}

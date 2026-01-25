@@ -12,8 +12,10 @@ import UserProfileCard from "@/components/features/UserProfileCard";
 import * as listService from '@/services/listService';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
 import type { ListWithItems, CoffeeLog } from '@/core/types/types';
+import { useAuth } from "@/hooks/useAuth";
 
 export default function UserDashboard() {
+    const { logout } = useAuth();
     const [user, setUser] = useState<any>(null);
     const [logs, setLogs] = useState<CoffeeLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -216,9 +218,8 @@ export default function UserDashboard() {
     };
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        await logout();
         router.push('/login');
-        router.refresh();
     };
 
     if (loading) {
@@ -226,6 +227,8 @@ export default function UserDashboard() {
     }
 
     const totalEntries = logs.length;
+
+    // Safety check for empty logs before accessing index
     const firstEntryDate = logs.length > 0 ? new Date(logs[logs.length - 1].created_at).toLocaleDateString() : "—";
     const lastEntryDate = logs.length > 0 ? new Date(logs[0].created_at).toLocaleDateString() : "—";
 
