@@ -7,6 +7,7 @@ import Navbar from "@/components/landing/Navbar";
 import Headline from "@/components/landing/Headline";
 import HeroArt from "@/components/landing/HeroArt";
 import Slogan from "@/components/landing/Slogan";
+import InstallAppPrompt from "@/components/features/InstallAppPrompt";
 
 export default function Home() {
     const router = useRouter();
@@ -43,6 +44,9 @@ export default function Home() {
                 <Headline />
                 <HeroArt />
                 <Slogan />
+            </div>
+            <div className="flex justify-center pb-12 animate-in fade-in delay-300">
+                <InstallAppPrompt variant="landing" />
             </div>
         </div>
     );
