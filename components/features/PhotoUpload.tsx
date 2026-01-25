@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, Image as ImageIcon } from 'lucide-react';
 import { uploadCoffeePhoto } from '@/utils/imageUpload';
 import Image from 'next/image';
+import Modal from '@/components/common/Modal';
 
 interface PhotoUploadProps {
     userId: string;
@@ -15,7 +16,10 @@ export default function PhotoUpload({ userId, onPhotoUrlChange, required = true 
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [showSourceModal, setShowSourceModal] = useState(false);
+
+    const cameraInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -35,6 +39,7 @@ export default function PhotoUpload({ userId, onPhotoUrlChange, required = true 
 
         setUploading(true);
         setError(null);
+        setShowSourceModal(false); // Close modal if open
 
         // Content Moderation
         try {
@@ -65,35 +70,92 @@ export default function PhotoUpload({ userId, onPhotoUrlChange, required = true 
         setPhotoUrl(url);
         onPhotoUrlChange(url);
         setUploading(false);
+
+        // Reset inputs
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+        if (galleryInputRef.current) galleryInputRef.current.value = '';
     };
 
     const handleRemovePhoto = () => {
         setPhotoUrl(null);
         onPhotoUrlChange(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
+        if (cameraInputRef.current) cameraInputRef.current.value = '';
+        if (galleryInputRef.current) galleryInputRef.current.value = '';
     };
 
-    const handleClick = () => {
-        fileInputRef.current?.click();
+    const handleCameraClick = () => {
+        cameraInputRef.current?.click();
+        setShowSourceModal(false);
+    };
+
+    const handleGalleryClick = () => {
+        galleryInputRef.current?.click();
+        setShowSourceModal(false);
     };
 
     return (
         <div className="w-full">
-            {/* Hidden file input */}
+            {/* Hidden file inputs */}
             <input
-                ref={fileInputRef}
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
+            <input
+                ref={galleryInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileSelect}
                 className="hidden"
             />
 
+            {/* Source Selection Modal */}
+            <Modal isOpen={showSourceModal} onClose={() => setShowSourceModal(false)} title="Add Photo">
+                <div className="p-6 flex flex-col gap-4">
+                    <h3 className="text-xl font-serif text-journal-brown mb-2">choose source</h3>
+
+                    <button
+                        onClick={handleCameraClick}
+                        className="flex items-center gap-4 p-4 rounded-xl bg-journal-card hover:bg-journal-brown/5 border border-journal-brown/10 transition-colors text-left"
+                    >
+                        <div className="w-12 h-12 rounded-full bg-journal-brown/10 flex items-center justify-center text-journal-brown">
+                            <Camera className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="font-medium text-journal-brown">take photo</p>
+                            <p className="text-sm text-journal-text/60">use your camera</p>
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={handleGalleryClick}
+                        className="flex items-center gap-4 p-4 rounded-xl bg-journal-card hover:bg-journal-brown/5 border border-journal-brown/10 transition-colors text-left"
+                    >
+                        <div className="w-12 h-12 rounded-full bg-journal-brown/10 flex items-center justify-center text-journal-brown">
+                            <ImageIcon className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="font-medium text-journal-brown">choose from gallery</p>
+                            <p className="text-sm text-journal-text/60">select from your photos</p>
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={() => setShowSourceModal(false)}
+                        className="mt-2 w-full py-3 text-center text-journal-text/60 hover:text-journal-brown transition-colors"
+                    >
+                        cancel
+                    </button>
+                </div>
+            </Modal>
+
             {/* Upload Box */}
             <button
                 type="button"
-                onClick={handleClick}
+                onClick={() => setShowSourceModal(true)}
                 disabled={uploading}
                 className="w-full aspect-[3/2] bg-journal-card rounded-2xl flex flex-col items-center justify-center gap-3 hover:opacity-90 transition-opacity relative overflow-hidden"
             >
