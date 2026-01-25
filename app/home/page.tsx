@@ -11,44 +11,25 @@ import { usePublicCoffeeFeed } from '@/hooks/useCoffeeLogs';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthenticatedHome() {
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
     const [showLogModal, setShowLogModal] = useState(false);
     const router = useRouter();
-    const { user: authUser } = useAuth();
+    const { user, loading } = useAuth();
 
-    // Fetch public coffee feed (no city filter)
-    const { logs, loading: feedLoading } = usePublicCoffeeFeed({
-        currentUserId: authUser?.id || null
+
+    // Fetch public coffee feed
+    const { logs, loading: feedLoading, refreshFeed } = usePublicCoffeeFeed({
+        currentUserId: user?.id || null
     });
 
-    useEffect(() => {
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                router.push('/login');
-            } else {
-                // Check if user has a profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('username, is_admin')
-                    .eq('user_id', session.user.id)
-                    .single();
 
-                if (!profile) {
-                    router.push('/set-username');
-                } else {
-                    setUser({
-                        ...session.user,
-                        username: profile.username,
-                        is_admin: profile.is_admin
-                    });
-                }
-            }
-            setLoading(false);
-        };
-        checkSession();
-    }, [router]);
+
+    // Redirect if not authenticated
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login');
+        }
+    }, [loading, user, router]);
+
 
     // Navigation handlers
     const handleUsernameClick = (username: string) => {
@@ -127,10 +108,9 @@ export default function AuthenticatedHome() {
                                 key={log.id}
                                 log={log}
                                 onUsernameClick={handleUsernameClick}
-                                isAdmin={user?.is_admin}
                                 onAdminDelete={() => {
                                     // Refresh feed after delete
-                                    window.location.reload();
+                                    refreshFeed();
                                 }}
                             />
                         ))
@@ -146,7 +126,7 @@ export default function AuthenticatedHome() {
                 <PhotoFirstLogCoffeeForm
                     onSuccess={() => {
                         setShowLogModal(false);
-                        window.location.reload();
+                        refreshFeed();
                     }}
                     onCancel={() => setShowLogModal(false)}
                 />

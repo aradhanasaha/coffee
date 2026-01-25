@@ -4,7 +4,7 @@
  * Platform-agnostic - uses authService
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import * as authService from '@/services/authService';
 import type { Session, User } from '@/core/types/types';
 
@@ -111,9 +111,14 @@ export function useAuth(): UseAuthReturn {
         return await authService.updatePassword(newPassword);
     }, []);
 
+    // Memoize user and session to prevent infinite re-renders
+    // Only create new objects when the actual data changes
+    const memoizedUser = useMemo(() => user, [user?.id, user?.email]);
+    const memoizedSession = useMemo(() => session, [session?.access_token]);
+
     return {
-        user,
-        session,
+        user: memoizedUser,
+        session: memoizedSession,
         loading,
         login,
         loginWithUsername,
