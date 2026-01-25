@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 
-export default function InstallAppPrompt() {
+interface InstallAppPromptProps {
+    variant?: 'banner' | 'landing';
+}
+
+export default function InstallAppPrompt({ variant = 'banner' }: InstallAppPromptProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -40,7 +44,22 @@ export default function InstallAppPrompt() {
         setIsVisible(false);
     };
 
+    const isLanding = variant === 'landing';
+
     if (!isVisible) return null;
+
+    if (isLanding) {
+        return (
+            <button
+                onClick={handleInstallClick}
+                className="inline-flex items-center gap-2 md:gap-3 text-espresso font-bold text-2xl md:text-3xl hover:opacity-80 transition-opacity cursor-pointer group mt-2"
+                title="Install App"
+            >
+                <span>get the app</span>
+                <Download className="w-6 h-6 md:w-8 md:h-8 group-hover:translate-y-1 transition-transform" strokeWidth={3} />
+            </button>
+        );
+    }
 
     return (
         <div className="fixed bottom-24 left-4 right-4 z-40 animate-in slide-in-from-bottom-5">
