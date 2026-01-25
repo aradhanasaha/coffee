@@ -41,7 +41,10 @@ node_modules
 /migrations
 *.sql
 
+
 # local docs
 Supabase Snippet Row-Level Security Policies Overview.csv
 Supabase Snippet Public Schema Column Inventory.csv
+Supabase Snippet Row-Level Security Policies Overview (1).csv
+Supabase Snippet Public Schema Column Inventory (1).csv
 
