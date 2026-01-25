@@ -10,7 +10,6 @@ import type {
     FollowStatus,
     ServiceResult
 } from '@/core/types/types';
-import { createNotification } from './notificationService';
 
 /**
  * Follow a user
@@ -44,8 +43,7 @@ export async function followUser(
             return { success: false, error: insertError.message };
         }
 
-        // Trigger notification
-        await createNotification(followingId, followerId, 'follow', null);
+        // Notification triggered by DB
 
         return { success: true };
     } catch (err: any) {

@@ -5,6 +5,8 @@ import LeftNav from './LeftNav';
 import DiscoveryPanel from './DiscoveryPanel';
 import TopHeader from './TopHeader';
 import BottomNav from './BottomNav';
+import NotificationToast from '@/components/features/NotificationToast'; // [NEW]
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'; // [NEW]
 
 interface JournalLayoutProps {
     children: ReactNode;
@@ -21,8 +23,16 @@ export default function JournalLayout({
     onListClick,
     onShareClick
 }: JournalLayoutProps) {
+    const { latestNotification, clearLatestNotification } = useUnreadNotifications();
+
     return (
         <div className="min-h-screen bg-journal-bg">
+            {/* Notification Toast [NEW] */}
+            <NotificationToast
+                notification={latestNotification}
+                onDismiss={clearLatestNotification}
+            />
+
             {/* Top Header - Fixed */}
             <TopHeader
                 onShareClick={onShareClick}

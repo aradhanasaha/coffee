@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import SearchModal from '@/components/features/SearchModal';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 
 interface TopHeaderProps {
     onShareClick?: () => void;
@@ -12,6 +13,7 @@ interface TopHeaderProps {
 
 export default function TopHeader({ onShareClick }: TopHeaderProps) {
     const [showSearch, setShowSearch] = useState(false);
+    const { hasUnread } = useUnreadNotifications();
 
     return (
         <>
@@ -44,9 +46,12 @@ export default function TopHeader({ onShareClick }: TopHeaderProps) {
                     {/* Notification - Mobile/Desktop */}
                     <Link
                         href="/notifications"
-                        className="p-2 text-journal-text hover:bg-journal-text/5 rounded-full"
+                        className="p-2 text-journal-text hover:bg-journal-text/5 rounded-full relative"
                     >
                         <Bell className="w-5 h-5" />
+                        {hasUnread && (
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-journal-bg" />
+                        )}
                     </Link>
                 </div>
             </header >

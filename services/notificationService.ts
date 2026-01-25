@@ -2,7 +2,7 @@ import { supabase } from '@/adapters/supabaseClient';
 import type { Notification, ServiceResult, NotificationType } from '@/core/types/types';
 
 /**
- * Create a notification
+ * Create a notification (DEPRECATED - Handled by DB Triggers)
  */
 export async function createNotification(
     recipientId: string,
@@ -10,24 +10,8 @@ export async function createNotification(
     type: NotificationType,
     entityId: string | null
 ): Promise<ServiceResult<void>> {
-    try {
-        if (recipientId === senderId) return { success: true }; // Don't notify self
-
-        const { error } = await supabase
-            .from('notifications')
-            .insert({
-                recipient_id: recipientId,
-                sender_id: senderId,
-                type: type,
-                entity_id: entityId
-            });
-
-        if (error) throw error;
-        return { success: true };
-    } catch (err: any) {
-        console.error('Error creating notification:', err);
-        return { success: false, error: err.message };
-    }
+    // Logic moved to Database Triggers
+    return { success: true };
 }
 
 /**
@@ -39,7 +23,7 @@ export async function fetchNotifications(userId: string): Promise<ServiceResult<
             .from('notifications')
             .select(`
                 *,
-                sender:profiles!notifications_sender_id_fkey(username)
+                sender:profiles!notifications_trigger_actor_id_fkey(username)
             `)
             .eq('recipient_id', userId)
             .order('created_at', { ascending: false })
@@ -90,6 +74,24 @@ export async function markAllAsRead(userId: string): Promise<ServiceResult<void>
 
         if (error) throw error;
         return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Get unread notification count
+ */
+export async function getUnreadCount(userId: string): Promise<ServiceResult<number>> {
+    try {
+        const { count, error } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('recipient_id', userId)
+            .eq('read', false);
+
+        if (error) throw error;
+        return { success: true, data: count || 0 };
     } catch (err: any) {
         return { success: false, error: err.message };
     }

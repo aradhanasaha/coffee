@@ -7,7 +7,6 @@ import type {
     ListWithItems,
     CoffeeLog
 } from '@/core/types/types';
-import { createNotification } from './notificationService';
 
 /**
  * Create a new list
@@ -184,10 +183,7 @@ export async function addListItem(
             .eq('id', listId)
             .single();
 
-        if (logData && listOwner && logData.user_id !== listOwner.owner_id) {
-            // Create notification: Recipient=LogOwner, Sender=ListOwner(Saver)
-            await createNotification(logData.user_id, listOwner.owner_id, 'save_list', coffeeLogId);
-        }
+        // Notification triggered by DB if owner != user
 
         return { success: true, data };
     } catch (err: any) {
