@@ -112,7 +112,8 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                 />
 
                 {/* Tabs */}
-                <div>
+                {/* Tabs - Only for own profile */}
+                {user?.id === profile.user_id ? (
                     <div className="flex items-center gap-6 border-b border-primary/10 mb-6">
                         <button
                             onClick={() => setActiveTab('history')}
@@ -121,8 +122,8 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
-                            <span className="flex items-center gap-2">
-                                📅 My Coffee History
+                            <span>
+                                My Coffee History
                             </span>
                             {activeTab === 'history' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -135,87 +136,91 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
-                            <span className="flex items-center gap-2">
-                                📋 My Lists
+                            <span>
+                                My Lists
                             </span>
                             {activeTab === 'lists' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
                             )}
                         </button>
                     </div>
+                ) : (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold text-primary">Coffee Logs</h2>
+                    </div>
+                )}
 
-                    {/* Content */}
-                    {activeTab === 'history' ? (
-                        <section>
-                            {recentLogs.length === 0 ? (
-                                <div className="bg-card rounded-2xl border-2 border-dashed border-primary/20 p-12 text-center text-muted-foreground">
-                                    No coffee logs yet
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {recentLogs.map((log) => (
-                                        <div
-                                            key={log.id}
-                                            className="bg-card p-5 rounded-2xl border-2 border-primary/10 hover:border-primary/20 transition-all"
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h3 className="font-bold text-lg">{log.coffee_name}</h3>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-                                                    <span className="font-bold text-primary">{log.rating}</span>
-                                                    <span className="text-xs text-primary">★</span>
-                                                </div>
-                                            </div>
-
-                                            {log.review && (
-                                                <p className="mt-3 text-sm text-foreground/80 italic">
-                                                    "{log.review}"
+                {/* Content */}
+                {activeTab === 'history' ? (
+                    <section>
+                        {recentLogs.length === 0 ? (
+                            <div className="bg-card rounded-2xl border-2 border-dashed border-primary/20 p-12 text-center text-muted-foreground">
+                                No coffee logs yet
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {recentLogs.map((log) => (
+                                    <div
+                                        key={log.id}
+                                        className="bg-card p-5 rounded-2xl border-2 border-primary/10 hover:border-primary/20 transition-all"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="font-bold text-lg">{log.coffee_name}</h3>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}
                                                 </p>
-                                            )}
-
-                                            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                                                <span>{new Date(log.created_at).toLocaleDateString()}</span>
-                                                {log.price_feel && (
-                                                    <span className="px-2 py-1 rounded-full bg-secondary text-secondary-foreground font-bold">
-                                                        {log.price_feel === 'steal' && '💰 Steal'}
-                                                        {log.price_feel === 'fair' && '✓ Fair'}
-                                                        {log.price_feel === 'expensive' && '💸 Pricey'}
-                                                    </span>
-                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+                                                <span className="font-bold text-primary">{log.rating}</span>
+                                                <span className="text-xs text-primary">★</span>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-                    ) : (
-                        <section>
-                            {listsLoading ? (
-                                <div className="text-center py-12 text-muted-foreground">Loading lists...</div>
-                            ) : myLists.length === 0 ? (
-                                <div className="bg-card rounded-2xl border-2 border-dashed border-primary/20 p-12 text-center text-muted-foreground">
-                                    No lists found
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {myLists.map((list) => (
-                                        <ExploreListCard
-                                            key={list.id}
-                                            title={list.title}
-                                            subtitle={`${list.item_count || 0} items`}
-                                            curatedBy={list.owner?.username}
-                                            onClick={() => router.push(`/lists/${list.id}?from=profile`)}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-                    )}
-                </div>
+
+                                        {log.review && (
+                                            <p className="mt-3 text-sm text-foreground/80 italic">
+                                                "{log.review}"
+                                            </p>
+                                        )}
+
+                                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                                            <span>{new Date(log.created_at).toLocaleDateString()}</span>
+                                            {log.price_feel && (
+                                                <span className="px-2 py-1 rounded-full bg-secondary text-secondary-foreground font-bold">
+                                                    {log.price_feel === 'steal' && '💰 Steal'}
+                                                    {log.price_feel === 'fair' && '✓ Fair'}
+                                                    {log.price_feel === 'expensive' && '💸 Pricey'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                ) : (
+                    <section>
+                        {listsLoading ? (
+                            <div className="text-center py-12 text-muted-foreground">Loading lists...</div>
+                        ) : myLists.length === 0 ? (
+                            <div className="bg-card rounded-2xl border-2 border-dashed border-primary/20 p-12 text-center text-muted-foreground">
+                                No lists found
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {myLists.map((list) => (
+                                    <ExploreListCard
+                                        key={list.id}
+                                        title={list.title}
+                                        subtitle={`${list.item_count || 0} items`}
+                                        curatedBy={list.owner?.username}
+                                        onClick={() => router.push(`/lists/${list.id}?from=profile`)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                )}
             </div>
         </div>
     );

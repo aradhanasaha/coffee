@@ -305,10 +305,7 @@ export default function UserDashboard() {
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
-                            <span className="flex items-center gap-2">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === 'history' ? 'bg-primary/10' : 'bg-transparent'}`}>
-                                    <Calendar className={`w-5 h-5 ${activeTab === 'history' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                </div>
+                            <span>
                                 My Coffee History
                             </span>
                             {activeTab === 'history' && (
@@ -322,10 +319,7 @@ export default function UserDashboard() {
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
-                            <span className="flex items-center gap-2">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeTab === 'lists' ? 'bg-primary/10' : 'bg-transparent'}`}>
-                                    <TrendingUp className={`w-5 h-5 ${activeTab === 'lists' ? 'text-primary' : 'text-muted-foreground'}`} />
-                                </div>
+                            <span>
                                 My Lists
                             </span>
                             {activeTab === 'lists' && (
