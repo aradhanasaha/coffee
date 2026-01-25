@@ -86,7 +86,6 @@ export default function PhotoUpload({ userId, onPhotoUrlChange, required = true 
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handleFileSelect}
                 className="hidden"
             />
