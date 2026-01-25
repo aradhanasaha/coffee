@@ -7,7 +7,6 @@ import JournalLayout from "@/components/layout/JournalLayout";
 import JournalFeedCard from "@/components/features/JournalFeedCard";
 import Modal from "@/components/common/Modal";
 import PhotoFirstLogCoffeeForm from "@/components/features/PhotoFirstLogCoffeeForm";
-import InstallAppPrompt from "@/components/features/InstallAppPrompt";
 import { usePublicCoffeeFeed } from '@/hooks/useCoffeeLogs';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -132,9 +131,6 @@ export default function AuthenticatedHome() {
                     onCancel={() => setShowLogModal(false)}
                 />
             </Modal>
-
-            {/* PWA Install Prompt */}
-            <InstallAppPrompt />
         </>
     );
 }
