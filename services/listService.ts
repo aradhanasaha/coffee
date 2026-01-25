@@ -290,6 +290,41 @@ export async function saveList(userId: string, listId: string): Promise<ServiceR
 }
 
 /**
+ * Unsave a list
+ */
+export async function unsaveList(userId: string, listId: string): Promise<ServiceResult<void>> {
+    try {
+        const { error } = await supabase
+            .from('list_saves')
+            .delete()
+            .match({ user_id: userId, list_id: listId });
+
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Check if a list is saved by the user
+ */
+export async function checkListSavedStatus(userId: string, listId: string): Promise<ServiceResult<boolean>> {
+    try {
+        const { data, error } = await supabase
+            .from('list_saves')
+            .select('id')
+            .match({ user_id: userId, list_id: listId })
+            .maybeSingle();
+
+        if (error) throw error;
+        return { success: true, data: !!data };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
  * Fetch lists saved by a user
  */
 export async function fetchSavedLists(userId: string): Promise<ServiceResult<ListWithItems[]>> {

@@ -32,20 +32,38 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
             if (result.success && result.data) {
                 setList(result.data);
                 setEditTitle(result.data.title);
+
+                // Check if saved
+                if (user) {
+                    const savedResult = await listService.checkListSavedStatus(user.id, params.id);
+                    if (savedResult.success) {
+                        setIsSaved(!!savedResult.data);
+                    }
+                }
             } else {
                 setError(result.error || 'Failed to load list');
             }
             setLoading(false);
         };
         fetchList();
-    }, [params.id]);
+    }, [params.id, user]);
 
     const handleSaveList = async () => {
         if (!user || !list) return;
         setSaving(true);
-        const result = await listService.saveList(user.id, list.id);
-        if (result.success) {
-            setIsSaved(true);
+
+        if (isSaved) {
+            // Unsave
+            const result = await listService.unsaveList(user.id, list.id);
+            if (result.success) {
+                setIsSaved(false);
+            }
+        } else {
+            // Save
+            const result = await listService.saveList(user.id, list.id);
+            if (result.success) {
+                setIsSaved(true);
+            }
         }
         setSaving(false);
     };
@@ -178,7 +196,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                         )}
                     </div>
 
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center justify-center gap-3 md:px-48">
                         {isEditing ? (
                             <div className="flex flex-col items-center gap-2 w-full max-w-md">
                                 <input
