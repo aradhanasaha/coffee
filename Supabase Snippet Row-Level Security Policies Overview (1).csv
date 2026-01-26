@@ -1,0 +1,42 @@
+schemaname,tablename,policyname,permissive,roles,cmd,using_expression,with_check
+public,coffee_logs,Users and Admins can delete coffee logs,PERMISSIVE,{public},DELETE,((( SELECT auth.uid() AS uid) = user_id) OR is_admin()),null
+public,coffee_logs,Users and Admins can update coffee logs,PERMISSIVE,{public},UPDATE,((( SELECT auth.uid() AS uid) = user_id) OR is_admin()),null
+public,coffee_logs,Users can insert own coffee logs,PERMISSIVE,{public},INSERT,null,(( SELECT auth.uid() AS uid) = user_id)
+public,coffee_logs,Users can view all coffee logs,PERMISSIVE,{public},SELECT,((deleted_at IS NULL) OR (( SELECT auth.uid() AS uid) = user_id) OR is_admin()),null
+public,follows,Anyone can view follows,PERMISSIVE,{public},SELECT,true,null
+public,follows,Users can delete their own follows,PERMISSIVE,{public},DELETE,(( SELECT auth.uid() AS uid) = follower_id),null
+public,follows,Users can insert their own follows,PERMISSIVE,{public},INSERT,null,(( SELECT auth.uid() AS uid) = follower_id)
+public,likes,Anyone can view likes,PERMISSIVE,{public},SELECT,true,null
+public,likes,Users can delete their own likes,PERMISSIVE,{public},DELETE,(( SELECT auth.uid() AS uid) = user_id),null
+public,likes,Users can insert their own likes,PERMISSIVE,{public},INSERT,null,(( SELECT auth.uid() AS uid) = user_id)
+public,list_items,owner manages list items,PERMISSIVE,{public},INSERT,null,"(EXISTS ( SELECT 1
+   FROM lists l
+  WHERE ((l.id = list_items.list_id) AND (l.owner_id = ( SELECT auth.uid() AS uid)) AND (l.deleted_at IS NULL))))"
+public,list_items,owner removes list items,PERMISSIVE,{public},DELETE,"(EXISTS ( SELECT 1
+   FROM lists l
+  WHERE ((l.id = list_items.list_id) AND (l.owner_id = ( SELECT auth.uid() AS uid)))))",null
+public,list_items,read list items,PERMISSIVE,{public},SELECT,"(EXISTS ( SELECT 1
+   FROM lists l
+  WHERE ((l.id = list_items.list_id) AND (l.deleted_at IS NULL) AND ((l.visibility = 'public'::list_visibility) OR (l.owner_id = ( SELECT auth.uid() AS uid))))))",null
+public,list_saves,read own saved lists,PERMISSIVE,{public},SELECT,(user_id = ( SELECT auth.uid() AS uid)),null
+public,list_saves,save list,PERMISSIVE,{public},INSERT,null,(user_id = ( SELECT auth.uid() AS uid))
+public,list_saves,unsave list,PERMISSIVE,{public},DELETE,(user_id = ( SELECT auth.uid() AS uid)),null
+public,lists,Users can delete own lists,PERMISSIVE,{public},DELETE,(auth.uid() = owner_id),null
+public,lists,Users can insert own lists,PERMISSIVE,{public},INSERT,null,(auth.uid() = owner_id)
+public,lists,Users can update own lists,PERMISSIVE,{public},UPDATE,(auth.uid() = owner_id),(auth.uid() = owner_id)
+public,lists,Users can view own lists,PERMISSIVE,{public},SELECT,((auth.uid() = owner_id) OR (visibility = 'public'::list_visibility)),null
+public,lists,create own list,PERMISSIVE,{public},INSERT,null,(owner_id = ( SELECT auth.uid() AS uid))
+public,lists,delete own list,PERMISSIVE,{public},DELETE,(owner_id = ( SELECT auth.uid() AS uid)),null
+public,lists,modify own list,PERMISSIVE,{public},UPDATE,(owner_id = ( SELECT auth.uid() AS uid)),(owner_id = ( SELECT auth.uid() AS uid))
+public,lists,read visible lists,PERMISSIVE,{public},SELECT,((deleted_at IS NULL) AND ((visibility = 'public'::list_visibility) OR (owner_id = auth.uid()))),null
+public,locations,Anyone can view locations,PERMISSIVE,{public},SELECT,true,null
+public,locations,Authenticated users can insert locations,PERMISSIVE,{public},INSERT,null,(( SELECT auth.role() AS role) = 'authenticated'::text)
+public,notifications,Users can update their own notifications (mark as read),PERMISSIVE,{public},UPDATE,(auth.uid() = recipient_id),null
+public,notifications,Users can view their own notifications,PERMISSIVE,{public},SELECT,(auth.uid() = recipient_id),null
+public,profiles,Profiles are viewable by everyone,PERMISSIVE,{public},SELECT,true,null
+public,profiles,Users can insert their own profile,PERMISSIVE,{public},INSERT,null,(user_id = ( SELECT auth.uid() AS uid))
+public,profiles,Users can update own profile,PERMISSIVE,{public},UPDATE,(( SELECT auth.uid() AS uid) = user_id),null
+storage,objects,Public can view coffee photos,PERMISSIVE,{public},SELECT,(bucket_id = 'coffee-photos'::text),null
+storage,objects,Users can delete their coffee photos,PERMISSIVE,{authenticated},DELETE,((bucket_id = 'coffee-photos'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)),null
+storage,objects,Users can update their coffee photos,PERMISSIVE,{authenticated},UPDATE,((bucket_id = 'coffee-photos'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text)),null
+storage,objects,Users can upload coffee photos,PERMISSIVE,{authenticated},INSERT,null,((bucket_id = 'coffee-photos'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))
