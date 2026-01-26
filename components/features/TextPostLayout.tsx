@@ -29,6 +29,7 @@ interface TextPostLayoutProps {
     isAdmin?: boolean;
     onDelete?: () => void;
     isDeleting?: boolean;
+    locationId?: string | null;
 }
 
 export default function TextPostLayout({
@@ -41,7 +42,8 @@ export default function TextPostLayout({
     priceFeel,
     isAdmin,
     onDelete,
-    isDeleting
+    isDeleting,
+    locationId
 }: TextPostLayoutProps) {
     // Truncate review logic
     const maxLength = 280; // Longer for text posts (Twitter style)
@@ -83,7 +85,13 @@ export default function TextPostLayout({
                 <div className="flex items-center gap-1">
                     <span className="font-medium text-journal-text/80">{log.coffee_name.toLowerCase()}</span>
                     <span>•</span>
-                    <span>{log.place.toLowerCase()}</span>
+                    {locationId ? (
+                        <a href={`/locations/${locationId}`} className="hover:underline hover:text-primary transition-colors">
+                            {log.place.toLowerCase()}
+                        </a>
+                    ) : (
+                        <span>{log.place.toLowerCase()}</span>
+                    )}
                     {log.area && <span>, {log.area.toLowerCase()}</span>}
                 </div>
                 {priceFeel && (

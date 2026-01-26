@@ -242,7 +242,11 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                                 <LocationCard
                                     key={log.id}
                                     log={log}
-                                    onClick={() => { }} // Could open log details modal in future
+                                    onClick={() => {
+                                        if (log.location_id) {
+                                            router.push(`/locations/${log.location_id}`);
+                                        }
+                                    }}
                                 />
                             ))}
                         </div>
