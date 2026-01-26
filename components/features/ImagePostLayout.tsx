@@ -9,6 +9,8 @@ import SaveToListButton from './lists/SaveToListButton';
 // Import Trash2
 import { Trash2 } from 'lucide-react';
 
+import ShareEntryButton from './ShareEntryButton';
+
 interface ImagePostLayoutProps {
     log: {
         id: string;
@@ -32,6 +34,7 @@ interface ImagePostLayoutProps {
     onDelete?: () => void;
     isDeleting?: boolean;
     locationId?: string | null;
+    variant?: 'default' | 'share';
 }
 
 export default function ImagePostLayout({
@@ -46,7 +49,8 @@ export default function ImagePostLayout({
     isAdmin,
     onDelete,
     isDeleting,
-    locationId
+    locationId,
+    variant = 'default'
 }: ImagePostLayoutProps) {
     // Truncate review logic
     const maxLength = 120; // Shorter for image posts (2-3 lines)
@@ -54,16 +58,18 @@ export default function ImagePostLayout({
 
     // Safety check: log.review might be null/undefined but type says string | null
     const reviewText = log.review || "";
-    const shouldTruncate = reviewText.length > maxLength && !isExpanded;
+    const shouldTruncate = variant === 'default' && reviewText.length > maxLength && !isExpanded;
 
     const displayReview = shouldTruncate
         ? reviewText.substring(0, maxLength) + '...'
         : reviewText;
 
+    const isShareMode = variant === 'share';
+
     return (
-        <div className="flex flex-col relative group/card">
-            {/* Admin Delete Button - Overlay */}
-            {isAdmin && onDelete && (
+        <div className={`flex flex-col relative group/card ${isShareMode ? 'bg-journal-bg' : ''}`}>
+            {/* Admin Delete Button - Overlay - Only in default mode */}
+            {!isShareMode && isAdmin && onDelete && (
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -82,7 +88,7 @@ export default function ImagePostLayout({
                 {log.username && (
                     <UsernameLink
                         username={log.username}
-                        onClick={onUsernameClick}
+                        onClick={isShareMode ? undefined : onUsernameClick}
                         className="font-semibold text-sm text-journal-text"
                     />
                 )}
@@ -111,7 +117,7 @@ export default function ImagePostLayout({
                     )}
                 </div>
                 <div className="text-right text-xs opacity-70">
-                    {locationId ? (
+                    {locationId && !isShareMode ? (
                         <a href={`/locations/${locationId}`} className="font-medium hover:underline hover:text-primary transition-colors">
                             {log.place.toLowerCase()}
                         </a>
@@ -122,19 +128,26 @@ export default function ImagePostLayout({
                 </div>
             </div>
 
-            {/* 4. Action Row (Rating + Heart) */}
-            <div className="px-4 py-2 flex justify-between items-center">
-                <StarRating rating={log.rating} size="sm" />
-                <div className="flex items-center gap-3">
-                    <SaveToListButton coffeeLogId={log.id} />
-                    <HeartButton
-                        isLiked={isLiked}
-                        onToggle={onToggleLike}
-                        loading={likeLoading}
-                        count={likeCount}
-                    />
+            {/* 4. Action Row (Rating + Heart) OR Share Footer */}
+            {!isShareMode ? (
+                <div className="px-4 py-2 flex justify-between items-center">
+                    <StarRating rating={log.rating} size="sm" />
+                    <div className="flex items-center gap-3">
+                        <ShareEntryButton log={log} />
+                        <SaveToListButton coffeeLogId={log.id} />
+                        <HeartButton
+                            isLiked={isLiked}
+                            onToggle={onToggleLike}
+                            loading={likeLoading}
+                            count={likeCount}
+                        />
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="px-4 py-2 flex items-center gap-2">
+                    <StarRating rating={log.rating} size="sm" />
+                </div>
+            )}
 
             {/* 5. Review Text */}
             {displayReview && (
@@ -150,6 +163,14 @@ export default function ImagePostLayout({
                             </span>
                         )}
                     </p>
+                </div>
+            )}
+
+            {/* Branding Footer for Share Mode */}
+            {isShareMode && (
+                <div className="mt-auto pt-6 pb-6 flex items-center justify-center gap-2 opacity-60">
+                    <img src="/logo.png" alt="imnotupyet logo" className="w-5 h-5 opacity-90" />
+                    <span className="font-bold text-sm tracking-widest lowercase text-journal-text">imnotupyet</span>
                 </div>
             )}
         </div>

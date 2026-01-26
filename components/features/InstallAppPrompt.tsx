@@ -10,6 +10,8 @@ interface InstallAppPromptProps {
 export default function InstallAppPrompt({ variant = 'banner' }: InstallAppPromptProps) {
     const [isIOS, setIsIOS] = useState(false);
     const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
     useEffect(() => {
         // Check for iOS

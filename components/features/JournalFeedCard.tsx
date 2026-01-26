@@ -21,9 +21,10 @@ interface JournalFeedCardProps {
     onUsernameClick?: (username: string) => void;
     isAdmin?: boolean;
     onAdminDelete?: () => void;
+    variant?: 'default' | 'share';
 }
 
-export default function JournalFeedCard({ log, onUsernameClick, isAdmin, onAdminDelete }: JournalFeedCardProps) {
+export default function JournalFeedCard({ log, onUsernameClick, isAdmin, onAdminDelete, variant = 'default' }: JournalFeedCardProps) {
     const { likeStatus, toggleLike, loading: likeLoading } = useLikes(log.id, 'coffee_log');
     const [imageLoadError, setImageLoadError] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -69,7 +70,8 @@ export default function JournalFeedCard({ log, onUsernameClick, isAdmin, onAdmin
         isAdmin,
         onDelete: isAdmin ? handleAdminDelete : undefined,
         isDeleting,
-        locationId: log.location_id
+        locationId: log.location_id,
+        variant
     };
 
     // Stricter check for image existence to avoid empty placeholders
