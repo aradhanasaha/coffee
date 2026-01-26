@@ -9,11 +9,13 @@ import Modal from "@/components/common/Modal";
 import PhotoFirstLogCoffeeForm from "@/components/features/PhotoFirstLogCoffeeForm";
 import { usePublicCoffeeFeed } from '@/hooks/useCoffeeLogs';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export default function AuthenticatedHome() {
     const [showLogModal, setShowLogModal] = useState(false);
     const router = useRouter();
     const { user, loading } = useAuth();
+    const { profile } = useUserProfile(user?.id || null);
 
 
     // Fetch public coffee feed
@@ -108,6 +110,7 @@ export default function AuthenticatedHome() {
                                 key={log.id}
                                 log={log}
                                 onUsernameClick={handleUsernameClick}
+                                isAdmin={profile?.is_admin}
                                 onAdminDelete={() => {
                                     // Refresh feed after delete
                                     refreshFeed();
