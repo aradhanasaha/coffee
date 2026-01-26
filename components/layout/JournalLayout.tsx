@@ -12,6 +12,8 @@ interface JournalLayoutProps {
     onCafeClick?: (cafe: string) => void;
     onListClick?: (listId: string) => void;
     onShareClick?: () => void;
+    showRightPanel?: boolean;
+    rightPanel?: ReactNode;
 }
 
 export default function JournalLayout({
@@ -19,7 +21,9 @@ export default function JournalLayout({
     onLogCoffeeClick,
     onCafeClick,
     onListClick,
-    onShareClick
+    onShareClick,
+    showRightPanel = true,
+    rightPanel
 }: JournalLayoutProps) {
     return (
         <div className="min-h-screen bg-journal-bg">
@@ -44,12 +48,16 @@ export default function JournalLayout({
                 </main>
 
                 {/* Right Discovery Panel - Fixed */}
-                <div className="hidden md:block fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 overflow-y-auto py-8 pr-8 bg-journal-bg">
-                    <DiscoveryPanel
-                        onCafeClick={onCafeClick}
-                        onListClick={onListClick}
-                    />
-                </div>
+                {(showRightPanel || rightPanel) && (
+                    <div className="hidden md:block fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 overflow-y-auto py-8 pr-8 bg-journal-bg">
+                        {rightPanel ? rightPanel : (
+                            <DiscoveryPanel
+                                onCafeClick={onCafeClick}
+                                onListClick={onListClick}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Bottom Navigation - Mobile Only */}

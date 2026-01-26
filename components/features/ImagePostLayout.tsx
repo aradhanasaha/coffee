@@ -31,6 +31,7 @@ interface ImagePostLayoutProps {
     isAdmin?: boolean;
     onDelete?: () => void;
     isDeleting?: boolean;
+    locationId?: string | null;
 }
 
 export default function ImagePostLayout({
@@ -44,7 +45,8 @@ export default function ImagePostLayout({
     priceFeel,
     isAdmin,
     onDelete,
-    isDeleting
+    isDeleting,
+    locationId
 }: ImagePostLayoutProps) {
     // Truncate review logic
     const maxLength = 120; // Shorter for image posts (2-3 lines)
@@ -109,7 +111,13 @@ export default function ImagePostLayout({
                     )}
                 </div>
                 <div className="text-right text-xs opacity-70">
-                    <span className="font-medium">{log.place.toLowerCase()}</span>
+                    {locationId ? (
+                        <a href={`/locations/${locationId}`} className="font-medium hover:underline hover:text-primary transition-colors">
+                            {log.place.toLowerCase()}
+                        </a>
+                    ) : (
+                        <span className="font-medium">{log.place.toLowerCase()}</span>
+                    )}
                     {log.area && <span>, {log.area.toLowerCase()}</span>}
                 </div>
             </div>

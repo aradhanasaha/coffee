@@ -42,9 +42,15 @@ export default function AuthenticatedHome() {
         setShowLogModal(true);
     };
 
-    const handleCafeClick = (cafe: string) => {
-        // TODO: Filter feed by café
-        console.log('Filter by café:', cafe);
+    const handleCafeClick = (cafeIdOrName: string) => {
+        // Simple check if it looks like a uuid, or just try to navigate.
+        // If it's just a name, the backend lookup might fail, but for now let's assume IDs are passed from DiscoveryPanel
+        // if we updated it.
+        if (cafeIdOrName && cafeIdOrName.length > 20) { // UUIDs are 36 chars
+            router.push(`/locations/${cafeIdOrName}`);
+        } else {
+            console.log('Filter by café:', cafeIdOrName); // Fallback for names
+        }
     };
 
     const handleListClick = (listId: string) => {

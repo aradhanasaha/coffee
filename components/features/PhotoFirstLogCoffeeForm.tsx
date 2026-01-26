@@ -32,12 +32,13 @@ interface LogCoffeeFormProps {
         flavor_notes: string | null;
         location_id?: string | null;
     };
+    initialLocation?: LocationDetails;
     onSuccess?: () => void;
     onCancel?: () => void;
     submitLabel?: string;
 }
 
-export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCancel, submitLabel }: LogCoffeeFormProps) {
+export default function PhotoFirstLogCoffeeForm({ initialData, initialLocation, onSuccess, onCancel, submitLabel }: LogCoffeeFormProps) {
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
     const { createLog, updateLog } = useCoffeeLogs(user?.id || null);
@@ -69,7 +70,16 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
     const [showCoffeeDropdown, setShowCoffeeDropdown] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const [spellSuggestion, setSpellSuggestion] = useState<string | null>(null);
-    const [selectedLocation, setSelectedLocation] = useState<LocationDetails | null>(null);
+    const [selectedLocation, setSelectedLocation] = useState<LocationDetails | null>(
+        initialLocation || null
+    );
+
+    // If initialLocation provided, override place in formData
+    useEffect(() => {
+        if (initialLocation) {
+            setFormData(prev => ({ ...prev, place: initialLocation.place_name }));
+        }
+    }, [initialLocation]);
 
     useEffect(() => {
         // Close dropdowns on click outside

@@ -16,6 +16,7 @@ interface JournalFeedCardProps {
         image_url?: string | null;
         area?: string;
         price_feel?: string | null;
+        location_id?: string | null;
     };
     onUsernameClick?: (username: string) => void;
     isAdmin?: boolean;
@@ -67,7 +68,8 @@ export default function JournalFeedCard({ log, onUsernameClick, isAdmin, onAdmin
         // Admin Props
         isAdmin,
         onDelete: isAdmin ? handleAdminDelete : undefined,
-        isDeleting
+        isDeleting,
+        locationId: log.location_id
     };
 
     // Stricter check for image existence to avoid empty placeholders
