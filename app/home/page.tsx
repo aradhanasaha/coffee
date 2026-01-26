@@ -47,7 +47,7 @@ export default function AuthenticatedHome() {
         // If it's just a name, the backend lookup might fail, but for now let's assume IDs are passed from DiscoveryPanel
         // if we updated it.
         if (cafeIdOrName && cafeIdOrName.length > 20) { // UUIDs are 36 chars
-            router.push(`/locations/${cafeIdOrName}`);
+            router.push(`/locations/${cafeIdOrName}?from=feed`);
         } else {
 
         }

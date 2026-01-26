@@ -121,7 +121,9 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     ) || [];
 
     return (
-        <JournalLayout>
+        <JournalLayout
+            onListClick={(listId) => router.push(`/lists/${listId}`)}
+        >
             <div className="max-w-2xl mx-auto py-8">
                 {/* Back to Feed/Profile */}
                 <button

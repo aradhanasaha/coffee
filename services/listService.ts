@@ -451,3 +451,54 @@ export async function removeFromAllLists(
         return { success: false, error: err.message };
     }
 }
+
+/**
+ * Fetch public lists that contain a specific location
+ */
+export async function fetchListsByLocation(locationId: string): Promise<ServiceResult<ListWithItems[]>> {
+    try {
+        // First find list IDs that contain this location
+        // This avoids the issue where !inner filters the 'items' array in the result
+        const { data: listItems, error: itemsError } = await supabase
+            .from('list_items')
+            .select('list_id, log:coffee_logs!inner(location_id)')
+            .eq('log.location_id', locationId);
+
+        if (itemsError) throw itemsError;
+
+        const listIds = Array.from(new Set(listItems?.map(item => item.list_id) || []));
+
+        if (listIds.length === 0) {
+            return { success: true, data: [] };
+        }
+
+        // Now fetch the actual lists with full details
+        const { data, error } = await supabase
+            .from('lists')
+            .select(`
+                *,
+                owner:profiles!lists_owner_id_fkey(username),
+                items:list_items(count),
+                saves:list_saves(count)
+            `)
+            .in('id', listIds)
+            .eq('visibility', 'public')
+            .is('deleted_at', null)
+            .limit(10);
+
+        if (error) throw error;
+
+        // Transform the nested result
+        const lists = (data as any[]).map((list) => ({
+            ...list,
+            items: [],
+            item_count: list.items?.[0]?.count || 0,
+            save_count: list.saves?.[0]?.count || 0,
+            owner: list.owner
+        }));
+
+        return { success: true, data: lists };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
