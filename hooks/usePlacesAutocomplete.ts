@@ -48,14 +48,12 @@ export const usePlacesAutocomplete = (debounceMs: number = 300) => {
     const startSession = useCallback(() => {
         if (!sessionToken.current && window.google) {
             sessionToken.current = new google.maps.places.AutocompleteSessionToken();
-            console.log("DEBUG: New Session Token Created:", sessionToken.current.toString());
         }
     }, []);
 
     const clearSession = useCallback(() => {
         sessionToken.current = null;
         setPredictions([]);
-        console.log("DEBUG: Session Token Cleared");
     }, []);
 
     const onInputFocus = useCallback(() => {
@@ -100,7 +98,7 @@ export const usePlacesAutocomplete = (debounceMs: number = 300) => {
     const onPlaceSelect = useCallback((placeId: string, callback: (details: PlaceDetails) => void) => {
         if (!initServices() || !placesService.current) return;
 
-        console.log("DEBUG: Fetching Details with Session Token:", sessionToken.current?.toString());
+
 
         placesService.current.getDetails(
             {

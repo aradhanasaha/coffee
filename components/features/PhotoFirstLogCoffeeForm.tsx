@@ -201,9 +201,7 @@ export default function PhotoFirstLogCoffeeForm({ initialData, initialLocation, 
             return;
         }
 
-        if (!photoUrl && false) { // Kept 'false' to minimize diff, or just remove block. Removing block is better.
-            // removed validation
-        }
+
 
         try {
             if (!user) {

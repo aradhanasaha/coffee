@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import JournalLayout from '@/components/layout/JournalLayout';
 import LocationHeader from '@/components/features/locations/LocationHeader';
 import FeaturedLists from '@/components/features/locations/FeaturedLists';
@@ -13,6 +13,7 @@ import PhotoFirstLogCoffeeForm from '@/components/features/PhotoFirstLogCoffeeFo
 export default function LocationDetailPage() {
     const params = useParams();
     const id = params?.id as string;
+    const router = useRouter();
 
     const [location, setLocation] = useState<LocationDetailsExtended | null>(null);
     const [loading, setLoading] = useState(true);
@@ -69,7 +70,11 @@ export default function LocationDetailPage() {
                                 <JournalFeedCard
                                     key={log.id}
                                     log={log}
-                                    onUsernameClick={() => { }} // TODO: Nav to user
+                                    onUsernameClick={() => {
+                                        if (log.username) {
+                                            router.push(`/user/${log.username}`);
+                                        }
+                                    }}
                                 />
                             ))
                         ) : (

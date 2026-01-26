@@ -69,9 +69,7 @@ export async function fetchUserLists(userId: string): Promise<ServiceResult<List
 /**
  * Fetch public lists for discovery
  */
-/**
- * Fetch public lists for discovery
- */
+
 export async function fetchPublicLists(options?: {
     limit?: number;
     sortBy?: 'newest' | 'popular';
@@ -167,7 +165,7 @@ export async function addListItem(
             .single();
 
         if (error) throw error;
-        if (error) throw error;
+
 
         // Fetch coffee log details to get owner and trigger notification
         const { data: logData } = await supabase
