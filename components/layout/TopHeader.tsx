@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Search, Bell } from 'lucide-react';
+import { ChevronDown, Search, Bell, Share } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -35,6 +35,14 @@ export default function TopHeader({ onShareClick }: TopHeaderProps) {
                         className="md:hidden p-2 text-journal-text hover:bg-journal-text/5 rounded-full"
                     >
                         <Search className="w-5 h-5" />
+                    </button>
+
+                    {/* Mobile Share Icon */}
+                    <button
+                        onClick={onShareClick}
+                        className="md:hidden p-2 text-journal-text hover:bg-journal-text/5 rounded-full"
+                    >
+                        <Share className="w-5 h-5" />
                     </button>
 
                     {/* Share with friends */}
