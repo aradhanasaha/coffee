@@ -20,16 +20,15 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
         if (!hiddenRef.current) return null;
 
         try {
-            const dataUrl = await htmlToImage.toPng(hiddenRef.current, {
+            const blob = await htmlToImage.toBlob(hiddenRef.current, {
                 quality: 1.0,
-                pixelRatio: 2,
-                backgroundColor: null as any, // Force transparent
+                pixelRatio: 3, // Higher quality
+                backgroundColor: null as any, // Explicitly null for transparency
                 style: {
-                    backgroundColor: 'transparent',
+                    background: 'none', // Ensure no background style
                 }
             });
-            const res = await fetch(dataUrl);
-            return await res.blob();
+            return blob;
         } catch (error) {
             console.error('Error generating image:', error);
             return null;
