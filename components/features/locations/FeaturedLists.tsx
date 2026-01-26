@@ -41,6 +41,7 @@ export default function FeaturedLists() {
                             title={list.title}
                             subtitle={`${list.item_count || 0} items`}
                             curatedBy={list.owner?.username}
+                            id={list.id}
                             onClick={() => router.push(`/lists/${list.id}`)}
                         />
                     ))

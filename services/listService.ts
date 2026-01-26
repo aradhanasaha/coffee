@@ -274,7 +274,11 @@ export async function saveList(userId: string, listId: string): Promise<ServiceR
     try {
         const { error } = await supabase
             .from('list_saves')
-            .insert([{ user_id: userId, list_id: listId }]);
+            .insert([{
+                user_id: userId,
+                list_id: listId,
+                saved_at: new Date().toISOString()
+            }]);
 
         if (error) throw error;
         return { success: true };
@@ -307,7 +311,7 @@ export async function checkListSavedStatus(userId: string, listId: string): Prom
     try {
         const { data, error } = await supabase
             .from('list_saves')
-            .select('id')
+            .select('list_id')
             .match({ user_id: userId, list_id: listId })
             .maybeSingle();
 
@@ -333,7 +337,7 @@ export async function fetchSavedLists(userId: string): Promise<ServiceResult<Lis
                 )
             `)
             .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+            .order('saved_at', { ascending: false });
 
         if (error) throw error;
 
