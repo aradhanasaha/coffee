@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import JournalLayout from '@/components/layout/JournalLayout';
 import LocationHeader from '@/components/features/locations/LocationHeader';
 import FeaturedLists from '@/components/features/locations/FeaturedLists';
@@ -14,6 +15,8 @@ export default function LocationDetailPage() {
     const params = useParams();
     const id = params?.id as string;
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const fromFeed = searchParams.get('from') === 'feed';
 
     const [location, setLocation] = useState<LocationDetailsExtended | null>(null);
     const [loading, setLoading] = useState(true);
@@ -51,11 +54,20 @@ export default function LocationDetailPage() {
         <JournalLayout
             rightPanel={
                 <div className="sticky top-24">
-                    <FeaturedLists />
+                    <FeaturedLists locationId={location.id} />
                 </div>
             }
         >
             <div className="space-y-10">
+                {fromFeed && (
+                    <button
+                        onClick={() => router.push('/home')}
+                        className="flex items-center gap-2 text-primary hover:text-primary/70 transition-colors text-sm font-medium mb-4"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to feed
+                    </button>
+                )}
                 <LocationHeader
                     location={location}
                     onLogCoffee={() => setShowLogModal(true)}

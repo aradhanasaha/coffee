@@ -6,7 +6,11 @@ import * as listService from '@/services/listService';
 import { useRouter } from 'next/navigation';
 import { ListWithItems } from '@/core/types/types';
 
-export default function FeaturedLists() {
+interface FeaturedListsProps {
+    locationId?: string;
+}
+
+export default function FeaturedLists({ locationId }: FeaturedListsProps) {
     const router = useRouter();
     const [exploreLists, setExploreLists] = useState<ListWithItems[]>([]);
     const [loading, setLoading] = useState(true);
@@ -14,7 +18,13 @@ export default function FeaturedLists() {
     useEffect(() => {
         const fetchLists = async () => {
             setLoading(true);
-            const result = await listService.fetchPublicLists();
+            let result;
+
+            if (locationId) {
+                result = await listService.fetchListsByLocation(locationId);
+            } else {
+                result = await listService.fetchPublicLists();
+            }
 
             if (result.success && result.data) {
                 setExploreLists(result.data.slice(0, 3)); // Limit to top 3
@@ -22,12 +32,16 @@ export default function FeaturedLists() {
             setLoading(false);
         };
         fetchLists();
-    }, []);
+    }, [locationId]);
+
+    if (!loading && exploreLists.length === 0 && locationId) {
+        return null; // Don't show anything if no lists have this location
+    }
 
     return (
         <aside className="w-full space-y-4 lowercase">
             <h2 className="text-journal-text font-semibold text-lg mb-4">
-                Featured lists
+                {locationId ? 'Featured in lists' : 'Featured lists'}
             </h2>
             <div className="space-y-3">
                 {loading ? (
