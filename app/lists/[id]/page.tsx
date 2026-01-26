@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X, Lock, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import * as listService from '@/services/listService';
+import SaveListButton from '@/components/features/lists/SaveListButton';
 import JournalLayout from '@/components/layout/JournalLayout';
 import LocationCard from '@/components/features/lists/LocationCard';
 import type { ListWithItems } from '@/core/types/types';
@@ -142,6 +143,11 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                         >
                             <Share2 className="w-4 h-4" />
                         </button>
+
+                        {/* Save Button (non-owners) */}
+                        {!isOwner && list && (
+                            <SaveListButton listId={list.id} />
+                        )}
 
 
 
