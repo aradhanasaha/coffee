@@ -36,9 +36,6 @@ node_modules
 # database migrations
 /migrations
 
-# database migrations
-# database migrations
-/migrations
 *.sql
 
 
