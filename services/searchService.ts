@@ -53,7 +53,7 @@ export async function searchPlaces(query: string, limit: number = 5): Promise<Se
     try {
         const { data, error } = await supabase
             .from('coffee_logs')
-            .select('place, locations(city)')
+            .select('place, location_id, locations(city)')
             .ilike('place', `%${query}%`)
             .is('deleted_at', null)
             .limit(50); // Fetch more to deduplicate
@@ -63,14 +63,15 @@ export async function searchPlaces(query: string, limit: number = 5): Promise<Se
         if (!data) return [];
 
         // Deduplicate places
-        const places = new Map<string, { city?: string; count: number }>();
+        const places = new Map<string, { city?: string; count: number; id?: string }>();
 
         data.forEach((log: any) => {
             const name = log.place;
             if (!places.has(name)) {
                 places.set(name, {
                     city: log.locations?.city,
-                    count: 0
+                    count: 0,
+                    id: log.location_id // Capture first ID found
                 });
             }
             places.get(name)!.count++;
@@ -81,7 +82,7 @@ export async function searchPlaces(query: string, limit: number = 5): Promise<Se
             .sort((a, b) => b[1].count - a[1].count)
             .slice(0, limit)
             .map(([name, info]) => ({
-                id: name,
+                id: info.id || name, // Use UUID if available, else name (fallback)
                 type: 'place',
                 title: name,
                 subtitle: info.city || 'Unknown Location'

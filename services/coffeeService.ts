@@ -299,6 +299,7 @@ export async function fetchTopLocations(limit: number = 5): Promise<TopLocation[
                 place,
                 image_url,
                 image_deleted_at,
+                location_id,
                 locations:location_id (
                     city
                 )
@@ -308,7 +309,7 @@ export async function fetchTopLocations(limit: number = 5): Promise<TopLocation[
         if (error || !data) return [];
 
         // Aggregate by place name
-        const placeCounts: Record<string, { count: number; area: string; image?: string }> = {};
+        const placeCounts: Record<string, { count: number; area: string; image?: string; locationId?: string }> = {};
 
         data.forEach((log: any) => {
             const placeName = log.place.toLowerCase().trim();
@@ -318,7 +319,8 @@ export async function fetchTopLocations(limit: number = 5): Promise<TopLocation[
                 placeCounts[placeName] = {
                     count: 0,
                     area: log.locations?.city || 'Unknown Area',
-                    image: (!log.image_deleted_at && log.image_url) ? log.image_url : undefined
+                    image: (!log.image_deleted_at && log.image_url) ? log.image_url : undefined,
+                    locationId: log.location_id
                 };
             }
 
@@ -329,15 +331,21 @@ export async function fetchTopLocations(limit: number = 5): Promise<TopLocation[
                 placeCounts[placeName].image = log.image_url;
             }
 
-            // Update area if we found a better one (e.g. not null/unknown)
+            // Update area if we found a better one
             if (placeCounts[placeName].area === 'Unknown Area' && log.locations?.city) {
                 placeCounts[placeName].area = log.locations.city;
+            }
+
+            // Capture location ID if we missed it
+            if (!placeCounts[placeName].locationId && log.location_id) {
+                placeCounts[placeName].locationId = log.location_id;
             }
         });
 
         const sortedPlaces = Object.entries(placeCounts)
+            .filter(([_, stats]) => stats.locationId) // FILTER: Only include places with a valid location_id
             .map(([name, stats]) => ({
-                id: name, // Using name as ID for now since we aggregate by name
+                id: stats.locationId!, // We know it's defined now
                 name: name,
                 area: stats.area,
                 count: stats.count,

@@ -47,8 +47,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         if (item.type === 'user') {
             router.push(`/user/${item.title}`);
         } else if (item.type === 'place') {
-            // TODO: Implement place filter page
-            console.log("Navigating to place:", item.title);
+            if (item.id && item.id !== item.title) {
+                router.push(`/locations/${item.id}`);
+            } else {
+                console.log("No location ID found for place:", item.title);
+                // Fallback? Maybe generic search page? For now just log.
+            }
         }
     };
 

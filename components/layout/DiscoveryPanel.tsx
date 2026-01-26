@@ -47,7 +47,7 @@ export default function DiscoveryPanel({ onCafeClick, onListClick }: DiscoveryPa
                             <CafeRecommendationCard
                                 key={cafe.id}
                                 name={cafe.name}
-                                onClick={() => onCafeClick?.(cafe.name)}
+                                onClick={() => onCafeClick?.(cafe.id)}
                             />
                         ))
                     ) : (
