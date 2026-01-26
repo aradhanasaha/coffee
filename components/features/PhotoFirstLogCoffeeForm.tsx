@@ -67,6 +67,7 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
 
     const [filteredCoffee, setFilteredCoffee] = useState<string[]>([]);
     const [showCoffeeDropdown, setShowCoffeeDropdown] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(-1);
     const [spellSuggestion, setSpellSuggestion] = useState<string | null>(null);
     const [selectedLocation, setSelectedLocation] = useState<LocationDetails | null>(null);
 
@@ -89,8 +90,35 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
             const filtered = filterCoffeeNames(val);
             setFilteredCoffee(filtered);
             setShowCoffeeDropdown(true);
+            setActiveIndex(-1); // Reset active index
         } else {
             setShowCoffeeDropdown(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showCoffeeDropdown || filteredCoffee.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setActiveIndex(prev => (prev < filteredCoffee.length - 1 ? prev + 1 : prev));
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setActiveIndex(prev => (prev > 0 ? prev - 1 : prev));
+                break;
+            case 'Enter':
+                if (activeIndex >= 0) {
+                    e.preventDefault();
+                    setFormData({ ...formData, coffee_name: filteredCoffee[activeIndex] });
+                    setShowCoffeeDropdown(false);
+                    setActiveIndex(-1);
+                }
+                break;
+            case 'Escape':
+                setShowCoffeeDropdown(false);
+                break;
         }
     };
 
@@ -110,7 +138,7 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
         const newHomeBrew = !isHomeBrew;
         setIsHomeBrew(newHomeBrew);
         if (newHomeBrew) {
-            setFormData({ ...formData, place: 'Home Brew' });
+            setFormData({ ...formData, place: 'Home Brew', price_feel: '' });
             setSelectedLocation(null);
         } else {
             setFormData({ ...formData, place: '' });
@@ -136,6 +164,12 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
         e.preventDefault();
         setSubmitting(true);
         setError(null);
+
+        if (formData.rating === 0) {
+            setError("Rate it!");
+            setSubmitting(false);
+            return;
+        }
 
         // Content Moderation
         try {
@@ -249,6 +283,7 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
                                     }, 200);
                                 }}
                                 onFocus={() => formData.coffee_name && setShowCoffeeDropdown(true)}
+                                onKeyDown={handleKeyDown}
                                 className="w-full px-4 py-2 rounded-xl border-2 border-primary/20 bg-secondary/50 focus:outline-none focus:border-primary transition-colors"
                                 placeholder="e.g. Iced Latte"
                             />
@@ -270,15 +305,18 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
                             )}
                             {showCoffeeDropdown && filteredCoffee.length > 0 && (
                                 <div className="absolute z-10 w-full mt-1 bg-card border-2 border-primary/20 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                                    {filteredCoffee.map(suggestion => (
+                                    {filteredCoffee.map((suggestion, index) => (
                                         <button
                                             key={suggestion}
                                             type="button"
-                                            onClick={() => {
+                                            onMouseDown={(e) => {
+                                                e.preventDefault(); // Prevent focus loss
                                                 setFormData({ ...formData, coffee_name: suggestion });
                                                 setShowCoffeeDropdown(false);
                                             }}
-                                            className="w-full text-left px-4 py-2 hover:bg-primary/10 transition-colors text-sm"
+                                            onMouseEnter={() => setActiveIndex(index)}
+                                            className={`w-full text-left px-4 py-2 transition-colors text-sm ${index === activeIndex ? 'bg-primary/20 text-primary font-bold' : 'hover:bg-primary/10'
+                                                }`}
                                         >
                                             {suggestion}
                                         </button>
@@ -330,10 +368,13 @@ export default function PhotoFirstLogCoffeeForm({ initialData, onSuccess, onCanc
                                     <button
                                         key={option.value}
                                         type="button"
+                                        disabled={isHomeBrew}
                                         onClick={() => setFormData({ ...formData, price_feel: option.value as any })}
-                                        className={`flex-1 px-2 py-2 rounded-xl border-2 text-xs font-bold transition-all ${formData.price_feel === option.value
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-secondary/50 text-foreground border-primary/20 hover:border-primary/40'
+                                        className={`flex-1 px-2 py-2 rounded-xl border-2 text-xs font-bold transition-all ${isHomeBrew
+                                            ? 'opacity-30 cursor-not-allowed bg-secondary/30 border-primary/5 text-muted-foreground'
+                                            : formData.price_feel === option.value
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-secondary/50 text-foreground border-primary/20 hover:border-primary/40'
                                             }`}
                                     >
                                         {option.label}
