@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Bookmark, Share2, ArrowLeft, Pencil, Trash2, Check, X, Lock, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import * as listService from '@/services/listService';
 import JournalLayout from '@/components/layout/JournalLayout';
@@ -11,12 +11,13 @@ import type { ListWithItems } from '@/core/types/types';
 
 export default function ListDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const fromProfile = searchParams.get('from') === 'profile';
     const { user } = useAuth();
     const [list, setList] = useState<ListWithItems | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [saving, setSaving] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+
 
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -30,23 +31,17 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
             if (result.success && result.data) {
                 setList(result.data);
                 setEditTitle(result.data.title);
+
+
             } else {
                 setError(result.error || 'Failed to load list');
             }
             setLoading(false);
         };
         fetchList();
-    }, [params.id]);
+    }, [params.id, user]);
 
-    const handleSaveList = async () => {
-        if (!user || !list) return;
-        setSaving(true);
-        const result = await listService.saveList(user.id, list.id);
-        if (result.success) {
-            setIsSaved(true);
-        }
-        setSaving(false);
-    };
+
 
     const handleShare = () => {
         if (typeof navigator !== 'undefined' && navigator.share) {
@@ -127,79 +122,73 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     return (
         <JournalLayout>
             <div className="max-w-2xl mx-auto py-8">
-                {/* Back to Feed */}
+                {/* Back to Feed/Profile */}
                 <button
-                    onClick={() => router.push('/home')}
+                    onClick={() => fromProfile ? router.push('/user') : router.push('/home')}
                     className="flex items-center gap-2 text-journal-text/60 hover:text-journal-text transition-colors mb-8 text-sm lowercase"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    back to feed
+                    {fromProfile ? 'back to profile' : 'back to feed'}
                 </button>
 
                 {/* Header Section */}
                 <div className="text-center mb-12 space-y-4 relative">
-                    {/* Action Buttons - Absolute positioned on desktop */}
-                    {isOwner && (
-                        <button
-                            onClick={handleDeleteList}
-                            className="absolute left-0 top-1 p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                            title="Delete List"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
-                    )}
-
                     <div className="flex justify-center md:absolute md:right-0 md:top-0 gap-2 mb-4 md:mb-0">
-                        {!isOwner && (
-                            <button
-                                onClick={handleSaveList}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${isSaved
-                                    ? 'bg-journal-text text-journal-card border-journal-text'
-                                    : 'border-journal-text text-journal-text hover:bg-journal-text/5'
-                                    }`}
-                            >
-                                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                                {isSaved ? 'Saved' : 'Save this list'}
-                            </button>
-                        )}
-
+                        {/* Share Button */}
                         <button
                             onClick={handleShare}
                             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-journal-text text-journal-text hover:bg-journal-text/5 transition-all"
+                            title="Share List"
                         >
                             <Share2 className="w-4 h-4" />
-                            Share
                         </button>
+
+
+
+                        {/* Delete Button (owners) */}
+                        {isOwner && (
+                            <button
+                                onClick={handleDeleteList}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-all"
+                                title="Delete List"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
 
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center justify-center gap-3 md:px-48">
                         {isEditing ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-center gap-2 w-full max-w-md">
                                 <input
                                     type="text"
                                     value={editTitle}
                                     onChange={(e) => setEditTitle(e.target.value)}
-                                    className="text-3xl md:text-4xl font-bold text-journal-text text-center bg-transparent border-b-2 border-primary focus:outline-none w-full max-w-md"
+                                    className="text-3xl md:text-4xl font-bold text-journal-text text-center bg-transparent border-b-2 border-primary focus:outline-none w-full"
                                     autoFocus
                                     onBlur={handleUpdateTitle}
                                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
                                 />
-                                <button
-                                    onClick={handleUpdateTitle}
-                                    className="p-1 text-green-600 hover:bg-green-100 rounded-full"
-                                    disabled={updating}
-                                >
-                                    <Check className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setEditTitle(list.title);
-                                        setIsEditing(false);
-                                    }}
-                                    className="p-1 text-red-500 hover:bg-red-100 rounded-full"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
+                                <div className="flex justify-center gap-2">
+                                    <button
+                                        onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                        onClick={handleUpdateTitle}
+                                        className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors"
+                                        disabled={updating}
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
+                                        onClick={() => {
+                                            setEditTitle(list.title);
+                                            setIsEditing(false);
+                                        }}
+                                        className="p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 group relative">
@@ -219,8 +208,39 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                         )}
                     </div>
 
-                    <div className="text-journal-text/60 font-medium">
-                        curated by: <span className="text-journal-text hover:underline cursor-pointer" onClick={() => list.owner?.username && router.push(`/user/${list.owner.username}`)}>@{list.owner?.username || 'unknown'}</span>
+                    <div className="relative flex items-center justify-center w-full">
+                        {isOwner && (
+                            <button
+                                onClick={async () => {
+                                    if (!list) return;
+                                    const newVisibility = list.visibility === 'public' ? 'private' : 'public';
+                                    const result = await listService.updateList(list.id, { visibility: newVisibility });
+                                    if (result.success) {
+                                        setList({ ...list, visibility: newVisibility });
+                                    }
+                                }}
+                                className={`absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${list.visibility === 'public'
+                                    ? 'border-green-200 text-green-700 hover:bg-green-50'
+                                    : 'border-amber-200 text-amber-700 hover:bg-amber-50'
+                                    }`}
+                                title={`Make ${list.visibility === 'public' ? 'Private' : 'Public'}`}
+                            >
+                                {list.visibility === 'public' ? (
+                                    <>
+                                        <Globe className="w-3.5 h-3.5" />
+                                        Public
+                                    </>
+                                ) : (
+                                    <>
+                                        <Lock className="w-3.5 h-3.5" />
+                                        Private
+                                    </>
+                                )}
+                            </button>
+                        )}
+                        <div className="text-journal-text/60 font-medium">
+                            curated by: <span className="text-journal-text hover:underline cursor-pointer" onClick={() => list.owner?.username && router.push(`/user/${list.owner.username}`)}>@{list.owner?.username || 'unknown'}</span>
+                        </div>
                     </div>
 
                     {list.description && (
@@ -242,11 +262,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                                 <LocationCard
                                     key={log.id}
                                     log={log}
-                                    onClick={() => {
-                                        if (log.location_id) {
-                                            router.push(`/locations/${log.location_id}`);
-                                        }
-                                    }}
+                                    onClick={() => { }} // Could open log details modal in future
                                 />
                             ))}
                         </div>

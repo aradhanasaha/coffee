@@ -7,7 +7,6 @@ import type {
     ListWithItems,
     CoffeeLog
 } from '@/core/types/types';
-import { createNotification } from './notificationService';
 
 /**
  * Create a new list
@@ -70,19 +69,41 @@ export async function fetchUserLists(userId: string): Promise<ServiceResult<List
 /**
  * Fetch public lists for discovery
  */
-export async function fetchPublicLists(): Promise<ServiceResult<ListWithItems[]>> {
+/**
+ * Fetch public lists for discovery
+ */
+export async function fetchPublicLists(options?: {
+    limit?: number;
+    sortBy?: 'newest' | 'popular';
+}): Promise<ServiceResult<ListWithItems[]>> {
     try {
-        const { data, error } = await supabase
+        let query = supabase
             .from('lists')
             .select(`
                 *,
                 owner:profiles!lists_owner_id_fkey(username),
-                items:list_items(count)
+                items:list_items(count),
+                saves:list_saves(count)
             `)
             .eq('visibility', 'public')
-            .is('deleted_at', null)
-            .order('created_at', { ascending: false })
-            .limit(10);
+            .is('deleted_at', null);
+
+        // Sorting logic
+        if (options?.sortBy === 'popular') {
+            // For popular, we fetch more items to sort in memory since we can't easily sort by related count in standard Supabase query
+            // Fetch up to 50 to get a good candidate pool
+            query = query.order('created_at', { ascending: false }).limit(50);
+        } else {
+            // Default: Newest
+            query = query.order('created_at', { ascending: false });
+            if (options?.limit) {
+                query = query.limit(options.limit);
+            } else {
+                query = query.limit(10);
+            }
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -90,14 +111,37 @@ export async function fetchPublicLists(): Promise<ServiceResult<ListWithItems[]>
         interface PublicListResponse extends List {
             owner: { username: string };
             items: { count: number }[];
+            saves: { count: number }[];
         }
 
-        const lists = (data as unknown as PublicListResponse[]).map((list) => ({
+        let lists = (data as unknown as PublicListResponse[]).map((list) => ({
             ...list,
             items: [], // Structure requires items array, but we only fetched count
             item_count: list.items[0]?.count || 0,
+            save_count: list.saves?.[0]?.count || 0,
             owner: list.owner
         }));
+
+        // In-memory sort for popularity
+        if (options?.sortBy === 'popular') {
+            lists.sort((a, b) => {
+                // Secondary sort by item count, then date
+                if (b.save_count !== a.save_count) {
+                    return (b.save_count || 0) - (a.save_count || 0);
+                }
+                if (b.item_count !== a.item_count) {
+                    return (b.item_count || 0) - (a.item_count || 0);
+                }
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+
+            // Apply limit after sorting
+            if (options?.limit) {
+                lists = lists.slice(0, options.limit);
+            } else {
+                lists = lists.slice(0, 10);
+            }
+        }
 
         return { success: true, data: lists };
     } catch (err: any) {
@@ -139,10 +183,7 @@ export async function addListItem(
             .eq('id', listId)
             .single();
 
-        if (logData && listOwner && logData.user_id !== listOwner.owner_id) {
-            // Create notification: Recipient=LogOwner, Sender=ListOwner(Saver)
-            await createNotification(logData.user_id, listOwner.owner_id, 'save_list', coffeeLogId);
-        }
+        // Notification triggered by DB if owner != user
 
         return { success: true, data };
     } catch (err: any) {
@@ -245,6 +286,41 @@ export async function saveList(userId: string, listId: string): Promise<ServiceR
 }
 
 /**
+ * Unsave a list
+ */
+export async function unsaveList(userId: string, listId: string): Promise<ServiceResult<void>> {
+    try {
+        const { error } = await supabase
+            .from('list_saves')
+            .delete()
+            .match({ user_id: userId, list_id: listId });
+
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Check if a list is saved by the user
+ */
+export async function checkListSavedStatus(userId: string, listId: string): Promise<ServiceResult<boolean>> {
+    try {
+        const { data, error } = await supabase
+            .from('list_saves')
+            .select('id')
+            .match({ user_id: userId, list_id: listId })
+            .maybeSingle();
+
+        if (error) throw error;
+        return { success: true, data: !!data };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
  * Fetch lists saved by a user
  */
 export async function fetchSavedLists(userId: string): Promise<ServiceResult<ListWithItems[]>> {
@@ -318,4 +394,58 @@ export async function deleteList(listId: string): Promise<ServiceResult<void>> {
     }
 }
 
+/**
+ * Check which lists contain a specific coffee log
+ */
+export async function checkLogSavedBatch(
+    listIds: string[],
+    coffeeLogId: string
+): Promise<ServiceResult<string[]>> {
+    try {
+        const { data, error } = await supabase
+            .from('list_items')
+            .select('list_id')
+            .in('list_id', listIds)
+            .eq('coffee_log_id', coffeeLogId);
 
+        if (error) throw error;
+
+        const containingListIds = (data || []).map(item => item.list_id);
+        return { success: true, data: containingListIds };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Remove a log from all lists owned by the user
+ */
+export async function removeFromAllLists(
+    userId: string,
+    coffeeLogId: string
+): Promise<ServiceResult<void>> {
+    try {
+        // First get all lists owned by user that contain this log
+        const { data: userLists, error: fetchError } = await supabase
+            .from('lists')
+            .select('id')
+            .eq('owner_id', userId);
+
+        if (fetchError) throw fetchError;
+
+        const listIds = userLists.map(l => l.id);
+
+        if (listIds.length === 0) return { success: true };
+
+        const { error } = await supabase
+            .from('list_items')
+            .delete()
+            .in('list_id', listIds)
+            .eq('coffee_log_id', coffeeLogId);
+
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
