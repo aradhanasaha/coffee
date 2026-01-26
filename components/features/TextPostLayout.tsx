@@ -9,6 +9,8 @@ import SaveToListButton from './lists/SaveToListButton';
 // Import Trash2
 import { Trash2 } from 'lucide-react';
 
+import ShareEntryButton from './ShareEntryButton';
+
 interface TextPostLayoutProps {
     log: {
         id: string;
@@ -31,6 +33,7 @@ interface TextPostLayoutProps {
     onDelete?: () => void;
     isDeleting?: boolean;
     locationId?: string | null;
+    variant?: 'default' | 'share';
 }
 
 export default function TextPostLayout({
@@ -44,7 +47,8 @@ export default function TextPostLayout({
     isAdmin,
     onDelete,
     isDeleting,
-    locationId
+    locationId,
+    variant = 'default'
 }: TextPostLayoutProps) {
     // Truncate review logic
     const maxLength = 280; // Longer for text posts (Twitter style)
@@ -52,16 +56,18 @@ export default function TextPostLayout({
 
     // Safety check
     const reviewText = log.review || "";
-    const shouldTruncate = reviewText.length > maxLength && !isExpanded;
+    const shouldTruncate = variant === 'default' && reviewText.length > maxLength && !isExpanded;
 
     const displayReview = shouldTruncate
         ? reviewText.substring(0, maxLength) + '...'
         : reviewText;
 
+    const isShareMode = variant === 'share';
+
     return (
-        <div className="flex flex-col p-6 relative group/card">
-            {/* Admin Delete Button - Overlay */}
-            {isAdmin && onDelete && (
+        <div className={`flex flex-col p-6 relative group/card ${isShareMode ? 'bg-journal-bg' : ''}`}>
+            {/* Admin Delete Button - Overlay - Only in default mode */}
+            {!isShareMode && isAdmin && onDelete && (
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -80,7 +86,7 @@ export default function TextPostLayout({
                 {log.username && (
                     <UsernameLink
                         username={log.username}
-                        onClick={onUsernameClick}
+                        onClick={isShareMode ? undefined : onUsernameClick}
                         className="font-semibold text-sm text-journal-text"
                     />
                 )}
@@ -91,7 +97,7 @@ export default function TextPostLayout({
                 <div className="flex items-center gap-1">
                     <span className="font-medium text-journal-text/80">{log.coffee_name.toLowerCase()}</span>
                     <span>•</span>
-                    {locationId ? (
+                    {locationId && !isShareMode ? (
                         <a href={`/locations/${locationId}`} className="hover:underline hover:text-primary transition-colors">
                             {log.place.toLowerCase()}
                         </a>
@@ -124,21 +130,37 @@ export default function TextPostLayout({
                 </div>
             )}
 
-            {/* 4. Footer (Rating + Heart) */}
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-primary/5">
-                <div className="opacity-80 scale-90 origin-left">
-                    <StarRating rating={log.rating} size="sm" />
+            {/* 4. Footer (Rating + Heart) OR Share Footer */}
+            {!isShareMode ? (
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-primary/5">
+                    <div className="opacity-80 scale-90 origin-left">
+                        <StarRating rating={log.rating} size="sm" />
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <ShareEntryButton log={log} />
+                        <SaveToListButton coffeeLogId={log.id} />
+                        <HeartButton
+                            isLiked={isLiked}
+                            onToggle={onToggleLike}
+                            loading={likeLoading}
+                            count={likeCount}
+                        />
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <SaveToListButton coffeeLogId={log.id} />
-                    <HeartButton
-                        isLiked={isLiked}
-                        onToggle={onToggleLike}
-                        loading={likeLoading}
-                        count={likeCount}
-                    />
-                </div>
-            </div>
+            ) : (
+                <>
+                    <div className="flex justify-between items-center mt-auto pt-2 border-t border-primary/5">
+                        <div className="opacity-80 scale-90 origin-left">
+                            <StarRating rating={log.rating} size="sm" />
+                        </div>
+                    </div>
+                    {/* Branding Footer for Share Mode */}
+                    <div className="mt-auto pt-6 pb-2 flex items-center justify-center gap-2 opacity-60">
+                        <img src="/logo.png" alt="imnotupyet logo" className="w-5 h-5 opacity-90" />
+                        <span className="font-bold text-sm tracking-widest lowercase text-journal-text">imnotupyet</span>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
