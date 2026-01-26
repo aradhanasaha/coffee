@@ -68,8 +68,8 @@ export default function ShareModal({ isOpen, onClose, imageBlob, fileName }: Sha
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
-            <div className="w-full max-w-sm bg-journal-card border-t sm:border border-white/10 sm:rounded-3xl p-6 space-y-6 animate-in slide-in-from-bottom-10">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
+            <div className="w-full max-w-sm bg-journal-card border border-white/10 rounded-3xl p-6 space-y-6 animate-in slide-in-from-bottom-10 mb-24 sm:mb-0">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-journal-text">Share Activity</h3>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-black/5 transition-colors">
