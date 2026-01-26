@@ -166,13 +166,7 @@ export default function ImagePostLayout({
                 </div>
             )}
 
-            {/* Branding Footer for Share Mode */}
-            {isShareMode && (
-                <div className="mt-auto pt-6 pb-6 flex items-center justify-center gap-2 opacity-60">
-                    <img src="/logo.png" alt="imnotupyet logo" className="w-5 h-5 opacity-90" />
-                    <span className="font-bold text-sm tracking-widest lowercase text-journal-text">imnotupyet</span>
-                </div>
-            )}
+
         </div>
     );
 }
