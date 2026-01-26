@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
 import * as listService from '@/services/listService';
+import { useRouter } from 'next/navigation';
 import { ListWithItems } from '@/core/types/types';
 
 export default function FeaturedLists() {
+    const router = useRouter();
     const [exploreLists, setExploreLists] = useState<ListWithItems[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -39,7 +41,7 @@ export default function FeaturedLists() {
                             title={list.title}
                             subtitle={`${list.item_count || 0} items`}
                             curatedBy={list.owner?.username}
-                            onClick={() => { }} // TODO: Navigate to list
+                            onClick={() => router.push(`/lists/${list.id}`)}
                         />
                     ))
                 ) : (

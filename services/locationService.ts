@@ -1,5 +1,5 @@
 import { supabase } from '@/adapters/supabaseClient';
-import { CoffeeLog, Location, ServiceResult } from '@/core/types/types';
+import { CoffeeLog, CoffeeLogWithUsername, Location, ServiceResult } from '@/core/types/types';
 
 /**
  * Find or create a location in the database
@@ -75,7 +75,7 @@ export interface LocationDetailsExtended extends Location {
     average_rating: number;
     review_count: number;
     cover_image_url: string | null;
-    logs: CoffeeLog[];
+    logs: CoffeeLogWithUsername[];
     // description field is not in DB yet, but we'll include it in the type for UI readiness
     description?: string;
 }
@@ -105,7 +105,7 @@ export async function fetchLocationDetails(locationId: string): Promise<ServiceR
             return { success: false, error: logsError.message };
         }
 
-        let validLogs: CoffeeLog[] = logs || [];
+        let validLogs: CoffeeLogWithUsername[] = (logs || []) as CoffeeLogWithUsername[];
 
         // 2.5 Manual Join for Profiles (to fix PGRST200 error)
         if (validLogs.length > 0) {

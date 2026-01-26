@@ -49,7 +49,7 @@ export default function AuthenticatedHome() {
         if (cafeIdOrName && cafeIdOrName.length > 20) { // UUIDs are 36 chars
             router.push(`/locations/${cafeIdOrName}`);
         } else {
-            console.log('Filter by café:', cafeIdOrName); // Fallback for names
+
         }
     };
 

@@ -22,10 +22,7 @@ export async function createCoffeeLog(
     logData: LogFormData
 ): Promise<ServiceResult<CoffeeLog>> {
     try {
-        // Validate required photo - CHECK REMOVED for V3 (Text posts allowed)
-        // if (!logData.image_url) {
-        //     return { success: false, error: 'Photo is required' };
-        // }
+
 
         const { data, error } = await supabase
             .from('coffee_logs')
@@ -199,7 +196,6 @@ export async function fetchPublicCoffeeFeed(options?: {
         }
 
         if (!logsData || logsData.length === 0) {
-            console.log('No logs found in database');
             return [];
         }
 

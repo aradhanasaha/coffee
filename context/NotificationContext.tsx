@@ -72,7 +72,7 @@ export default function NotificationProvider({ children }: { children: ReactNode
                             if (data) username = data.username;
                         }
 
-                        console.log('[NotificationContext] Triggering Toast:', eventType, newRecord.id);
+
 
                         setLatestNotification({
                             ...newRecord,
