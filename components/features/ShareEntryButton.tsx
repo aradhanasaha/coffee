@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Share2 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import JournalFeedCard from './JournalFeedCard';
+import ShareModal from './ShareModal';
 
 interface ShareEntryButtonProps {
     log: any; // Using any for now to match the complex props of FeedCard, essentially the log object
@@ -11,6 +12,8 @@ interface ShareEntryButtonProps {
 
 export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
     const [isSharing, setIsSharing] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null);
     const hiddenRef = useRef<HTMLDivElement>(null);
 
     const generateBlob = async () => {
@@ -21,6 +24,9 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
                 quality: 1.0,
                 pixelRatio: 2,
                 backgroundColor: null as any, // Force transparent
+                style: {
+                    backgroundColor: 'transparent',
+                }
             });
             const res = await fetch(dataUrl);
             return await res.blob();
@@ -35,32 +41,13 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
         const blob = await generateBlob();
 
         if (blob) {
-            if (navigator.share) {
-                const file = new File([blob], `imnotupyet-${log.coffee_name}.png`, { type: 'image/png' });
-                try {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Check out this coffee!',
-                        text: `Checking out ${log.coffee_name} at ${log.place}`
-                    });
-                } catch (e) {
-                    console.error('Share failed', e);
-                }
-            } else {
-                // Fallback if share not supported
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.download = `imnotupyet-${log.coffee_name}.png`;
-                link.href = url;
-                link.click();
-                URL.revokeObjectURL(url);
-            }
+            setGeneratedBlob(blob);
+            setShowModal(true);
         } else {
             alert('Failed to generate image.');
         }
         setIsSharing(false);
     };
-
 
     return (
         <div className="flex items-center gap-2">
@@ -73,13 +60,19 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
                 <Share2 className={`w-5 h-5 ${isSharing ? 'opacity-50 animate-pulse' : ''}`} />
             </button>
 
+            <ShareModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                imageBlob={generatedBlob}
+                fileName={`imnotupyet-${log.coffee_name}.png`}
+            />
 
             {/* Hidden container for image generation */}
             <div style={{ position: 'fixed', top: '-9999px', left: '-9999px' }}>
                 <div
                     ref={hiddenRef}
-                    style={{ width: '375px' }}
-                    className="flex flex-col gap-6 p-4 bg-transparent items-center"
+                    style={{ width: '375px', backgroundColor: 'transparent' }}
+                    className="flex flex-col gap-3 p-4 bg-transparent items-center"
                 >
                     {/* Card Wrapper to ensure rounded corners are visible against transparent background */}
                     <div className="w-full shadow-lg rounded-2xl overflow-hidden">
@@ -94,8 +87,8 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
 
                     {/* Branding Footer - Outside the card */}
                     <div className="flex items-center justify-center gap-2 opacity-100">
-                        <img src="/logo.png" alt="imnotupyet logo" className="w-6 h-6" />
-                        <span className="font-bold text-sm tracking-widest lowercase text-journal-text">imnotupyet</span>
+                        <img src="/logo.png" alt="imnotupyet logo" className="w-12 h-12" />
+                        <span className="font-bold text-lg tracking-widest lowercase text-journal-text">imnotupyet</span>
                     </div>
                 </div>
             </div>
