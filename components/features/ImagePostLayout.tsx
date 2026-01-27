@@ -102,6 +102,8 @@ export default function ImagePostLayout({
                         alt={`${log.coffee_name} at ${log.place}`}
                         className="w-full h-auto max-h-[500px] object-cover"
                         onError={onImageError}
+                        crossOrigin={isShareMode ? "anonymous" : undefined}
+                        loading={isShareMode ? "eager" : "lazy"}
                     />
                 </div>
             )}
