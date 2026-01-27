@@ -2,6 +2,7 @@
 
 import JournalLayout from '@/components/layout/JournalLayout';
 import { Bell } from 'lucide-react';
+import PushNotificationManager from '@/components/features/PushNotificationManager';
 
 export default function NotificationsPage() {
     return (
@@ -12,6 +13,9 @@ export default function NotificationsPage() {
                 </div>
                 <h1 className="text-2xl font-bold text-journal-text">Notifications</h1>
                 <p className="text-muted-foreground">No new notifications.</p>
+                <div className="pt-4">
+                    <PushNotificationManager />
+                </div>
             </div>
         </JournalLayout>
     );
