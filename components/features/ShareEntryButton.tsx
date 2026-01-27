@@ -19,13 +19,18 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
     const generateBlob = async () => {
         if (!hiddenRef.current) return null;
 
+        // Increased delay to 500ms to ensure images are fully loaded and fonts are rendered
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         try {
             const blob = await htmlToImage.toBlob(hiddenRef.current, {
                 quality: 1.0,
-                pixelRatio: 3, // Higher quality
-                backgroundColor: null as any, // Explicitly null for transparency
+                pixelRatio: 2, // Accessability/Size balance. 3 might trigger compression on share.
+                backgroundColor: null as any,
+                cacheBust: true, // Force reload images
+                skipAutoScale: true, // Prevent iOS scaling issues
                 style: {
-                    background: 'none', // Ensure no background style
+                    background: 'none',
                 }
             });
             return blob;
