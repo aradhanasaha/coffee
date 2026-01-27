@@ -14,6 +14,7 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
     const [isSharing, setIsSharing] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null);
+    const [shareableLog, setShareableLog] = useState<any>(null);
     const hiddenRef = useRef<HTMLDivElement>(null);
 
     const generateBlob = async () => {
@@ -42,6 +43,35 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
 
     const handleShare = async () => {
         setIsSharing(true);
+
+        // Pre-process image to Base64 to avoid CORS/tainted canvas issues on iOS
+        let logToShare = log;
+        if (log.image_url) {
+            try {
+                // Fetch the image
+                const response = await fetch(log.image_url);
+                const blob = await response.blob();
+
+                // Convert to Base64
+                const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+
+                logToShare = { ...log, image_url: base64 };
+            } catch (error) {
+                console.error('Failed to convert image to base64, using original url:', error);
+                // Fallback to original URL if fetch fails
+            }
+        }
+
+        setShareableLog(logToShare);
+
+        // Wait for state update and render
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const blob = await generateBlob();
 
         if (blob) {
@@ -51,6 +81,10 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
             alert('Failed to generate image.');
         }
         setIsSharing(false);
+        // Reset shareable log after a delay or on close, but simpler to just leave it 
+        // as it will be overwritten next time or ignored.
+        // Actually, let's clear it to save memory if it's large base64 string
+        setTimeout(() => setShareableLog(null), 1000);
     };
 
     return (
@@ -81,7 +115,7 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
                     {/* Card Wrapper to ensure rounded corners are visible against transparent background */}
                     <div className="w-full shadow-lg rounded-2xl overflow-hidden">
                         <JournalFeedCard
-                            log={log}
+                            log={shareableLog || log}
                             variant="share"
                             // Pass dummy props
                             onUsernameClick={() => { }}
@@ -90,8 +124,7 @@ export default function ShareEntryButton({ log }: ShareEntryButtonProps) {
                     </div>
 
                     {/* Branding Footer - Outside the card */}
-                    <div className="flex items-center justify-center gap-2 opacity-100">
-                        <img src="/logo.png" alt="imnotupyet logo" className="w-12 h-12" />
+                    <div className="flex items-center justify-center opacity-100">
                         <span className="font-bold text-lg tracking-widest lowercase text-journal-text">imnotupyet</span>
                     </div>
                 </div>
