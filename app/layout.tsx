@@ -23,6 +23,8 @@ export const viewport: Viewport = {
 };
 
 
+import Providers from "./providers";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -32,7 +34,9 @@ export default function RootLayout({
         <html lang="en">
             <body className={inter.className}>
                 <ServiceWorkerRegister />
-                {children}
+                <Providers>
+                    {children}
+                </Providers>
             </body>
         </html>
     );
