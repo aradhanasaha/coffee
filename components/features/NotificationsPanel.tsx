@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchNotifications, markAllAsRead, markAsRead } from '@/services/notificationService';
 import { Notification } from '@/core/types/types';
+import { useNotificationContext } from '@/context/NotificationContext';
 
 interface NotificationsPanelProps {
     isOpen: boolean;
@@ -17,6 +18,7 @@ interface NotificationsPanelProps {
 export default function NotificationsPanel({ isOpen, onClose, mobile = false }: NotificationsPanelProps) {
     const router = useRouter();
     const { user } = useAuth();
+    const { refreshCount } = useNotificationContext();
     const panelRef = useRef<HTMLDivElement>(null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(false);
@@ -59,11 +61,13 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
         if (!user) return;
         await markAllAsRead(user.id);
         await loadNotifications();
+        refreshCount();
     };
 
     const handleNotificationClick = async (notification: Notification) => {
         if (!notification.read) {
             await markAsRead(notification.id);
+            refreshCount();
             // Optimistically update UI
             setNotifications(prev => prev.map(n =>
                 n.id === notification.id ? { ...n, read: true } : n

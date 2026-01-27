@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Coffee, Search, Bell } from 'lucide-react';
 import SearchModal from '@/components/features/SearchModal';
 import NotificationsPanel from '@/components/features/NotificationsPanel';
-import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
+import { useNotificationContext } from '@/context/NotificationContext';
 
 interface LeftNavProps {
     onLogCoffeeClick?: () => void;
@@ -16,7 +16,7 @@ export default function LeftNav({ onLogCoffeeClick }: LeftNavProps) {
     const router = useRouter();
     const [showSearch, setShowSearch] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
-    const { hasUnread } = useUnreadNotifications();
+    const { hasUnread, unreadCount } = useNotificationContext();
 
     return (
         <>
@@ -55,8 +55,10 @@ export default function LeftNav({ onLogCoffeeClick }: LeftNavProps) {
                         >
                             <div className="relative">
                                 <Bell className="w-5 h-5" />
-                                {hasUnread && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full border border-journal-bg" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] bg-[#FF3040] text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1 border-2 border-journal-bg shadow-sm">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
                                 )}
                             </div>
                             <span>notifications</span>
