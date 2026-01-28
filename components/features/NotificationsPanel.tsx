@@ -167,6 +167,10 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
                 </button>
             </div>
 
+            <div className="p-3 border-b border-journal-text/5">
+                <PushNotificationManager />
+            </div>
+
             <div className="max-h-[60vh] overflow-y-auto">
                 {loading ? (
                     <div className="p-8 text-center text-journal-text/40 text-sm">
