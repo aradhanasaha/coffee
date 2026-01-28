@@ -6,7 +6,11 @@ import { Bell, BellOff, Loader2 } from 'lucide-react';
 
 const VAPID_PUBLIC_KEY = 'BKntPVco71jin1umb6iMv8Ct8SDzt0kcq70TUT0W8ata_FXHUVTadyLiRH9vV4FJWatELUzzaLhIWEgr4z6flnY'; // Hardcoded from generation
 
-export default function PushNotificationManager() {
+interface PushNotificationManagerProps {
+    hideWhenActive?: boolean;
+}
+
+export default function PushNotificationManager({ hideWhenActive = false }: PushNotificationManagerProps) {
     const [isSupported, setIsSupported] = useState(false);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
     const [loading, setLoading] = useState(true);
@@ -113,8 +117,9 @@ export default function PushNotificationManager() {
     }
 
     if (subscription) {
+        if (hideWhenActive) return null;
         return (
-            <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+            <div className="flex items-center gap-2 text-sm text-journal-brown font-medium">
                 <Bell className="w-4 h-4" />
                 <span>Notifications Active</span>
             </div>
