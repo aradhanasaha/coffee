@@ -129,7 +129,7 @@ export default function PushNotificationManager({ hideWhenActive = false }: Push
     return (
         <button
             onClick={subscribeToPush}
-            className="flex items-center gap-2 px-4 py-2 bg-journal-brown text-[#fbfbfb] rounded-xl text-sm font-medium hover:bg-journal-brown-dark transition-colors w-full justify-center"
+            className="flex items-center gap-2 px-4 py-2 bg-journal-brown/10 text-journal-brown rounded-xl text-sm font-medium hover:bg-journal-brown/20 transition-colors w-full justify-center"
         >
             <Bell className="w-4 h-4" />
             Enable Notifications
