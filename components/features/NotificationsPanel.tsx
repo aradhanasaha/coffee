@@ -147,7 +147,7 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
     if (!isOpen) return null;
 
     const positionClasses = mobile
-        ? "fixed top-16 right-4 w-[90vw] md:w-80 h-[80vh]"
+        ? "fixed top-16 right-4 w-[90vw] md:w-80 h-[60vh]"
         : "absolute left-full top-0 ml-4 w-full md:w-80 h-[calc(100vh-3rem)]";
 
     const fadeClass = mobile ? "slide-in-from-top-2" : "slide-in-from-left-2";
@@ -168,7 +168,7 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
             </div>
 
             <div className="p-3 border-b border-journal-text/5">
-                <PushNotificationManager />
+                <PushNotificationManager hideWhenActive={true} />
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto">
