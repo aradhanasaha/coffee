@@ -40,11 +40,11 @@ export default function LikersList({ likers, loading, error }: LikersListProps) 
 
     return (
         <div className="flex flex-col min-w-[150px] max-h-[200px] overflow-y-auto py-1">
-            <div className="px-3 py-1.5 text-[10px] items-center font-bold text-journal-text/50 uppercase tracking-wider border-b border-journal-border/30 mb-1 sticky top-0 bg-journal-accent/95 backdrop-blur-sm z-10">
+            <div className="px-4 py-1.5 text-[10px] items-center font-bold text-journal-text/50 uppercase tracking-wider border-b border-journal-border/30 mb-1 sticky top-0 bg-journal-card/95 backdrop-blur-sm z-10 w-full">
                 Liked by
             </div>
             {likers.map((liker) => (
-                <div key={liker.user_id} className="px-3 py-1.5 hover:bg-black/5 transition-colors">
+                <div key={liker.user_id} className="px-4 py-1.5 hover:bg-black/5 transition-colors">
                     <UsernameLink
                         username={liker.username}
                         className="text-xs font-medium text-journal-text block"

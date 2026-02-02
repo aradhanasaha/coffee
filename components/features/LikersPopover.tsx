@@ -43,8 +43,7 @@ export default function LikersPopover({ children, targetId, targetType }: Likers
 
             {isOpen && (
                 <div
-                    className="absolute bottom-full mb-2 z-50 bg-journal-card/95 backdrop-blur-md border border-journal-border/50 rounded-xl shadow-xl w-48 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-                    style={{ left: '50%', transform: 'translateX(-50%)' }}
+                    className="absolute bottom-full right-0 mb-2 z-50 bg-journal-card/95 backdrop-blur-md border border-journal-border/50 rounded-lg shadow-xl w-auto min-w-[140px] max-w-[200px] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-bottom-right"
                     onMouseEnter={handleOpen}
                     onMouseLeave={handleClose}
                 >
