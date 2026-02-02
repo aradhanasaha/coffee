@@ -14,10 +14,7 @@ import * as listService from '@/services/listService';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
 import type { ListWithItems, CoffeeLog } from '@/core/types/types';
 import { useAuth } from "@/hooks/useAuth";
-<<<<<<< HEAD
-=======
 import Modal from "@/components/common/Modal";
->>>>>>> new_profile_page
 
 export default function UserDashboard() {
     const { logout } = useAuth();
@@ -314,11 +311,7 @@ export default function UserDashboard() {
                                 }`}
                         >
                             <span>
-<<<<<<< HEAD
-                                My Coffee History
-=======
                                 Posts
->>>>>>> new_profile_page
                             </span>
                             {activeTab === 'history' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -332,11 +325,7 @@ export default function UserDashboard() {
                                 }`}
                         >
                             <span>
-<<<<<<< HEAD
-                                My Lists
-=======
                                 Lists
->>>>>>> new_profile_page
                             </span>
                             {activeTab === 'lists' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -356,57 +345,6 @@ export default function UserDashboard() {
                                         </Link>
                                     </div>
                                 ) : (
-<<<<<<< HEAD
-                                    <div className="space-y-4">
-                                        {logs.map((log) => (
-                                            <div key={log.id} className="bg-card p-5 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
-                                                {editingLogId === log.id ? (
-                                                    <LogCoffeeForm
-                                                        initialData={log}
-                                                        onSuccess={handleUpdateLog}
-                                                        submitLabel="Save Changes"
-                                                    />
-                                                ) : (
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                        <div className="space-y-1">
-                                                            <h3 className="font-bold text-lg">{log.coffee_name}</h3>
-                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                <MapPin className="w-3 h-3" />
-                                                                <span>{log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-wrap items-center gap-4">
-                                                            <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-                                                                <Star className="w-4 h-4 text-primary fill-primary" />
-                                                                <span className="font-bold text-primary">{log.rating}</span>
-                                                            </div>
-                                                            <div className="text-xs font-bold px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
-                                                                {getPriceLabel(log.price_feel)}
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground font-medium">
-                                                                {new Date(log.created_at).toLocaleDateString()}
-                                                            </div>
-                                                            <div className="flex items-center gap-2 ml-auto">
-                                                                <button
-                                                                    className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                                                                    onClick={() => handleEditClick(log)}
-                                                                >
-                                                                    <Edit2 className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                                                                    onClick={() => handleDeleteLog(log.id)}
-                                                                    disabled={isDeleting === log.id}
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-=======
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-2 gap-4">
                                             {logs.map((log) => (
@@ -419,7 +357,7 @@ export default function UserDashboard() {
                                                 />
                                             ))}
                                         </div>
->>>>>>> new_profile_page
+                                    </div>
                                     </div>
                                 )}
                             </>
@@ -464,30 +402,30 @@ export default function UserDashboard() {
                     </div>
                 </Modal>
 
-                {/* Placeholder Sections */}
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">
-                    <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
-                        <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
-                            Coming Soon
-                        </div>
-                        <h3 className="font-bold mb-2 flex items-center gap-2">
-                            <MapIcon className="w-4 h-4" />
-                            Map of logged places
-                        </h3>
-                        <p className="text-sm text-muted-foreground">Visualize your coffee journey across the city.</p>
-                    </div>
-                    <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
-                        <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
-                            Coming Soon
-                        </div>
-                        <h3 className="font-bold mb-2 flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4" />
-                            Taste analytics & trends
-                        </h3>
-                        <p className="text-sm text-muted-foreground">Discover your flavor profile and habits.</p>
-                    </div>
-                </section>
-            </main>
+                {/* Placeholder Sections */ }
+    <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">
+        <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
+            <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                Coming Soon
+            </div>
+            <h3 className="font-bold mb-2 flex items-center gap-2">
+                <MapIcon className="w-4 h-4" />
+                Map of logged places
+            </h3>
+            <p className="text-sm text-muted-foreground">Visualize your coffee journey across the city.</p>
         </div>
+        <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
+            <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                Coming Soon
+            </div>
+            <h3 className="font-bold mb-2 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Taste analytics & trends
+            </h3>
+            <p className="text-sm text-muted-foreground">Discover your flavor profile and habits.</p>
+        </div>
+    </section>
+            </main >
+        </div >
     );
 }
