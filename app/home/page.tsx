@@ -10,6 +10,7 @@ import PhotoFirstLogCoffeeForm from "@/components/features/PhotoFirstLogCoffeeFo
 import { usePublicCoffeeFeed } from '@/hooks/useCoffeeLogs';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import NotificationPermissionPopup from '@/components/features/NotificationPermissionPopup';
 
 export default function AuthenticatedHome() {
     const [showLogModal, setShowLogModal] = useState(false);
@@ -140,6 +141,8 @@ export default function AuthenticatedHome() {
                     onCancel={() => setShowLogModal(false)}
                 />
             </Modal>
+
+            <NotificationPermissionPopup />
         </>
     );
 }
