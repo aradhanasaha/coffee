@@ -358,7 +358,6 @@ export default function UserDashboard() {
                                             ))}
                                         </div>
                                     </div>
-                                    </div>
                                 )}
                             </>
                         ) : (
@@ -402,29 +401,29 @@ export default function UserDashboard() {
                     </div>
                 </Modal>
 
-                {/* Placeholder Sections */ }
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">
-        <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
-            <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
-                Coming Soon
-            </div>
-            <h3 className="font-bold mb-2 flex items-center gap-2">
-                <MapIcon className="w-4 h-4" />
-                Map of logged places
-            </h3>
-            <p className="text-sm text-muted-foreground">Visualize your coffee journey across the city.</p>
-        </div>
-        <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
-            <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
-                Coming Soon
-            </div>
-            <h3 className="font-bold mb-2 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Taste analytics & trends
-            </h3>
-            <p className="text-sm text-muted-foreground">Discover your flavor profile and habits.</p>
-        </div>
-    </section>
+                {/* Placeholder Sections */}
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">
+                    <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
+                        <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                            Coming Soon
+                        </div>
+                        <h3 className="font-bold mb-2 flex items-center gap-2">
+                            <MapIcon className="w-4 h-4" />
+                            Map of logged places
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Visualize your coffee journey across the city.</p>
+                    </div>
+                    <div className="bg-card p-6 rounded-2xl border-2 border-dashed border-primary/20 relative overflow-hidden group">
+                        <div className="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                            Coming Soon
+                        </div>
+                        <h3 className="font-bold mb-2 flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4" />
+                            Taste analytics & trends
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Discover your flavor profile and habits.</p>
+                    </div>
+                </section>
             </main >
         </div >
     );

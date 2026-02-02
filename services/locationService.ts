@@ -1,7 +1,6 @@
 import { supabase } from '@/adapters/supabaseClient';
 import { CoffeeLog, CoffeeLogWithUsername, Location, ServiceResult } from '@/core/types/types';
-<<<<<<< HEAD
-=======
+
 
 // Interface for extended location details
 export interface LocationDetailsExtended extends Location {
@@ -20,7 +19,7 @@ interface LocationDetails {
     lng: number;
     google_place_id: string;
 }
->>>>>>> new_profile_page
+
 
 /**
  * Find or create a location in the database
@@ -92,17 +91,7 @@ export async function findOrCreateLocation(
     }
 }
 
-<<<<<<< HEAD
-export interface LocationDetailsExtended extends Location {
-    average_rating: number;
-    review_count: number;
-    cover_image_url: string | null;
-    logs: CoffeeLogWithUsername[];
-    // description field is not in DB yet, but we'll include it in the type for UI readiness
-    description?: string;
-}
-=======
->>>>>>> new_profile_page
+
 
 export async function fetchLocationDetails(locationId: string): Promise<ServiceResult<LocationDetailsExtended>> {
     try {
