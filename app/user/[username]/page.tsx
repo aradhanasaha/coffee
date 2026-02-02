@@ -173,7 +173,7 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                                 No coffee logs yet
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {recentLogs.map((log) => (
                                     <ProfileFeedCard
                                         key={log.id}

@@ -8,7 +8,7 @@ import SaveToListButton from './lists/SaveToListButton';
 import LikersPopover from './LikersPopover';
 
 // Import Trash2
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 
 import ShareEntryButton from './ShareEntryButton';
 
@@ -35,6 +35,9 @@ interface TextPostLayoutProps {
     isDeleting?: boolean;
     locationId?: string | null;
     variant?: 'default' | 'share';
+    // Edit Props
+    isOwner?: boolean;
+    onEdit?: (log: any) => void;
 }
 
 export default function TextPostLayout({
@@ -49,7 +52,9 @@ export default function TextPostLayout({
     onDelete,
     isDeleting,
     locationId,
-    variant = 'default'
+    variant = 'default',
+    isOwner,
+    onEdit
 }: TextPostLayoutProps) {
     // Truncate review logic
     const maxLength = 280; // Longer for text posts (Twitter style)
@@ -82,14 +87,25 @@ export default function TextPostLayout({
                 </button>
             )}
 
-            {/* 1. Header: Username */}
-            <div className="mb-1">
+            {/* 1. Header: Username & Edit */}
+            <div className="mb-1 flex justify-between items-start">
                 {log.username && (
                     <UsernameLink
                         username={log.username}
                         onClick={isShareMode ? undefined : onUsernameClick}
                         className="font-semibold text-sm text-journal-text"
                     />
+                )}
+                {isOwner && onEdit && !isShareMode && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(log);
+                        }}
+                        className="text-foreground/80 hover:text-primary font-semibold text-xs lowercase transition-colors flex items-center gap-1"
+                    >
+                        <Pencil className="w-3 h-3" /> edit
+                    </button>
                 )}
             </div>
 

@@ -8,7 +8,7 @@ import SaveToListButton from './lists/SaveToListButton';
 import LikersPopover from './LikersPopover';
 
 // Import Trash2
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 
 import ShareEntryButton from './ShareEntryButton';
 
@@ -36,6 +36,9 @@ interface ImagePostLayoutProps {
     isDeleting?: boolean;
     locationId?: string | null;
     variant?: 'default' | 'share';
+    // Edit Props
+    isOwner?: boolean;
+    onEdit?: (log: any) => void;
 }
 
 export default function ImagePostLayout({
@@ -51,7 +54,9 @@ export default function ImagePostLayout({
     onDelete,
     isDeleting,
     locationId,
-    variant = 'default'
+    variant = 'default',
+    isOwner,
+    onEdit
 }: ImagePostLayoutProps) {
     // Truncate review logic
     const maxLength = 120; // Shorter for image posts (2-3 lines)
@@ -84,14 +89,25 @@ export default function ImagePostLayout({
                 </button>
             )}
 
-            {/* 1. Header: Username */}
-            <div className="px-4 py-3">
+            {/* 1. Header: Username & Edit */}
+            <div className="px-4 py-3 flex justify-between items-center bg-card">
                 {log.username && (
                     <UsernameLink
                         username={log.username}
                         onClick={isShareMode ? undefined : onUsernameClick}
                         className="font-semibold text-sm text-journal-text"
                     />
+                )}
+                {isOwner && onEdit && !isShareMode && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(log);
+                        }}
+                        className="text-foreground/80 hover:text-primary font-semibold text-xs lowercase transition-colors flex items-center gap-1"
+                    >
+                        <Pencil className="w-3 h-3" /> edit
+                    </button>
                 )}
             </div>
 
