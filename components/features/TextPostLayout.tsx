@@ -5,6 +5,7 @@ import StarRating from '../common/StarRating';
 import HeartButton from '../common/HeartButton';
 import UsernameLink from '../common/UsernameLink';
 import SaveToListButton from './lists/SaveToListButton';
+import LikersPopover from './LikersPopover';
 
 // Import Trash2
 import { Trash2 } from 'lucide-react';
@@ -139,12 +140,14 @@ export default function TextPostLayout({
                     <div className="flex items-center gap-3">
                         <ShareEntryButton log={log} />
                         <SaveToListButton coffeeLogId={log.id} />
-                        <HeartButton
-                            isLiked={isLiked}
-                            onToggle={onToggleLike}
-                            loading={likeLoading}
-                            count={likeCount}
-                        />
+                        <LikersPopover targetId={log.id} targetType="coffee_log">
+                            <HeartButton
+                                isLiked={isLiked}
+                                onToggle={onToggleLike}
+                                loading={likeLoading}
+                                count={likeCount}
+                            />
+                        </LikersPopover>
                     </div>
                 </div>
             ) : (

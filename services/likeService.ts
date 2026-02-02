@@ -124,20 +124,56 @@ export async function getLikeStatus(
 /**
  * Get all likes for a target (who liked it)
  */
-export async function getLikesForTarget(
+/**
+ * Get all likes for a target (who liked it)
+ * Returns array of public profile data
+ */
+export async function getLikersForTarget(
     targetId: string,
     targetType: LikeTargetType
-): Promise<Like[]> {
+): Promise<{ user_id: string; username: string }[]> {
     try {
-        const { data, error } = await supabase
+        // 1. Get user_ids from likes
+        const { data: likesData, error: likesError } = await supabase
             .from('likes')
-            .select('*')
+            .select('user_id')
             .eq('target_id', targetId)
             .eq('target_type', targetType)
             .order('created_at', { ascending: false });
 
-        if (error || !data) return [];
-        return data;
+        if (likesError) throw likesError;
+        if (!likesData || likesData.length === 0) return [];
+
+        const userIds = likesData.map(l => l.user_id);
+
+        // 2. Get profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('user_id, username')
+            .in('user_id', userIds);
+
+        if (profilesError) throw profilesError;
+        if (!profilesData) return [];
+
+        // 3. Map back to maintain order (optional, but nice) or just return profiles
+        // Note: profilesData might return in any order. If we want to preserve 'liked at' order,
+        // we should map based on userIds order.
+
+        const validProfiles = profilesData;
+        const profileMap = new Map(validProfiles.map(p => [p.user_id, p.username]));
+
+        const result = userIds
+            .map(id => ({
+                user_id: id,
+                username: profileMap.get(id) || 'Unknown User'
+            }))
+            // Optional: filter out unknown users if that's desired, or keep them.
+            // Keeping them lets us know there's a loose like.
+            .filter(u => u.username !== 'Unknown User');
+
+        console.log('Fetched likers (2-step):', result);
+        return result;
+
     } catch (err) {
         console.error('Error fetching likes:', err);
         return [];

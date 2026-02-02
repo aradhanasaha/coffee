@@ -5,6 +5,7 @@ import StarRating from '../common/StarRating';
 import HeartButton from '../common/HeartButton';
 import UsernameLink from '../common/UsernameLink';
 import SaveToListButton from './lists/SaveToListButton';
+import LikersPopover from './LikersPopover';
 
 // Import Trash2
 import { Trash2 } from 'lucide-react';
@@ -96,7 +97,7 @@ export default function ImagePostLayout({
 
             {/* 2. Image Container (Primary Focus) */}
             {log.image_url && (
-                <div className="w-full relative overflow-hidden">
+                <div className="w-full relative overflow-hidden rounded-t-2xl">
                     <img
                         src={log.image_url}
                         alt={`${log.coffee_name} at ${log.place}`}
@@ -137,12 +138,14 @@ export default function ImagePostLayout({
                     <div className="flex items-center gap-3">
                         <ShareEntryButton log={log} />
                         <SaveToListButton coffeeLogId={log.id} />
-                        <HeartButton
-                            isLiked={isLiked}
-                            onToggle={onToggleLike}
-                            loading={likeLoading}
-                            count={likeCount}
-                        />
+                        <LikersPopover targetId={log.id} targetType="coffee_log">
+                            <HeartButton
+                                isLiked={isLiked}
+                                onToggle={onToggleLike}
+                                loading={likeLoading}
+                                count={likeCount}
+                            />
+                        </LikersPopover>
                     </div>
                 </div>
             ) : (

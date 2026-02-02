@@ -85,7 +85,7 @@ export default function JournalFeedCard({ log, onUsernameClick, isAdmin, onAdmin
     );
 
     return (
-        <article className="bg-journal-card rounded-2xl overflow-hidden lowercase shadow-sm hover:shadow-md transition-shadow duration-200 relative group">
+        <article className="bg-journal-card rounded-2xl lowercase shadow-sm hover:shadow-md transition-shadow duration-200 relative group">
             {hasImage ? (
                 <ImagePostLayout
                     {...commonProps}
