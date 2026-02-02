@@ -9,10 +9,15 @@ import Link from "next/link";
 import { validateUsername } from "@/lib/usernameValidation";
 import LogCoffeeForm from "@/components/features/LogCoffeeForm";
 import UserProfileCard from "@/components/features/UserProfileCard";
+import ProfileFeedCard from "@/components/features/ProfileFeedCard";
 import * as listService from '@/services/listService';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
 import type { ListWithItems, CoffeeLog } from '@/core/types/types';
 import { useAuth } from "@/hooks/useAuth";
+<<<<<<< HEAD
+=======
+import Modal from "@/components/common/Modal";
+>>>>>>> new_profile_page
 
 export default function UserDashboard() {
     const { logout } = useAuth();
@@ -300,16 +305,20 @@ export default function UserDashboard() {
 
                 {/* Tabs */}
                 <div>
-                    <div className="flex items-center gap-6 border-b border-primary/10 mb-6">
+                    <div className="grid grid-cols-2 border-b border-primary/10 mb-6 w-full">
                         <button
                             onClick={() => setActiveTab('history')}
-                            className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'history'
+                            className={`pb-3 text-sm font-bold transition-colors relative text-center ${activeTab === 'history'
                                 ? 'text-primary'
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span>
+<<<<<<< HEAD
                                 My Coffee History
+=======
+                                Posts
+>>>>>>> new_profile_page
                             </span>
                             {activeTab === 'history' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -317,13 +326,17 @@ export default function UserDashboard() {
                         </button>
                         <button
                             onClick={() => setActiveTab('lists')}
-                            className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'lists'
+                            className={`pb-3 text-sm font-bold transition-colors relative text-center ${activeTab === 'lists'
                                 ? 'text-primary'
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span>
+<<<<<<< HEAD
                                 My Lists
+=======
+                                Lists
+>>>>>>> new_profile_page
                             </span>
                             {activeTab === 'lists' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -343,6 +356,7 @@ export default function UserDashboard() {
                                         </Link>
                                     </div>
                                 ) : (
+<<<<<<< HEAD
                                     <div className="space-y-4">
                                         {logs.map((log) => (
                                             <div key={log.id} className="bg-card p-5 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
@@ -392,6 +406,20 @@ export default function UserDashboard() {
                                                 )}
                                             </div>
                                         ))}
+=======
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {logs.map((log) => (
+                                                <ProfileFeedCard
+                                                    key={log.id}
+                                                    log={log}
+                                                    author={user}
+                                                    isOwner={user?.id === log.user_id}
+                                                    onEdit={handleEditClick}
+                                                />
+                                            ))}
+                                        </div>
+>>>>>>> new_profile_page
                                     </div>
                                 )}
                             </>
@@ -420,6 +448,21 @@ export default function UserDashboard() {
                         )}
                     </section>
                 </div>
+
+                <Modal
+                    isOpen={!!editingLogId}
+                    onClose={handleCancelEdit}
+                >
+                    <div className="p-1">
+                        {editingLogId && logs.find(l => l.id === editingLogId) && (
+                            <LogCoffeeForm
+                                initialData={logs.find(l => l.id === editingLogId)}
+                                onSuccess={handleUpdateLog}
+                                submitLabel="Save Changes"
+                            />
+                        )}
+                    </div>
+                </Modal>
 
                 {/* Placeholder Sections */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">

@@ -8,7 +8,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // Added for list navigation
 import * as listService from '@/services/listService';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
-import type { ListWithItems } from '@/core/types/types';
+import LogCoffeeForm from '@/components/features/LogCoffeeForm';
+import Modal from '@/components/common/Modal';
+import ProfileFeedCard from '@/components/features/ProfileFeedCard';
+import type { ListWithItems, CoffeeLog } from '@/core/types/types';
 
 interface UserProfilePageProps {
     params: {
@@ -24,6 +27,18 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     const [activeTab, setActiveTab] = useState<'history' | 'lists'>('history');
     const [myLists, setMyLists] = useState<ListWithItems[]>([]);
     const [listsLoading, setListsLoading] = useState(false);
+    const [editingLogId, setEditingLogId] = useState<string | null>(null);
+
+    const handleEditClick = (log: CoffeeLog) => {
+        setEditingLogId(log.id);
+    };
+
+    const handleUpdateLog = () => {
+        setEditingLogId(null);
+        // Optimally we would refresh logs here, but usePublicProfile doesn't expose it yet.
+        // We could force a reload or just let it be.
+        window.location.reload();
+    };
 
     // Fetch lists when tab changes to 'lists' and we have a profile
     useEffect(() => {
@@ -158,42 +173,15 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                                 No coffee logs yet
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 {recentLogs.map((log) => (
-                                    <div
+                                    <ProfileFeedCard
                                         key={log.id}
-                                        className="bg-card p-5 rounded-2xl border-2 border-primary/10 hover:border-primary/20 transition-all"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="font-bold text-lg">{log.coffee_name}</h3>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-                                                <span className="font-bold text-primary">{log.rating}</span>
-                                                <span className="text-xs text-primary">★</span>
-                                            </div>
-                                        </div>
-
-                                        {log.review && (
-                                            <p className="mt-3 text-sm text-foreground/80 italic">
-                                                "{log.review}"
-                                            </p>
-                                        )}
-
-                                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                                            <span>{new Date(log.created_at).toLocaleDateString()}</span>
-                                            {log.price_feel && (
-                                                <span className="px-2 py-1 rounded-full bg-secondary text-secondary-foreground font-bold">
-                                                    {log.price_feel === 'steal' && '💰 Steal'}
-                                                    {log.price_feel === 'fair' && '✓ Fair'}
-                                                    {log.price_feel === 'expensive' && '💸 Pricey'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
+                                        log={log}
+                                        author={profile}
+                                        isOwner={user?.id === log.user_id}
+                                        onEdit={handleEditClick}
+                                    />
                                 ))}
                             </div>
                         )}
@@ -222,6 +210,6 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                     </section>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
