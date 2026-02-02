@@ -5,6 +5,7 @@ import LeftNav from './LeftNav';
 import DiscoveryPanel from './DiscoveryPanel';
 import TopHeader from './TopHeader';
 import BottomNav from './BottomNav';
+import NotificationCTA from '@/components/features/NotificationCTA';
 
 interface JournalLayoutProps {
     children: ReactNode;
@@ -31,6 +32,13 @@ export default function JournalLayout({
             <TopHeader
                 onShareClick={onShareClick}
             />
+
+            {/* Notification CTA Banner - Fixed below header */}
+            <div className="fixed top-16 left-0 right-0 z-40 flex justify-center pointer-events-none">
+                <div className="pointer-events-auto mt-2">
+                    <NotificationCTA />
+                </div>
+            </div>
 
             {/* Main Layout */}
             <div className="flex pt-16">

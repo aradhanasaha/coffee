@@ -92,11 +92,11 @@ export default function NotificationCTA() {
         <button
             onClick={handleEnable}
             disabled={loading}
-            className="flex items-center gap-1.5 px-2 py-1 bg-brown/10 text-primary hover:bg-brown/20 rounded-lg transition-colors mt-0.5 animate-in fade-in zoom-in duration-300"
+            className="flex items-center gap-2 px-3 py-1.5 bg-journal-brown text-journal-bg rounded-full shadow-md hover:opacity-90 transition-all animate-in fade-in slide-in-from-top-4 duration-500"
             title="Enable Notifications"
         >
             <Bell className="w-3 h-3 fill-current" />
-            <span className="text-[10px] font-bold uppercase tracking-tight">Enable Notifications</span>
+            <span className="text-xs font-bold uppercase tracking-wide">Enable Notifications</span>
         </button>
     );
 }

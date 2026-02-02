@@ -7,7 +7,7 @@ import Link from 'next/link';
 import SearchModal from '@/components/features/SearchModal';
 import { useNotificationContext } from '@/context/NotificationContext';
 import NotificationsPanel from '@/components/features/NotificationsPanel';
-import NotificationCTA from '@/components/features/NotificationCTA';
+
 
 interface TopHeaderProps {
     onShareClick?: () => void;
@@ -24,10 +24,7 @@ export default function TopHeader({ onShareClick }: TopHeaderProps) {
                 {/* Logo + Title - Left Aligned */}
                 <div className="flex items-center gap-3 text-journal-text pl-2">
                     <Image src="/logo.png" alt="imnotupyet logo" width={32} height={32} className="object-contain" />
-                    <div className="flex flex-row items-center gap-3 leading-none">
-                        <span className="font-bold text-xl tracking-tight">imnotupyet</span>
-                        <NotificationCTA />
-                    </div>
+                    <span className="font-bold text-xl tracking-tight">imnotupyet</span>
                 </div>
 
                 {/* Right side actions */}
