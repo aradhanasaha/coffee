@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { fetchNotifications, markAllAsRead, markAsRead } from '@/services/notificationService';
 import { Notification } from '@/core/types/types';
 import { useNotificationContext } from '@/context/NotificationContext';
-import PushNotificationManager from '@/components/features/PushNotificationManager';
+
 
 interface NotificationsPanelProps {
     isOpen: boolean;
@@ -167,9 +167,7 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
                 </button>
             </div>
 
-            <div className="p-3 border-b border-journal-text/5">
-                <PushNotificationManager hideWhenActive={true} />
-            </div>
+
 
             <div className="max-h-[60vh] overflow-y-auto">
                 {loading ? (
