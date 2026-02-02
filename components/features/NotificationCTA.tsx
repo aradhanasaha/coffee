@@ -10,10 +10,17 @@ export default function NotificationCTA() {
     const [loading, setLoading] = useState(false);
 
     const checkPermission = () => {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        // Force show if we can't determine permission (e.g. strict iOS) or if standard permission is default/denied
+        // We want the user to see it and click it to get the error message if needed.
+
+        // Safety check for SSR or weird APIs
+        if (typeof Notification === 'undefined') {
+            setVisible(true); // Assume we should show it
+            return;
+        }
 
         // Show if not granted
-        if (Notification.permission === 'default') { // || 'denied' but we can't do much if denied
+        if (Notification.permission === 'default' || Notification.permission === 'denied') {
             setVisible(true);
         } else {
             setVisible(false);
@@ -21,10 +28,20 @@ export default function NotificationCTA() {
     };
 
     useEffect(() => {
+        // Check on mount
         checkPermission();
 
-        // Listen for changes (hacky check periodically or just on mount)
-        // Permissions API might help but simple check is okay
+        // Check when window gains focus (user might have changed settings)
+        const onFocus = () => checkPermission();
+        window.addEventListener('focus', onFocus);
+
+        // Optional: Polling every few seconds to be sure
+        const interval = setInterval(checkPermission, 2000);
+
+        return () => {
+            window.removeEventListener('focus', onFocus);
+            clearInterval(interval);
+        };
     }, []);
 
     const urlBase64ToUint8Array = (base64String: string) => {
@@ -45,6 +62,11 @@ export default function NotificationCTA() {
     const handleEnable = async () => {
         setLoading(true);
         try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                alert("Push notifications are not supported on this device/browser. Please try adding to Home Screen (iOS) or ensuring HTTPS.");
+                return;
+            }
+
             const registration = await navigator.serviceWorker.register('/sw.js');
             await navigator.serviceWorker.ready;
 
