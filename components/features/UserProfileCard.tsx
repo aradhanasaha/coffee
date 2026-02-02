@@ -4,9 +4,12 @@
  * Pure presentational component
  */
 
+import { useState } from 'react';
 import type { PublicUserProfile, UserStats } from '@/core/types/types';
 import { User, Calendar, Coffee, Users, Edit2 } from 'lucide-react';
 import FollowButton from '@/components/features/FollowButton';
+import UserListModal from '@/components/features/UserListModal';
+import { useFollows } from '@/hooks/useFollows';
 
 // Update interface
 interface UserProfileCardProps {
@@ -45,6 +48,20 @@ export default function UserProfileCard({
     });
 
     const isOwner = currentUserId === profile.user_id;
+
+    // Follows Modal Logic
+    const [activeList, setActiveList] = useState<'followers' | 'following' | null>(null);
+    const { users, loading, fetchUsers, resetUsers } = useFollows(profile.user_id);
+
+    const openList = (type: 'followers' | 'following') => {
+        resetUsers();
+        setActiveList(type);
+        fetchUsers(type);
+    };
+
+    const closeList = () => {
+        setActiveList(null);
+    };
 
     return (
         <div className="bg-card p-4 md:p-8 rounded-2xl border-2 border-primary/10 shadow-sm">
@@ -132,28 +149,40 @@ export default function UserProfileCard({
                             </div>
                         </div>
 
-                        {/* Follower stats - now fully visible */}
-                        <div className="flex items-center gap-2">
+                        {/* Follower stats - now clickable */}
+                        <button
+                            onClick={() => openList('followers')}
+                            className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                        >
                             <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                            <div>
+                            <div className="text-left">
                                 <div className="text-lg md:text-xl font-bold">{stats.followerCount}</div>
                                 <div className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">Followers</div>
                             </div>
-                        </div>
+                        </button>
 
-                        <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => openList('following')}
+                            className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                        >
                             <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                            <div>
+                            <div className="text-left">
                                 <div className="text-lg md:text-xl font-bold">{stats.followingCount}</div>
                                 <div className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">Following</div>
                             </div>
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Bio placeholder for future */}
-            {/* <p className="mt-4 text-muted-foreground">{profile.bio}</p> */}
+            {/* Modal for Followers/Following */}
+            <UserListModal
+                isOpen={!!activeList}
+                onClose={closeList}
+                title={activeList === 'followers' ? 'Followers' : 'Following'}
+                users={users}
+                loading={loading}
+            />
         </div>
     );
 }

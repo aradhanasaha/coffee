@@ -171,7 +171,6 @@ export async function getLikersForTarget(
             // Keeping them lets us know there's a loose like.
             .filter(u => u.username !== 'Unknown User');
 
-        console.log('Fetched likers (2-step):', result);
         return result;
 
     } catch (err) {

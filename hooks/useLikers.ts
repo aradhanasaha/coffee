@@ -24,16 +24,13 @@ export function useLikers(targetId: string, targetType: LikeTargetType): UseLike
     const fetchLikers = useCallback(async () => {
         if (hasFetched) return;
 
-        console.log('[useLikers] Fetching for:', targetId, targetType);
         setLoading(true);
         setError(null);
         try {
             const data = await getLikersForTarget(targetId, targetType);
-            console.log('[useLikers] Received data:', data);
             setLikers(data);
             setHasFetched(true);
         } catch (err) {
-            console.error('[useLikers] Error:', err);
             setError('Failed to load likes');
         } finally {
             setLoading(false);

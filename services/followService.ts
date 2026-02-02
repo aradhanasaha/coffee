@@ -138,6 +138,47 @@ export async function getFollowing(userId: string): Promise<FollowRelationship[]
 }
 
 /**
+ * Get profiles of users that a user is following
+ */
+export async function getFollowingProfiles(userId: string): Promise<{ user_id: string; username: string }[]> {
+    try {
+        // 1. Get following_ids
+        const { data: followsData, error: followsError } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (followsError) throw followsError;
+        if (!followsData || followsData.length === 0) return [];
+
+        const followingIds = followsData.map(f => f.following_id);
+
+        // 2. Get profiles
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('user_id, username')
+            .in('user_id', followingIds);
+
+        if (profilesError) throw profilesError;
+        if (!profilesData) return [];
+
+        const profileMap = new Map(profilesData.map(p => [p.user_id, p.username]));
+
+        return followingIds
+            .map(id => ({
+                user_id: id,
+                username: profileMap.get(id) || 'Unknown User'
+            }))
+            .filter(u => u.username !== 'Unknown User');
+
+    } catch (err) {
+        console.error('Error fetching following profiles:', err);
+        return [];
+    }
+}
+
+/**
  * Get all followers of a user
  */
 export async function getFollowers(userId: string): Promise<FollowRelationship[]> {
@@ -152,6 +193,47 @@ export async function getFollowers(userId: string): Promise<FollowRelationship[]
         return data;
     } catch (err) {
         console.error('Error fetching followers:', err);
+        return [];
+    }
+}
+
+/**
+ * Get profiles of all followers of a user
+ */
+export async function getFollowerProfiles(userId: string): Promise<{ user_id: string; username: string }[]> {
+    try {
+        // 1. Get follower_ids
+        const { data: followsData, error: followsError } = await supabase
+            .from('follows')
+            .select('follower_id')
+            .eq('following_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (followsError) throw followsError;
+        if (!followsData || followsData.length === 0) return [];
+
+        const followerIds = followsData.map(f => f.follower_id);
+
+        // 2. Get profiles
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('user_id, username')
+            .in('user_id', followerIds);
+
+        if (profilesError) throw profilesError;
+        if (!profilesData) return [];
+
+        const profileMap = new Map(profilesData.map(p => [p.user_id, p.username]));
+
+        return followerIds
+            .map(id => ({
+                user_id: id,
+                username: profileMap.get(id) || 'Unknown User'
+            }))
+            .filter(u => u.username !== 'Unknown User');
+
+    } catch (err) {
+        console.error('Error fetching follower profiles:', err);
         return [];
     }
 }
