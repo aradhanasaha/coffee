@@ -9,10 +9,12 @@ import Link from "next/link";
 import { validateUsername } from "@/lib/usernameValidation";
 import LogCoffeeForm from "@/components/features/LogCoffeeForm";
 import UserProfileCard from "@/components/features/UserProfileCard";
+import ProfileFeedCard from "@/components/features/ProfileFeedCard";
 import * as listService from '@/services/listService';
 import ExploreListCard from '@/components/discovery/ExploreListCard';
 import type { ListWithItems, CoffeeLog } from '@/core/types/types';
 import { useAuth } from "@/hooks/useAuth";
+import Modal from "@/components/common/Modal";
 
 export default function UserDashboard() {
     const { logout } = useAuth();
@@ -300,16 +302,16 @@ export default function UserDashboard() {
 
                 {/* Tabs */}
                 <div>
-                    <div className="flex items-center gap-6 border-b border-primary/10 mb-6">
+                    <div className="grid grid-cols-2 border-b border-primary/10 mb-6 w-full">
                         <button
                             onClick={() => setActiveTab('history')}
-                            className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'history'
+                            className={`pb-3 text-sm font-bold transition-colors relative text-center ${activeTab === 'history'
                                 ? 'text-primary'
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span>
-                                My Coffee History
+                                Posts
                             </span>
                             {activeTab === 'history' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -317,13 +319,13 @@ export default function UserDashboard() {
                         </button>
                         <button
                             onClick={() => setActiveTab('lists')}
-                            className={`pb-3 text-sm font-bold transition-colors relative ${activeTab === 'lists'
+                            className={`pb-3 text-sm font-bold transition-colors relative text-center ${activeTab === 'lists'
                                 ? 'text-primary'
                                 : 'text-muted-foreground hover:text-primary/70'
                                 }`}
                         >
                             <span>
-                                My Lists
+                                Lists
                             </span>
                             {activeTab === 'lists' && (
                                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
@@ -343,55 +345,18 @@ export default function UserDashboard() {
                                         </Link>
                                     </div>
                                 ) : (
-                                    <div className="space-y-4">
-                                        {logs.map((log) => (
-                                            <div key={log.id} className="bg-card p-5 rounded-2xl border-2 border-primary/5 hover:border-primary/20 transition-all shadow-sm">
-                                                {editingLogId === log.id ? (
-                                                    <LogCoffeeForm
-                                                        initialData={log}
-                                                        onSuccess={handleUpdateLog}
-                                                        submitLabel="Save Changes"
-                                                    />
-                                                ) : (
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                        <div className="space-y-1">
-                                                            <h3 className="font-bold text-lg">{log.coffee_name}</h3>
-                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                <MapPin className="w-3 h-3" />
-                                                                <span>{log.place}{log.locations?.city ? ` • ${log.locations.city}` : ''}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex flex-wrap items-center gap-4">
-                                                            <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-                                                                <Star className="w-4 h-4 text-primary fill-primary" />
-                                                                <span className="font-bold text-primary">{log.rating}</span>
-                                                            </div>
-                                                            <div className="text-xs font-bold px-3 py-1 rounded-full bg-secondary text-secondary-foreground">
-                                                                {getPriceLabel(log.price_feel)}
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground font-medium">
-                                                                {new Date(log.created_at).toLocaleDateString()}
-                                                            </div>
-                                                            <div className="flex items-center gap-2 ml-auto">
-                                                                <button
-                                                                    className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                                                                    onClick={() => handleEditClick(log)}
-                                                                >
-                                                                    <Edit2 className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                                                                    onClick={() => handleDeleteLog(log.id)}
-                                                                    disabled={isDeleting === log.id}
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {logs.map((log) => (
+                                                <ProfileFeedCard
+                                                    key={log.id}
+                                                    log={log}
+                                                    author={user}
+                                                    isOwner={user?.id === log.user_id}
+                                                    onEdit={handleEditClick}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </>
@@ -420,6 +385,21 @@ export default function UserDashboard() {
                         )}
                     </section>
                 </div>
+
+                <Modal
+                    isOpen={!!editingLogId}
+                    onClose={handleCancelEdit}
+                >
+                    <div className="p-1">
+                        {editingLogId && logs.find(l => l.id === editingLogId) && (
+                            <LogCoffeeForm
+                                initialData={logs.find(l => l.id === editingLogId)}
+                                onSuccess={handleUpdateLog}
+                                submitLabel="Save Changes"
+                            />
+                        )}
+                    </div>
+                </Modal>
 
                 {/* Placeholder Sections */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-50 grayscale">
