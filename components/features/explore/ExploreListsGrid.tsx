@@ -7,7 +7,8 @@ import { Loader2 } from "lucide-react";
 
 interface ListData {
     id: string;
-    name: string;
+    id: string;
+    title: string;
     description: string | null;
     user_id: string;
     visibility: 'public' | 'private';
