@@ -6,7 +6,6 @@ import Link from "next/link";
 
 interface ListData {
     id: string;
-    id: string;
     title: string;
     description: string | null;
     user_id: string;
@@ -34,7 +33,7 @@ export default function ExploreListCard({ list }: ExploreListCardProps) {
                 {firstImage ? (
                     <Image
                         src={firstImage}
-                        alt={list.name}
+                        alt={list.title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 768px) 50vw, 33vw"
@@ -57,7 +56,7 @@ export default function ExploreListCard({ list }: ExploreListCardProps) {
             {/* Content Below */}
             <div className="pt-2">
                 <p className="text-primary text-sm font-bold line-clamp-2 leading-tight">
-                    {list.name || "Untitled List"}
+                    {list.title || "Untitled List"}
                 </p>
             </div>
         </Link>
