@@ -50,11 +50,9 @@ export default function ExploreListCard({ list }: ExploreListCardProps) {
 
             {/* Content Below */}
             <div>
-                <h3 className="font-semibold text-journal-text text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-primary text-sm line-clamp-2 leading-tight group-hover:opacity-80 transition-opacity">
                     {list.name}
                 </h3>
-                {/* Optional: Add item count or user name if needed */}
-                {/* <p className="text-muted-foreground text-xs mt-1">{list.items?.length || 0} items</p> */}
             </div>
         </Link>
     );
