@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import JournalLayout from '@/components/layout/JournalLayout';
 import ExploreTabs from '@/components/features/explore/ExploreTabs';
