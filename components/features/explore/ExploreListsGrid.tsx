@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/lib/supabaseClient";
 import ExploreListCard from "./ExploreListCard";
 import { Loader2 } from "lucide-react";
 
@@ -22,7 +22,6 @@ interface ListData {
 export default function ExploreListsGrid() {
     const [lists, setLists] = useState<ListData[]>([]);
     const [loading, setLoading] = useState(true);
-    const supabase = createClientComponentClient();
 
     useEffect(() => {
         const fetchLists = async () => {
