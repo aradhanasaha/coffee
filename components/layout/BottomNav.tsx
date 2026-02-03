@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, User, Plus, List, Compass } from 'lucide-react';
+import { Compass, User, PlusCircle } from 'lucide-react';
 import classNames from 'classnames';
 
 interface BottomNavProps {
@@ -11,66 +11,47 @@ export default function BottomNav({ onLogCoffeeClick }: BottomNavProps) {
     const router = useRouter();
     const pathname = usePathname();
 
-    const isActive = (path: string) => pathname?.startsWith(path);
+    const isActive = (path: string) => {
+        if (path === '/') return pathname === '/';
+        return pathname?.startsWith(path);
+    };
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-journal-bg border-t border-journal-text/10 flex items-center justify-around px-4 z-50 md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-t border-border flex items-center justify-around px-12 z-50 md:hidden">
             {/* 1. Explore */}
             <Link
                 href="/explore"
                 className={classNames(
-                    "flex flex-col items-center justify-center gap-1 p-2 text-xs font-medium transition-colors",
-                    isActive('/explore') ? "text-journal-text" : "text-journal-text/40 hover:text-journal-text/60"
+                    "flex flex-col items-center justify-center p-2 transition-colors",
+                    isActive('/explore') ? "text-primary" : "text-muted-foreground hover:text-primary"
                 )}
             >
-                <Compass className="w-6 h-6" />
+                <Compass className="w-6 h-6" strokeWidth={isActive('/explore') ? 2.5 : 2} />
             </Link>
 
-            {/* 2. Lists */}
-            <Link
-                href="/lists/discover"
-                className={classNames(
-                    "flex flex-col items-center justify-center gap-1 p-2 text-xs font-medium transition-colors",
-                    isActive('/lists') ? "text-journal-text" : "text-journal-text/40 hover:text-journal-text/60"
-                )}
-            >
-                <List className="w-6 h-6" />
-            </Link>
-
-            {/* 3. Log Coffee (Center) */}
+            {/* 2. Add Log (Primary CTA) */}
             <button
                 onClick={() => {
                     if (onLogCoffeeClick) {
                         onLogCoffeeClick();
                     } else {
-                        router.push('/user');
+                        router.push('/log/new');
                     }
                 }}
-                className="flex items-center justify-center w-12 h-12 bg-journal-text text-journal-card rounded-2xl shadow-lg -mt-6 hover:opacity-90 transition-opacity"
+                className="flex items-center justify-center text-primary transition-transform active:scale-95"
             >
-                <Plus className="w-6 h-6" />
+                <PlusCircle className="w-10 h-10 fill-current text-background" strokeWidth={1.5} />
             </button>
 
-            {/* 4. Feed */}
-            <Link
-                href="/home"
-                className={classNames(
-                    "flex flex-col items-center justify-center gap-1 p-2 text-xs font-medium transition-colors",
-                    isActive('/home') ? "text-journal-text" : "text-journal-text/40 hover:text-journal-text/60"
-                )}
-            >
-                <Home className="w-6 h-6" />
-            </Link>
-
-            {/* 5. Profile */}
+            {/* 3. Profile */}
             <Link
                 href="/user"
                 className={classNames(
-                    "flex flex-col items-center justify-center gap-1 p-2 text-xs font-medium transition-colors",
-                    isActive('/user') && pathname !== '/user/settings' ? "text-journal-text" : "text-journal-text/40 hover:text-journal-text/60"
+                    "flex flex-col items-center justify-center p-2 transition-colors",
+                    isActive('/user') ? "text-primary" : "text-muted-foreground hover:text-primary"
                 )}
             >
-                <User className="w-5 h-5" />
+                <User className="w-6 h-6" strokeWidth={isActive('/user') ? 2.5 : 2} />
             </Link>
         </nav>
     );

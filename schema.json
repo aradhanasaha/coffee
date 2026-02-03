@@ -1,0 +1,690 @@
+[
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "auth.uid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "coffee_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "place",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "price",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "rating",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "review",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "flavor_notes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "price_feel",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "deleted_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "deletion_reason",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "deleted_by",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "location_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "image_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "coffee_logs",
+        "column_name": "image_deleted_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "debug_trace",
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('debug_trace_id_seq'::regclass)"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "debug_trace",
+        "column_name": "event",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "debug_trace",
+        "column_name": "details",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "debug_trace",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "follows",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "follows",
+        "column_name": "follower_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "follows",
+        "column_name": "following_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "follows",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "like_counts",
+        "column_name": "target_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "like_counts",
+        "column_name": "target_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "like_counts",
+        "column_name": "like_count",
+        "data_type": "bigint",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "likes",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "likes",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "likes",
+        "column_name": "target_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "likes",
+        "column_name": "target_type",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "likes",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_items",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_items",
+        "column_name": "list_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_items",
+        "column_name": "coffee_log_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_items",
+        "column_name": "added_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_saves",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_saves",
+        "column_name": "list_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "list_saves",
+        "column_name": "saved_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "owner_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "visibility",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'private'::list_visibility"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "lists",
+        "column_name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "place_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "place_address",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "city",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "lat",
+        "data_type": "double precision",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "lng",
+        "data_type": "double precision",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "google_place_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "locations",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "recipient_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "sender_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "type",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "entity_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "read",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "trigger_actor_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "actor_count",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": "1"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "actor_names",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": "'[]'::jsonb"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "notifications",
+        "column_name": "group_key",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "username",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "username_last_changed_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "created_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "follower_count",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "0"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "following_count",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "0"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "profiles",
+        "column_name": "is_admin",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "endpoint",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "p256dh",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "auth",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+    },
+    {
+        "table_schema": "public",
+        "table_name": "push_subscriptions",
+        "column_name": "user_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "user_follow_stats",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "user_follow_stats",
+        "column_name": "username",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "user_follow_stats",
+        "column_name": "follower_count",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "user_follow_stats",
+        "column_name": "following_count",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "user_follow_stats",
+        "column_name": "verified_following_count",
+        "data_type": "bigint",
+        "is_nullable": "YES",
+        "column_default": null
+    },
+    {
+        "table_schema": "public",
+        "table_name": "user_follow_stats",
+        "column_name": "verified_follower_count",
+        "data_type": "bigint",
+        "is_nullable": "YES",
+        "column_default": null
+    }
+]

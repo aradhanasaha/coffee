@@ -17,8 +17,8 @@ export default function Home() {
     useEffect(() => {
         if (!loading) {
             if (user) {
-                // User is logged in, redirect to home feed
-                router.replace('/home');
+                // User is logged in, redirect to explore
+                router.replace('/explore');
             } else {
                 // Not logged in, show landing page
                 setShowLanding(true);

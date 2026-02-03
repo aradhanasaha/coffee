@@ -1,0 +1,342 @@
+[
+    {
+        "schemaname": "public",
+        "tablename": "coffee_logs",
+        "policyname": "Users and Admins can delete coffee logs",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "using_expression": "((( SELECT auth.uid() AS uid) = user_id) OR is_admin())",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "coffee_logs",
+        "policyname": "Users and Admins can update coffee logs",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "using_expression": "((( SELECT auth.uid() AS uid) = user_id) OR is_admin())",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "coffee_logs",
+        "policyname": "Users can insert own coffee logs",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "coffee_logs",
+        "policyname": "Users can view all coffee logs",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "((deleted_at IS NULL) OR (( SELECT auth.uid() AS uid) = user_id) OR is_admin())",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "follows",
+        "policyname": "Anyone can view follows",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "true",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "follows",
+        "policyname": "Users can delete their own follows",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = follower_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "follows",
+        "policyname": "Users can insert their own follows",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.uid() AS uid) = follower_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "likes",
+        "policyname": "Anyone can view likes",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "true",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "likes",
+        "policyname": "Users can delete their own likes",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = user_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "likes",
+        "policyname": "Users can insert their own likes",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "list_items",
+        "policyname": "owner manages list items",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(EXISTS ( SELECT 1\n   FROM lists l\n  WHERE ((l.id = list_items.list_id) AND (l.owner_id = ( SELECT auth.uid() AS uid)) AND (l.deleted_at IS NULL))))"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "list_items",
+        "policyname": "owner removes list items",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "using_expression": "(EXISTS ( SELECT 1\n   FROM lists l\n  WHERE ((l.id = list_items.list_id) AND (l.owner_id = ( SELECT auth.uid() AS uid)))))",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "list_items",
+        "policyname": "read list items",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "(EXISTS ( SELECT 1\n   FROM lists l\n  WHERE ((l.id = list_items.list_id) AND (l.deleted_at IS NULL) AND ((l.visibility = 'public'::list_visibility) OR (l.owner_id = ( SELECT auth.uid() AS uid))))))",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "list_saves",
+        "policyname": "Users can save lists for themselves",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "list_saves",
+        "policyname": "Users can unsave their own lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "DELETE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = user_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "list_saves",
+        "policyname": "Users can view their own saves",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "using_expression": "(( SELECT auth.uid() AS uid) = user_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "lists",
+        "policyname": "Users can delete own lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = owner_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "lists",
+        "policyname": "Users can insert own lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.uid() AS uid) = owner_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "lists",
+        "policyname": "Users can update own lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = owner_id)",
+        "with_check": "(( SELECT auth.uid() AS uid) = owner_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "lists",
+        "policyname": "Users can view own lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "((( SELECT auth.uid() AS uid) = owner_id) OR (visibility = 'public'::list_visibility))",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "locations",
+        "policyname": "Anyone can view locations",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "true",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "locations",
+        "policyname": "Authenticated users can insert locations",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.role() AS role) = 'authenticated'::text)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "Users can update their own notifications (mark as read)",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = recipient_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "Users can view their own notifications",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "(( SELECT auth.uid() AS uid) = recipient_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Profiles are viewable by everyone",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "true",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Users can insert their own profile",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Users can update own profile",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = user_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "push_subscriptions",
+        "policyname": "Users can delete their own subscriptions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "using_expression": "(( SELECT auth.uid() AS uid) = user_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "public",
+        "tablename": "push_subscriptions",
+        "policyname": "Users can insert their own subscriptions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+        "schemaname": "public",
+        "tablename": "push_subscriptions",
+        "policyname": "Users can view their own subscriptions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "(( SELECT auth.uid() AS uid) = user_id)",
+        "with_check": null
+    },
+    {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Public can view coffee photos",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "using_expression": "(bucket_id = 'coffee-photos'::text)",
+        "with_check": null
+    },
+    {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Users can delete their coffee photos",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "DELETE",
+        "using_expression": "((bucket_id = 'coffee-photos'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+        "with_check": null
+    },
+    {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Users can update their coffee photos",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE",
+        "using_expression": "((bucket_id = 'coffee-photos'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+        "with_check": null
+    },
+    {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Users can upload coffee photos",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "using_expression": null,
+        "with_check": "((bucket_id = 'coffee-photos'::text) AND ((storage.foldername(name))[1] = (auth.uid())::text))"
+    }
+]

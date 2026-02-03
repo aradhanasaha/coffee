@@ -14,6 +14,14 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         );
 
+        // Security Check: CRON jobs or Admin only
+        const authHeader = req.headers.get('Authorization');
+        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+        if (authHeader !== `Bearer ${serviceRoleKey}`) {
+            return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+        }
+
         // Logic: Find users inactive for 7 days
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);

@@ -21,6 +21,14 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders });
     }
 
+    // Security: Verify Webhook Secret
+    const webhookSecret = req.headers.get('x-webhook-secret');
+    const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
+
+    if (!expectedSecret || webhookSecret !== expectedSecret) {
+        return new Response('Unauthorized: Invalid Webhook Secret', { status: 401 });
+    }
+
     try {
         const payload: WebhookPayload = await req.json();
         console.log('Webhook received for:', payload.table);
