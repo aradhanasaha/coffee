@@ -20,7 +20,7 @@ export default function TopHeader({ onShareClick }: TopHeaderProps) {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 min-h-16 h-auto py-2 bg-journal-bg hidden md:flex items-center justify-between px-8 lowercase z-50 transition-all duration-300">
+            <header className="fixed top-0 left-0 right-0 min-h-16 h-auto py-2 bg-journal-bg flex items-center justify-between px-8 lowercase z-50 transition-all duration-300">
                 {/* Logo + Title - Left Aligned */}
                 <div className="flex items-center gap-3 text-journal-text pl-2">
                     <Image src="/logo.png" alt="imnotupyet logo" width={32} height={32} className="object-contain" />

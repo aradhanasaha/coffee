@@ -41,6 +41,7 @@ export default function ExploreListsGrid() {
                 if (error) {
                     console.error('Error fetching lists:', error);
                 } else {
+                    console.log('Fetched lists:', data);
                     setLists(data || []);
                 }
             } catch (err) {
