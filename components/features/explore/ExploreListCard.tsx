@@ -39,9 +39,14 @@ export default function ExploreListCard({ list }: ExploreListCardProps) {
                         sizes="(max-width: 768px) 50vw, 33vw"
                     />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                        <List className="w-12 h-12 opacity-20" />
-                    </div>
+                    // Fallback for text-only lists: Use generic coffee image
+                    <Image
+                        src="/coffee-counter.png"
+                        alt="Coffee"
+                        fill
+                        className="object-cover opacity-80 transition-transform duration-500 group-hover:scale-105 contrast-[0.9] sepia-[0.2]"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                    />
                 )}
 
                 {/* Gradient Overlay - Subtle for depth */}
@@ -49,10 +54,10 @@ export default function ExploreListCard({ list }: ExploreListCardProps) {
             </div>
 
             {/* Content Below */}
-            <div>
-                <h3 className="font-semibold text-primary text-sm line-clamp-2 leading-tight group-hover:opacity-80 transition-opacity">
-                    {list.name}
-                </h3>
+            <div className="pt-2">
+                <p className="text-primary text-sm font-bold line-clamp-2 leading-tight">
+                    {list.name || "Untitled List"}
+                </p>
             </div>
         </Link>
     );
