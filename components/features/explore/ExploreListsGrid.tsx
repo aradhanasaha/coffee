@@ -13,6 +13,7 @@ interface ListData {
     visibility: 'public' | 'private';
     created_at: string;
     items: {
+        added_at: string;
         coffee_log: {
             image_url: string | null;
         } | null;
@@ -31,6 +32,7 @@ export default function ExploreListsGrid() {
                     .select(`
                         *,
                         items:list_items(
+                            added_at,
                             coffee_log:coffee_logs(image_url)
                         )
                     `)

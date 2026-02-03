@@ -12,6 +12,7 @@ interface ListData {
     visibility: 'public' | 'private';
     created_at: string;
     items?: {
+        added_at: string;
         coffee_log: {
             image_url: string | null;
         } | null;
@@ -23,8 +24,11 @@ interface ExploreListCardProps {
 }
 
 export default function ExploreListCard({ list }: ExploreListCardProps) {
-    // Find first image for thumbnail
-    const firstImage = list.items?.find(item => item.coffee_log?.image_url)?.coffee_log?.image_url;
+    // Find first image for thumbnail (prioritizing newest items)
+    const sortedItems = [...(list.items || [])].sort((a, b) =>
+        new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
+    );
+    const firstImage = sortedItems.find(item => item.coffee_log?.image_url)?.coffee_log?.image_url;
 
     return (
         <Link href={`/lists/${list.id}`} className="block group">
