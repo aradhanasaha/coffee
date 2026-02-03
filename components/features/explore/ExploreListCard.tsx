@@ -9,7 +9,7 @@ interface ListData {
     name: string;
     description: string | null;
     user_id: string;
-    is_public: boolean;
+    visibility: 'public' | 'private';
     created_at: string;
     items?: {
         coffee_log: {

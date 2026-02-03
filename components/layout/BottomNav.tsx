@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, User } from 'lucide-react';
+import { Compass, Plus, User } from 'lucide-react';
 import classNames from 'classnames';
 
 interface BottomNavProps {
@@ -33,7 +33,7 @@ export default function BottomNav({ onLogCoffeeClick }: BottomNavProps) {
                     "p-1.5 rounded-xl transition-all",
                     isActive('/explore') ? "bg-journal-text/5" : "bg-transparent"
                 )}>
-                    <Home className="w-6 h-6" strokeWidth={isActive('/explore') ? 2.5 : 2} />
+                    <Compass className="w-6 h-6" strokeWidth={isActive('/explore') ? 2.5 : 2} />
                 </div>
             </Link>
 
