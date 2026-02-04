@@ -23,8 +23,23 @@ serve(async (req) => {
         const authHeader = req.headers.get('Authorization');
         const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-        // Allow if Authorization header matches Service Role Key (simple check for internal/system calls)
-        if (authHeader !== `Bearer ${serviceRoleKey}`) {
+        // Debug logging (check Supabase Dashboard -> Edge Function Logs)
+        console.log(`Auth Check: Header present=${!!authHeader}, Key present=${!!serviceRoleKey}`);
+
+        if (!serviceRoleKey) {
+            console.error('FATAL: SUPABASE_SERVICE_ROLE_KEY is not set in the environment.');
+            return new Response(JSON.stringify({ error: 'Server Misconfiguration: Missing Key' }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 500,
+            });
+        }
+
+        // Allow if Authorization header matches Service Role Key (tolerant of whitespace)
+        const cleanHeader = (authHeader || '').replace('Bearer ', '').trim();
+        const cleanKey = serviceRoleKey.trim();
+
+        if (cleanHeader !== cleanKey) {
+            console.error(`Unauthorized: Provided '${cleanHeader.slice(0, 5)}...' does not match expected key.`);
             return new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 401,
