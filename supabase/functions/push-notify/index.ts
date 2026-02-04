@@ -21,7 +21,8 @@ serve(async (req) => {
 
         // Security Check: Ensure the request is authorized
         const authHeader = req.headers.get('Authorization');
-        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        // Use custom SERVICE_KEY if set (to allow user override), otherwise fallback to system key
+        const serviceRoleKey = Deno.env.get('SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
         // Debug logging (check Supabase Dashboard -> Edge Function Logs)
         console.log(`Auth Check: Header present=${!!authHeader}, Key present=${!!serviceRoleKey}`);
