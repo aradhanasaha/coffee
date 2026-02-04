@@ -39,8 +39,19 @@ serve(async (req) => {
         const cleanKey = serviceRoleKey.trim();
 
         if (cleanHeader !== cleanKey) {
-            console.error(`Unauthorized: Provided '${cleanHeader.slice(0, 5)}...' does not match expected key.`);
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            const receivedSuffix = cleanHeader.slice(-5);
+            const expectedSuffix = cleanKey.slice(-5);
+            console.error(`Unauthorized Mismatch!`);
+            console.error(`Received Key (from GitHub) ends with: ...${receivedSuffix}`);
+            console.error(`Expected Key (on Server) ends with:   ...${expectedSuffix}`);
+
+            return new Response(JSON.stringify({
+                error: 'Unauthorized',
+                debug: {
+                    received_suffix: receivedSuffix,
+                    expected_suffix: expectedSuffix
+                }
+            }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 401,
             });
