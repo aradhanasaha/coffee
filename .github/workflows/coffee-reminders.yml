@@ -1,0 +1,42 @@
+name: Daily Coffee Reminders
+
+on:
+  schedule:
+    # 02:30 UTC = 8:00 AM IST
+    - cron: "30 2 * * *"
+    # 12:30 UTC = 6:00 PM IST
+    - cron: "30 12 * * *"
+  workflow_dispatch: # Allows manual testing
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Notification
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Determine message based on time of day (approximate via job execution)
+          HOUR=$(date +%H)
+
+          if [ $HOUR -lt 10 ]; then
+             TITLE="Morning Coffee? ☕"
+             BODY="Don't forget to log your morning brew!"
+          else
+             TITLE="Evening Brew? 🌙"
+             BODY="Had any coffee today? Log it now!"
+          fi
+
+          echo "Sending $TITLE..."
+
+          curl -X POST "${SUPABASE_URL}/functions/v1/push-notify" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"broadcast\": true,
+              \"title\": \"$TITLE\",
+              \"body\": \"$BODY\",
+              \"url\": \"/home\",
+              \"icon\": \"/logo.png\"
+            }"
