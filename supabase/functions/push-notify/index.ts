@@ -31,10 +31,10 @@ serve(async (req) => {
             });
         }
 
-        const { user_id, title, body, url, icon } = await req.json();
+        const { user_id, title, body, url, icon, broadcast } = await req.json();
 
-        if (!user_id || !title || !body) {
-            throw new Error('Missing required fields: user_id, title, body');
+        if ((!user_id && !broadcast) || !title || !body) {
+            throw new Error('Missing required fields: user_id (or broadcast: true), title, body');
         }
 
         // Initialize web-push
@@ -54,18 +54,31 @@ serve(async (req) => {
             privateKey
         );
 
-        // Fetch user subscriptions
-        const { data: subscriptions, error: subError } = await supabase
-            .from('push_subscriptions')
-            .select('*')
-            .eq('user_id', user_id);
+        let subscriptions = [];
 
-        if (subError) {
-            throw subError;
+        if (broadcast) {
+            // Fetch ALL subscriptions for broadcast
+            // Note: In a large app, you would paginate this.
+            const { data: allSubs, error: subError } = await supabase
+                .from('push_subscriptions')
+                .select('*');
+
+            if (subError) throw subError;
+            subscriptions = allSubs || [];
+            console.log(`Broadcasting to ${subscriptions.length} subscriptions`);
+        } else {
+            // Fetch specific user subscriptions
+            const { data: userSubs, error: subError } = await supabase
+                .from('push_subscriptions')
+                .select('*')
+                .eq('user_id', user_id);
+
+            if (subError) throw subError;
+            subscriptions = userSubs || [];
         }
 
         if (!subscriptions || subscriptions.length === 0) {
-            console.log(`No subscriptions found for user ${user_id}`);
+            console.log(`No subscriptions found for targeting`);
             return new Response(JSON.stringify({ message: 'No subscriptions found' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 200,
