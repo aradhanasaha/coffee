@@ -2,10 +2,12 @@ name: Daily Coffee Reminders
 
 on:
   schedule:
-    # 02:30 UTC = 8:00 AM IST
-    - cron: "30 2 * * *"
-    # 12:30 UTC = 6:00 PM IST
-    - cron: "30 12 * * *"
+    # 02:00 UTC = 7:30 AM IST (Morning)
+    - cron: "0 2 * * *"
+    # 07:30 UTC = 1:00 PM IST (Afternoon)
+    - cron: "30 7 * * *"
+    # 13:00 UTC = 6:30 PM IST (Evening)
+    - cron: "0 13 * * *"
   workflow_dispatch: # Allows manual testing
 
 jobs:
@@ -17,15 +19,21 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          # Determine message based on time of day (approximate via job execution)
+          # Determine message based on time of day (UTC)
           HOUR=$(date +%H)
 
-          if [ $HOUR -lt 10 ]; then
-             TITLE="Morning Coffee? ☕"
-             BODY="Don't forget to log your morning brew!"
+          if [ $HOUR -lt 5 ]; then
+             # Morning (approx 02:00 UTC)
+             TITLE="Morning Brew ☕"
+             BODY="Rise and shine! Don't forget to log your morning coffee."
+          elif [ $HOUR -lt 12 ]; then
+             # Afternoon (approx 07:30 UTC)
+             TITLE="Afternoon Pick-me-up? ☀️"
+             BODY="Powering through the day? Log your afternoon fuel!"
           else
-             TITLE="Evening Brew? 🌙"
-             BODY="Had any coffee today? Log it now!"
+             # Evening (approx 13:00 UTC)
+             TITLE="Evening Wind Down 🌙"
+             BODY="Having a late one? Log your evening brew (or decaf!)."
           fi
 
           echo "Sending $TITLE..."
