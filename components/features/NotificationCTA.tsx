@@ -9,39 +9,63 @@ export default function NotificationCTA() {
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const checkPermission = () => {
-        // Force show if we can't determine permission (e.g. strict iOS) or if standard permission is default/denied
-        // We want the user to see it and click it to get the error message if needed.
+    const checkPermission = async () => {
+        // Safety check for SSR
+        if (typeof window === 'undefined' || typeof Notification === 'undefined') return;
 
-        // Safety check for SSR or weird APIs
-        if (typeof Notification === 'undefined') {
-            setVisible(true); // Assume we should show it
+        // 1. If permission is denied/default, show button
+        if (Notification.permission !== 'granted') {
+            setVisible(true);
             return;
         }
 
-        // Show if not granted
-        if (Notification.permission === 'default' || Notification.permission === 'denied') {
-            setVisible(true);
-        } else {
+        // 2. "Limbo" Check: Permission is granted, but are we in the DB?
+        try {
+            if (!('serviceWorker' in navigator)) return;
+
+            const registration = await navigator.serviceWorker.ready;
+            const sub = await registration.pushManager.getSubscription();
+
+            if (!sub) {
+                // Permissions granted but no active subscription in browser -> Show button
+                setVisible(true);
+                return;
+            }
+
+            // Check DB
+            const { supabase } = await import('@/lib/supabaseClient');
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                const { data } = await supabase
+                    .from('push_subscriptions')
+                    .select('id')
+                    .eq('endpoint', sub.endpoint)
+                    .single();
+
+                if (!data) {
+                    // Critical: Browser has sub, but DB does not. Show button to allow re-sync.
+                    console.log('User in Limbo state: Browser subscribed, DB missing. Showing CTA.');
+                    setVisible(true);
+                } else {
+                    setVisible(false);
+                }
+            }
+        } catch (err) {
+            console.error('Error checking subscription status:', err);
+            // On error, default to showing button if we aren't sure, or hide it? 
+            // Better to hide to avoid annoying people if DB is unreachable.
             setVisible(false);
         }
     };
 
     useEffect(() => {
-        // Check on mount
         checkPermission();
 
-        // Check when window gains focus (user might have changed settings)
+        // Poll less frequently to avoid DB hammer, or just rely on focus
         const onFocus = () => checkPermission();
         window.addEventListener('focus', onFocus);
-
-        // Optional: Polling every few seconds to be sure
-        const interval = setInterval(checkPermission, 2000);
-
-        return () => {
-            window.removeEventListener('focus', onFocus);
-            clearInterval(interval);
-        };
+        return () => window.removeEventListener('focus', onFocus);
     }, []);
 
     const urlBase64ToUint8Array = (base64String: string) => {
