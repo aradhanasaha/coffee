@@ -73,7 +73,7 @@ export default function ImagePostLayout({
     const isShareMode = variant === 'share';
 
     return (
-        <div className={`flex flex-col relative group/card ${isShareMode ? 'bg-journal-bg' : ''}`}>
+        <div className={`flex flex-col relative group/card rounded-2xl overflow-hidden ${isShareMode ? 'bg-journal-bg' : 'bg-card'}`}>
             {/* Admin Delete Button - Overlay - Only in default mode */}
             {!isShareMode && isAdmin && onDelete && (
                 <button
@@ -113,7 +113,7 @@ export default function ImagePostLayout({
 
             {/* 2. Image Container (Primary Focus) */}
             {log.image_url && (
-                <div className="w-full relative overflow-hidden rounded-t-2xl">
+                <div className="w-full relative overflow-hidden">
                     <img
                         src={log.image_url}
                         alt={`${log.coffee_name} at ${log.place}`}
