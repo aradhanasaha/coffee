@@ -256,9 +256,69 @@ export default function UserDashboard() {
                 <span className="text-xs md:text-sm font-bold text-primary truncate max-w-[120px] md:max-w-[200px]">
                     @{user?.username}
                 </span>
-                <Button onClick={handleLogout} variant="secondary" size="sm" className="text-destructive hover:bg-destructive/10 px-2 md:px-3 text-xs md:text-sm">
-                    <LogOut className="w-3 h-3 md:w-4 md:h-4" />
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={async () => {
+                        // 1. Local Check
+                        if (Notification.permission === 'granted') {
+                            new Notification("Test Notification", {
+                                body: "Verifying subscription...",
+                                icon: '/logo.png'
+                            });
+
+                            // 2. Force Sync to DB
+                            try {
+                                const registration = await navigator.serviceWorker.ready;
+                                let sub = await registration.pushManager.getSubscription();
+
+                                if (!sub) {
+                                    // Subscribe if missing
+                                    const VAPID_KEY = 'BKntPVco71jin1umb6iMv8Ct8SDzt0kcq70TUT0W8ata_FXHUVTadyLiRH9vV4FJWatELUzzaLhIWEgr4z6flnY';
+                                    const urlBase64ToUint8Array = (base64String: string) => {
+                                        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                                        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+                                        const rawData = window.atob(base64);
+                                        const outputArray = new Uint8Array(rawData.length);
+                                        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+                                        return outputArray;
+                                    };
+                                    sub = await registration.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: urlBase64ToUint8Array(VAPID_KEY),
+                                    });
+                                }
+
+                                // Sync
+                                const p256dh = sub.toJSON().keys?.p256dh;
+                                const auth = sub.toJSON().keys?.auth;
+
+                                if (p256dh && auth) {
+                                    const { error } = await supabase.from('push_subscriptions').upsert({
+                                        user_id: user.id,
+                                        endpoint: sub.endpoint,
+                                        p256dh,
+                                        auth,
+                                        user_agent: navigator.userAgent
+                                    }, { onConflict: 'user_id, endpoint' });
+
+                                    if (error) throw error;
+                                    alert("Synced! You should now receive remote notifications.");
+                                }
+                            } catch (err: any) {
+                                console.error(err);
+                                alert("Sync failed: " + err.message);
+                            }
+
+                        } else {
+                            alert(`Permission is ${Notification.permission}. Please enable it in browser settings.`);
+                            Notification.requestPermission();
+                        }
+                    }} className="text-primary hover:bg-primary/10 px-2 md:px-3 text-xs md:text-sm">
+                        Test & Sync
+                    </Button>
+                    <Button onClick={handleLogout} variant="secondary" size="sm" className="text-destructive hover:bg-destructive/10 px-2 md:px-3 text-xs md:text-sm">
+                        <LogOut className="w-3 h-3 md:w-4 md:h-4" />
+                    </Button>
+                </div>
             </header>
 
             <main className="container mx-auto max-w-4xl px-3 md:px-4 py-4 md:py-8 space-y-6 md:space-y-12">
