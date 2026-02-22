@@ -203,6 +203,23 @@ export default function LogCoffeeForm({ initialData, onSuccess, submitLabel }: L
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to create log');
                 }
+
+                // --- NEW FEATURE: Send push notification on new post ---
+                try {
+                    // Try to send notification, but don't fail the whole post if it errors out
+                    const anyUser = user as any;
+                    await supabase.functions.invoke('push-notify', {
+                        body: {
+                            broadcast: true,
+                            title: `New Coffee Log from @${anyUser.user_metadata?.username || 'someone'}`,
+                            body: `Just logged a coffee at ${formData.place}!`,
+                            url: '/home',
+                            icon: '/logo.png'
+                        }
+                    });
+                } catch (pushError) {
+                    console.error('Failed to send push notification:', pushError);
+                }
             }
 
             // Call success callback

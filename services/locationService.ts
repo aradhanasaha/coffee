@@ -164,3 +164,45 @@ export async function fetchLocationDetails(locationId: string): Promise<ServiceR
 }
 
 
+
+export async function getDistinctCities(): Promise<ServiceResult<string[]>> {
+    try {
+        const { data, error } = await supabase
+            .from('locations')
+            .select('city')
+            .not('city', 'is', null)
+            .order('city');
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        // Filter valid cities and remove duplicates
+        const cities = Array.from(new Set(
+            data
+                ?.map(item => item.city)
+                .filter((city): city is string => !!city && city.trim().length > 0)
+        ));
+
+        return { success: true, data: cities };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function getLocationsByCity(city: string): Promise<ServiceResult<Location[]>> {
+    try {
+        const { data, error } = await supabase
+            .from('locations')
+            .select('*')
+            .eq('city', city);
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        return { success: true, data: data as Location[] };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}

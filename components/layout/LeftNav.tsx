@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Coffee, Search, Bell } from 'lucide-react';
+import { Coffee, Search, Bell, Compass } from 'lucide-react';
 import SearchModal from '@/components/features/SearchModal';
 import NotificationsPanel from '@/components/features/NotificationsPanel';
 import { useNotificationContext } from '@/context/NotificationContext';
@@ -69,16 +69,15 @@ export default function LeftNav({ onLogCoffeeClick }: LeftNavProps) {
                         />
                     </div>
 
-                    <div className="relative group">
-                        <button
-                            className="text-journal-text text-sm font-medium hover:opacity-70 transition-opacity pl-1 cursor-not-allowed opacity-50"
-                        >
-                            explore
-                        </button>
-                        <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-journal-text text-journal-card text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            coming soon
-                        </span>
-                    </div>
+                    <Link
+                        href="/explore"
+                        className="flex items-center gap-3 text-journal-text text-sm font-medium hover:opacity-70 transition-opacity pl-1 w-full text-left"
+                    >
+                        <div className="relative">
+                            <Compass className="w-5 h-5" />
+                        </div>
+                        <span>explore</span>
+                    </Link>
 
                     <Link
                         href="/user"
