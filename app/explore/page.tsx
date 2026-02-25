@@ -85,8 +85,9 @@ export default function ExplorePage() {
                 <div className="md:hidden flex flex-col border-b border-[#4A2C2A]/10">
                     <div className="flex items-center justify-between p-4 pb-2">
                         <div className="flex items-center gap-4">
-                            <a href="/home" className="flex items-center gap-1 text-journal-text/60 hover:text-journal-text transition-colors text-sm lowercase">
+                            <a href="/home" className="flex items-center gap-1 text-[#4A2C2A]/60 hover:text-[#4A2C2A] transition-colors text-sm lowercase font-medium bg-[#F5E6D3] px-3 py-1.5 rounded-full border border-[#4A2C2A]/10">
                                 <ArrowLeft className="w-4 h-4" />
+                                back to feed
                             </a>
                             <h1 className="text-xl font-serif text-[#4A2C2A]">Explore</h1>
                         </div>
@@ -97,13 +98,19 @@ export default function ExplorePage() {
                             isLoading={isLoadingCities}
                         />
                     </div>
-                    {/* Map is disabled on mobile for now */}
-                    {/* <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} /> */}
+                    {/* Tabs for mobile */}
+                    <div className="pt-2 px-4">
+                        <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                    </div>
                 </div>
 
                 {/* Desktop Header */}
                 <div className="hidden md:flex items-center justify-between px-8 py-6 max-w-[900px] mx-auto w-full">
                     <div className="flex items-center gap-4">
+                        <a href="/home" className="flex items-center gap-1 text-[#4A2C2A]/60 hover:text-[#4A2C2A] transition-colors text-sm lowercase font-medium bg-[#F5E6D3] px-3 py-1.5 rounded-full border border-[#4A2C2A]/10">
+                            <ArrowLeft className="w-4 h-4" />
+                            back to feed
+                        </a>
                         <h1 className="text-3xl font-sans font-medium text-[#4A2C2A]">explore</h1>
                     </div>
                     <div className="flex items-center gap-4">
@@ -122,10 +129,30 @@ export default function ExplorePage() {
 
                     {/* Mobile: Conditional Rendering based on Tab */}
                     <div className="md:hidden absolute inset-0">
-                        {/* Map disabled on mobile, defaulting to lists */}
-                        <div className="p-4 overflow-y-auto h-full pb-20">
-                            <ExploreListsGrid />
-                        </div>
+                        {activeTab === 'lists' ? (
+                            <div className="p-4 overflow-y-auto h-full pb-20">
+                                <ExploreListsGrid />
+                            </div>
+                        ) : (
+                            <div className="w-full h-full relative z-0">
+                                {isLoadingLocations ? (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-[#F5E6D3]/50 z-20 backdrop-blur-[1px]">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
+                                    </div>
+                                ) : (
+                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
+                                )}
+
+                                {mapLocations.length === 0 && !isLoadingLocations && (
+                                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
+                                        <div className="p-6 bg-[#F5E6D3]/90 rounded-xl border border-[#4A2C2A]/10 text-center max-w-xs shadow-sm backdrop-blur-sm">
+                                            <p className="text-[#4A2C2A] font-medium mb-1">No places logged yet</p>
+                                            <p className="text-[#4A2C2A]/60 text-sm">Select another city or start logging!</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Desktop: Always Map */}
