@@ -5,6 +5,7 @@ import JournalLayout from '@/components/layout/JournalLayout';
 import ExploreTabs from '@/components/features/explore/ExploreTabs';
 import ExploreListsGrid from '@/components/features/explore/ExploreListsGrid';
 import CityDropdown from '@/components/map/CityDropdown';
+import GoogleMapExplore from '@/components/map/GoogleMapExplore';
 import { ArrowLeft } from 'lucide-react';
 import { getDistinctCities, getLocationsByCity } from '@/services/locationService';
 import { Location } from '@/core/types/types';
@@ -90,7 +91,7 @@ export default function ExplorePage() {
                 {/* Desktop Header */}
                 <div className="hidden md:flex items-center justify-between px-8 py-6 max-w-[900px] mx-auto w-full">
                     <div className="flex items-center gap-4">
-                        <h1 className="text-3xl font-serif text-[#4A2C2A]">Explore</h1>
+                        <h1 className="text-3xl font-sans font-medium text-[#4A2C2A]">explore</h1>
                     </div>
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-[#4A2C2A]/60 italic">{mapLocations.length} places logged</span>
@@ -104,10 +105,10 @@ export default function ExplorePage() {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 relative w-full h-full">
+                <div className="flex-1 relative w-full min-h-[500px]">
 
                     {/* Mobile: Conditional Rendering based on Tab */}
-                    <div className="md:hidden h-full">
+                    <div className="md:hidden absolute inset-0">
                         {activeTab === 'lists' ? (
                             <div className="p-4 overflow-y-auto h-full">
                                 <ExploreListsGrid />
@@ -119,29 +120,29 @@ export default function ExplorePage() {
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
                                     </div>
                                 )}
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="p-6 bg-[#F5E6D3]/90 rounded-xl border border-[#4A2C2A]/10 text-center max-w-xs shadow-sm backdrop-blur-sm">
-                                        <p className="text-[#4A2C2A] font-medium mb-1">Map is disabled</p>
-                                        <p className="text-[#4A2C2A]/60 text-sm">We are rebuilding the map experience.</p>
-                                    </div>
-                                </div>
+                                {!isLoadingLocations && (
+                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
+                                )}
                             </div>
                         )}
                     </div>
 
-                    {/* Desktop: Always Map (can add toggle if needed later, but request said Map Container) */}
-                    <div className="hidden md:flex justify-center h-full pb-8">
-                        <div className="w-full max-w-[900px] h-full relative rounded-2xl overflow-hidden border border-[#4A2C2A]/10 shadow-sm bg-[#EBDBC6]/30">
+                    {/* Desktop: Always Map */}
+                    <div className="hidden md:flex absolute inset-0 justify-center pb-8 px-8">
+                        <div className="w-full max-w-[900px] h-full relative rounded-2xl overflow-hidden shadow-sm">
                             {isLoadingLocations && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-[#F5E6D3]/50 z-20 backdrop-blur-[1px]">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
                                 </div>
                             )}
 
-
-
+                            {!isLoadingLocations && (
+                                <div className="absolute inset-0 z-0">
+                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
+                                </div>
+                            )}
                             {mapLocations.length === 0 && !isLoadingLocations && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
                                     <div className="p-6 bg-[#F5E6D3]/90 rounded-xl border border-[#4A2C2A]/10 text-center max-w-xs shadow-sm backdrop-blur-sm">
                                         <p className="text-[#4A2C2A] font-medium mb-1">No places logged yet</p>
                                         <p className="text-[#4A2C2A]/60 text-sm">Select another city or start logging!</p>

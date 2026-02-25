@@ -49,7 +49,7 @@ export default function JournalLayout({
                 </div>
 
                 {/* Main Content Area */}
-                <main className="flex-1 ml-0 md:ml-56 mr-0 md:mr-80 pb-20 md:pb-0">
+                <main className={`flex-1 ml-0 md:ml-56 mr-0 ${showRightPanel || rightPanel ? 'md:mr-80' : ''} pb-20 md:pb-0`}>
                     {/* Center Feed - Scrollable */}
                     <div className={fullWidth ? "w-full h-full" : "max-w-2xl mx-auto px-6 py-12"}>
                         {children}
