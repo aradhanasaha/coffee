@@ -178,11 +178,14 @@ export async function getDistinctCities(): Promise<ServiceResult<string[]>> {
         }
 
         // Filter valid cities and remove duplicates
-        const cities = Array.from(new Set(
+        let cities = Array.from(new Set(
             data
                 ?.map(item => item.city)
                 .filter((city): city is string => !!city && city.trim().length > 0)
         ));
+
+        // Map 'New Delhi' to 'Delhi' and deduplicate again
+        cities = Array.from(new Set(cities.map(c => c === 'New Delhi' ? 'Delhi' : c))).sort();
 
         return { success: true, data: cities };
     } catch (err: any) {
@@ -192,10 +195,15 @@ export async function getDistinctCities(): Promise<ServiceResult<string[]>> {
 
 export async function getLocationsByCity(city: string): Promise<ServiceResult<Location[]>> {
     try {
-        const { data, error } = await supabase
-            .from('locations')
-            .select('*')
-            .eq('city', city);
+        let query = supabase.from('locations').select('*');
+
+        if (city === 'Delhi') {
+            query = query.in('city', ['Delhi', 'New Delhi']);
+        } else {
+            query = query.eq('city', city);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             return { success: false, error: error.message };
