@@ -17,7 +17,7 @@ import {
     normalizeFlavorNotes,
     parseFlavorNotes
 } from '@/core/domain/coffeeDomain';
-import type { LocationDetails } from '@/core/types/types';
+import type { LocationDetails, CoffeeLog } from '@/core/types/types';
 
 // Constants moved to coffeeDomain
 
@@ -33,7 +33,7 @@ interface LogCoffeeFormProps {
         location_id?: string | null;
     };
     initialLocation?: LocationDetails;
-    onSuccess?: () => void;
+    onSuccess?: (logData?: CoffeeLog) => void;
     onCancel?: () => void;
     submitLabel?: string;
 }
@@ -236,21 +236,24 @@ export default function PhotoFirstLogCoffeeForm({ initialData, initialLocation, 
             };
 
             // Create or update log
+            let returnData: CoffeeLog | undefined;
             if (initialData?.id) {
                 const result = await updateLog(initialData.id, logData);
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to update log');
                 }
+                returnData = result.data;
             } else {
                 const result = await createLog(logData);
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to create log');
                 }
+                returnData = result.data;
             }
 
             // Call success callback
             if (onSuccess) {
-                onSuccess();
+                onSuccess(returnData);
             }
         } catch (err: any) {
             setError(err.message || 'An error occurred');

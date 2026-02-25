@@ -5,7 +5,19 @@ import JournalLayout from '@/components/layout/JournalLayout';
 import ExploreTabs from '@/components/features/explore/ExploreTabs';
 import ExploreListsGrid from '@/components/features/explore/ExploreListsGrid';
 import CityDropdown from '@/components/map/CityDropdown';
-import GoogleMapExplore from '@/components/map/GoogleMapExplore';
+import dynamic from 'next/dynamic';
+
+const GoogleMapExplore = dynamic(
+    () => import('@/components/map/GoogleMapExplore'),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="w-full h-full flex items-center justify-center bg-[#F5E6D3]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
+            </div>
+        )
+    }
+);
 import { ArrowLeft } from 'lucide-react';
 import { getDistinctCities, getLocationsByCity } from '@/services/locationService';
 import { Location } from '@/core/types/types';
@@ -67,10 +79,10 @@ export default function ExplorePage() {
 
     return (
         <JournalLayout showRightPanel={false} fullWidth={true}>
-            <div className="flex flex-col min-h-[calc(100vh-64px)] bg-[#F5E6D3]">
+            <div className="flex flex-col min-h-[calc(100vh-64px)]">
 
                 {/* Mobile Header & Tabs */}
-                <div className="md:hidden flex flex-col border-b border-[#4A2C2A]/10 bg-[#F5E6D3]">
+                <div className="md:hidden flex flex-col border-b border-[#4A2C2A]/10">
                     <div className="flex items-center justify-between p-4 pb-2">
                         <div className="flex items-center gap-4">
                             <a href="/home" className="flex items-center gap-1 text-journal-text/60 hover:text-journal-text transition-colors text-sm lowercase">

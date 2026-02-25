@@ -12,8 +12,8 @@ interface UseCoffeeLogsReturn {
     logs: CoffeeLog[];
     loading: boolean;
     error: string | null;
-    createLog: (logData: LogFormData) => Promise<{ success: boolean; error?: string }>;
-    updateLog: (logId: string, updates: Partial<LogFormData>) => Promise<{ success: boolean; error?: string }>;
+    createLog: (logData: LogFormData) => Promise<{ success: boolean; data?: CoffeeLog; error?: string }>;
+    updateLog: (logId: string, updates: Partial<LogFormData>) => Promise<{ success: boolean; data?: CoffeeLog; error?: string }>;
     deleteLog: (logId: string) => Promise<{ success: boolean; error?: string }>;
     refreshLogs: () => Promise<void>;
 }
@@ -50,7 +50,7 @@ export function useCoffeeLogs(userId: string | null): UseCoffeeLogsReturn {
 
         if (result.success && result.data) {
             setLogs(prev => [result.data!, ...prev]);
-            return { success: true };
+            return { success: true, data: result.data };
         }
 
         return { success: false, error: result.error };
@@ -61,7 +61,7 @@ export function useCoffeeLogs(userId: string | null): UseCoffeeLogsReturn {
 
         if (result.success && result.data) {
             setLogs(prev => prev.map(log => log.id === logId ? result.data! : log));
-            return { success: true };
+            return { success: true, data: result.data };
         }
 
         return { success: false, error: result.error };
@@ -106,40 +106,54 @@ interface UsePublicFeedReturn {
     loading: boolean;
     error: string | null;
     refreshFeed: () => Promise<void>;
+    addOptimisticLog: (log: CoffeeLogWithUsername) => void;
 }
 
 export function usePublicCoffeeFeed(options?: {
     limit?: number;
     city?: string;
     currentUserId?: string | null;
+    initialLogs?: CoffeeLogWithUsername[];
 }): UsePublicFeedReturn {
-    const [logs, setLogs] = useState<CoffeeLogWithUsername[]>([]);
-    const [loading, setLoading] = useState(true);
+    // If initialLogs is provided, use it as the initial state and assume loading is false initially.
+    const [logs, setLogs] = useState<CoffeeLogWithUsername[]>(options?.initialLogs || []);
+    const [loading, setLoading] = useState(!options?.initialLogs);
     const [error, setError] = useState<string | null>(null);
 
     // Destructure options to avoid object reference issues in dependency array
-    const { limit, city, currentUserId } = options || {};
+    const { limit, city, currentUserId, initialLogs } = options || {};
 
-    const fetchFeed = useCallback(async () => {
+    const fetchFeed = useCallback(async (isInitialRender: boolean = false) => {
+        // Skip fetching if we already have initialLogs and it's the very first render cycle
+        if (isInitialRender && initialLogs) {
+            return;
+        }
+
         setLoading(true);
         const feedData = await coffeeService.fetchPublicCoffeeFeed({ limit, city, currentUserId });
         setLogs(feedData);
         setError(null);
         setLoading(false);
-    }, [limit, city, currentUserId]); // Use individual values instead of the whole options object
+    }, [limit, city, currentUserId, initialLogs]);
 
     useEffect(() => {
-        fetchFeed();
+        // True indicates it's triggered by the mount effect
+        fetchFeed(true);
     }, [fetchFeed]);
 
     const refreshFeed = useCallback(async () => {
-        await fetchFeed();
+        await fetchFeed(false);
     }, [fetchFeed]);
+
+    const addOptimisticLog = useCallback((log: CoffeeLogWithUsername) => {
+        setLogs(prev => [log, ...prev]);
+    }, []);
 
     return {
         logs,
         loading,
         error,
         refreshFeed,
+        addOptimisticLog,
     };
 }

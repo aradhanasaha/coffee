@@ -31,9 +31,9 @@ export default function PhotoUpload({ userId, onPhotoUrlChange, required = true 
             return;
         }
 
-        // Validate file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-            setError('Image must be smaller than 5MB');
+        // Validate file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            setError('Image must be smaller than 10MB');
             return;
         }
 

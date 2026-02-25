@@ -74,8 +74,8 @@ export async function uploadCoffeePhoto(
     imageFile: File
 ): Promise<{ url: string | null; error: string | null }> {
     try {
-        // Compress image first
-        const compressedBlob = await compressImage(imageFile, 1200, 1200, 0.85);
+        // Compress image first (increase resolution and quality slightly for better view)
+        const compressedBlob = await compressImage(imageFile, 1600, 1600, 0.90);
 
         // Generate filename
         const filename = generatePhotoFilename(userId);
