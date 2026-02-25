@@ -13,7 +13,7 @@ import { Location } from '@/core/types/types';
 
 
 export default function ExplorePage() {
-    const [activeTab, setActiveTab] = useState<'lists' | 'map'>('map');
+    const [activeTab, setActiveTab] = useState<'lists' | 'map'>('lists');
     const [cities, setCities] = useState<string[]>([]);
     const [selectedCity, setSelectedCity] = useState<string>('');
     const [mapLocations, setMapLocations] = useState<Location[]>([]);
@@ -85,7 +85,8 @@ export default function ExplorePage() {
                             isLoading={isLoadingCities}
                         />
                     </div>
-                    <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                    {/* Map is disabled on mobile for now */}
+                    {/* <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} /> */}
                 </div>
 
                 {/* Desktop Header */}
@@ -109,22 +110,10 @@ export default function ExplorePage() {
 
                     {/* Mobile: Conditional Rendering based on Tab */}
                     <div className="md:hidden absolute inset-0">
-                        {activeTab === 'lists' ? (
-                            <div className="p-4 overflow-y-auto h-full">
-                                <ExploreListsGrid />
-                            </div>
-                        ) : (
-                            <div className="w-full h-full relative">
-                                {isLoadingLocations && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-[#F5E6D3]/50 z-20 backdrop-blur-[1px]">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
-                                    </div>
-                                )}
-                                {!isLoadingLocations && (
-                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
-                                )}
-                            </div>
-                        )}
+                        {/* Map disabled on mobile, defaulting to lists */}
+                        <div className="p-4 overflow-y-auto h-full pb-20">
+                            <ExploreListsGrid />
+                        </div>
                     </div>
 
                     {/* Desktop: Always Map */}
