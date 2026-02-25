@@ -81,24 +81,7 @@ export default function ExplorePage() {
         <JournalLayout showRightPanel={false} fullWidth={true}>
             <div className="flex flex-col min-h-[calc(100vh-64px)]">
 
-                {/* Mobile Header & Tabs - hidden when map is active */}
-                {activeTab !== 'map' && (
-                    <div className="md:hidden flex flex-col border-b border-[#4A2C2A]/10">
-                        <div className="flex items-center justify-between p-4 pb-2">
-                            <h1 className="text-xl font-serif text-[#4A2C2A]">Explore</h1>
-                            <CityDropdown
-                                cities={cities}
-                                selectedCity={selectedCity}
-                                onSelectCity={handleCityChange}
-                                isLoading={isLoadingCities}
-                            />
-                        </div>
-                        {/* Tabs for mobile */}
-                        <div className="pt-2 px-4">
-                            <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} />
-                        </div>
-                    </div>
-                )}
+                {/* Mobile Header - Removed entirely per user request */}
 
                 {/* Desktop Header */}
                 <div className="hidden md:flex items-center justify-between px-8 py-6 max-w-[900px] mx-auto w-full">
@@ -121,8 +104,25 @@ export default function ExplorePage() {
 
                     {/* Mobile: Conditional Rendering based on Tab */}
                     <div className="md:hidden absolute inset-0">
+                        {/* Floating City Dropdown - Global for Mobile */}
+                        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
+                            <div className="bg-[#F5E6D3]/90 backdrop-blur-sm rounded-lg shadow-sm border border-[#4A2C2A]/10">
+                                <CityDropdown
+                                    cities={cities}
+                                    selectedCity={selectedCity}
+                                    onSelectCity={handleCityChange}
+                                    isLoading={isLoadingCities}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Floating Toggle Tabs at the bottom - Global for Mobile */}
+                        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 w-[200px] shadow-lg rounded-full pointer-events-auto">
+                            <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                        </div>
+
                         {activeTab === 'lists' ? (
-                            <div className="p-4 overflow-y-auto h-full pb-20">
+                            <div className="p-4 overflow-y-auto h-full pb-20 pt-16">
                                 <ExploreListsGrid />
                             </div>
                         ) : (
@@ -132,25 +132,7 @@ export default function ExplorePage() {
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
                                     </div>
                                 ) : (
-                                    <>
-                                        <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
-
-                                        {/* Overlay City Dropdown & Tabs for Mobile Map */}
-                                        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
-                                            <div className="bg-[#F5E6D3]/90 backdrop-blur-sm rounded-lg shadow-sm border border-[#4A2C2A]/10">
-                                                <CityDropdown
-                                                    cities={cities}
-                                                    selectedCity={selectedCity}
-                                                    onSelectCity={handleCityChange}
-                                                    isLoading={isLoadingCities}
-                                                />
-                                            </div>
-                                        </div>
-                                        {/* Floating Toggle Tabs at the bottom */}
-                                        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 w-[200px] shadow-lg rounded-full">
-                                            <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} />
-                                        </div>
-                                    </>
+                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
                                 )}
 
                                 {mapLocations.length === 0 && !isLoadingLocations && (
