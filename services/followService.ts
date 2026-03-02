@@ -152,7 +152,7 @@ export async function getFollowingProfiles(userId: string): Promise<{ user_id: s
         if (followsError) throw followsError;
         if (!followsData || followsData.length === 0) return [];
 
-        const followingIds = followsData.map(f => f.following_id);
+        const followingIds = followsData.map((f: any) => f.following_id);
 
         // 2. Get profiles
         const { data: profilesData, error: profilesError } = await supabase
@@ -163,14 +163,14 @@ export async function getFollowingProfiles(userId: string): Promise<{ user_id: s
         if (profilesError) throw profilesError;
         if (!profilesData) return [];
 
-        const profileMap = new Map(profilesData.map(p => [p.user_id, p.username]));
+        const profileMap = new Map(profilesData.map((p: any) => [p.user_id, p.username]));
 
         return followingIds
-            .map(id => ({
+            .map((id: string) => ({
                 user_id: id,
                 username: profileMap.get(id) || 'Unknown User'
             }))
-            .filter(u => u.username !== 'Unknown User');
+            .filter((u: any) => u.username !== 'Unknown User');
 
     } catch (err) {
         console.error('Error fetching following profiles:', err);
@@ -212,7 +212,7 @@ export async function getFollowerProfiles(userId: string): Promise<{ user_id: st
         if (followsError) throw followsError;
         if (!followsData || followsData.length === 0) return [];
 
-        const followerIds = followsData.map(f => f.follower_id);
+        const followerIds = followsData.map((f: any) => f.follower_id);
 
         // 2. Get profiles
         const { data: profilesData, error: profilesError } = await supabase
@@ -223,14 +223,14 @@ export async function getFollowerProfiles(userId: string): Promise<{ user_id: st
         if (profilesError) throw profilesError;
         if (!profilesData) return [];
 
-        const profileMap = new Map(profilesData.map(p => [p.user_id, p.username]));
+        const profileMap = new Map(profilesData.map((p: any) => [p.user_id, p.username]));
 
         return followerIds
-            .map(id => ({
+            .map((id: string) => ({
                 user_id: id,
                 username: profileMap.get(id) || 'Unknown User'
             }))
-            .filter(u => u.username !== 'Unknown User');
+            .filter((u: any) => u.username !== 'Unknown User');
 
     } catch (err) {
         console.error('Error fetching follower profiles:', err);

@@ -144,7 +144,7 @@ export async function getLikersForTarget(
         if (likesError) throw likesError;
         if (!likesData || likesData.length === 0) return [];
 
-        const userIds = likesData.map(l => l.user_id);
+        const userIds = likesData.map((l: any) => l.user_id);
 
         // 2. Get profiles for these users
         const { data: profilesData, error: profilesError } = await supabase
@@ -160,16 +160,16 @@ export async function getLikersForTarget(
         // we should map based on userIds order.
 
         const validProfiles = profilesData;
-        const profileMap = new Map(validProfiles.map(p => [p.user_id, p.username]));
+        const profileMap = new Map(validProfiles.map((p: any) => [p.user_id, p.username]));
 
         const result = userIds
-            .map(id => ({
+            .map((id: string) => ({
                 user_id: id,
                 username: profileMap.get(id) || 'Unknown User'
             }))
             // Optional: filter out unknown users if that's desired, or keep them.
             // Keeping them lets us know there's a loose like.
-            .filter(u => u.username !== 'Unknown User');
+            .filter((u: any) => u.username !== 'Unknown User');
 
         return result;
 

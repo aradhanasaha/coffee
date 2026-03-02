@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
     images: {
         remotePatterns: [
@@ -7,6 +8,11 @@ const nextConfig = {
                 hostname: '**.supabase.co',
             },
         ],
+    },
+    modularizeImports: {
+        'lucide-react': {
+            transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+        },
     },
 }
 

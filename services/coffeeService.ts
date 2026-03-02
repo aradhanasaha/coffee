@@ -147,8 +147,8 @@ export async function fetchUserCoffeeLogs(userId: string): Promise<CoffeeLog[]> 
 
         // Filter out any deleted logs as a frontend fallback
         return data
-            .filter(log => !log.deleted_at)
-            .map(log => ({
+            .filter((log: any) => !log.deleted_at)
+            .map((log: any) => ({
                 ...log,
                 image_url: log.image_deleted_at ? null : log.image_url
             }));
@@ -200,12 +200,12 @@ export async function fetchPublicCoffeeFeed(options?: {
         }
 
         // Filter out deleted logs
-        let activeLogs = logsData.filter(log => !log.deleted_at);
+        let activeLogs = logsData.filter((log: any) => !log.deleted_at);
 
         // If city filter is provided, prefer logs from that city, but fall back to all logs if none match
         if (options?.city && activeLogs.length > 0) {
             const cityFilteredLogs = activeLogs.filter(
-                log => log.locations?.city === options.city
+                (log: any) => log.locations?.city === options.city
             );
 
             // Only use city-filtered logs if we found some
@@ -227,12 +227,12 @@ export async function fetchPublicCoffeeFeed(options?: {
                 .eq('follower_id', options.currentUserId);
 
             if (!followsError && followsData) {
-                followedUserIds = new Set(followsData.map(f => f.following_id));
+                followedUserIds = new Set(followsData.map((f: any) => f.following_id));
             }
         }
 
         // Fetch usernames for these logs
-        const userIds = Array.from(new Set(activeLogs.map(log => log.user_id)));
+        const userIds = Array.from(new Set(activeLogs.map((log: any) => log.user_id)));
         const { data: profilesData, error: profilesError } = await supabase
             .from('profiles')
             .select('user_id, username')
@@ -242,10 +242,10 @@ export async function fetchPublicCoffeeFeed(options?: {
 
         if (!profilesError && profilesData) {
             const profileMap = Object.fromEntries(
-                profilesData.map(p => [p.user_id, p.username])
+                profilesData.map((p: any) => [p.user_id, p.username])
             );
 
-            enrichedLogs = activeLogs.map(log => ({
+            enrichedLogs = activeLogs.map((log: any) => ({
                 ...log,
                 username: profileMap[log.user_id],
             }));
@@ -274,7 +274,7 @@ export async function fetchPublicCoffeeFeed(options?: {
         }
 
         // Filter out soft-deleted images from the result
-        return enrichedLogs.map(log => ({
+        return enrichedLogs.map((log: any) => ({
             ...log,
             image_url: log.image_deleted_at ? null : log.image_url
         }));

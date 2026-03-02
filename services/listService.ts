@@ -412,7 +412,7 @@ export async function checkLogSavedBatch(
 
         if (error) throw error;
 
-        const containingListIds = (data || []).map(item => item.list_id);
+        const containingListIds = (data || []).map((item: any) => item.list_id);
         return { success: true, data: containingListIds };
     } catch (err: any) {
         return { success: false, error: err.message };
@@ -435,7 +435,7 @@ export async function removeFromAllLists(
 
         if (fetchError) throw fetchError;
 
-        const listIds = userLists.map(l => l.id);
+        const listIds = userLists.map((l: any) => l.id);
 
         if (listIds.length === 0) return { success: true };
 

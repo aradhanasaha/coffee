@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "rmdir /s /q .next 2>nul & next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
+    "@supabase/auth-js": "2.60.0",
     "@supabase/supabase-js": "^2.39.0",
     "bad-words": "^4.0.0",
     "classnames": "^2.5.1",

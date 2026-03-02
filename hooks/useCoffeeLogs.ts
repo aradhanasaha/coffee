@@ -18,20 +18,37 @@ interface UseCoffeeLogsReturn {
     refreshLogs: () => Promise<void>;
 }
 
+// Simple in-memory cache for user logs
+const userLogsCache: Record<string, { data: CoffeeLog[], timestamp: number }> = {};
+const CACHE_TTL = 60 * 1000; // 1 minute
+
 export function useCoffeeLogs(userId: string | null): UseCoffeeLogsReturn {
     const [logs, setLogs] = useState<CoffeeLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Fetch logs
-    const fetchLogs = useCallback(async () => {
+    const fetchLogs = useCallback(async (forceRefresh = false) => {
         if (!userId) {
             setLoading(false);
             return;
         }
 
-        setLoading(true);
+        // Check cache first
+        const cached = userLogsCache[userId];
+        if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            setLogs(cached.data);
+            setLoading(false);
+            return;
+        }
+
+        if (!cached) setLoading(true); // Only show loading state if we don't have stale cached data
+
         const logsData = await coffeeService.fetchUserCoffeeLogs(userId);
+
+        // Update cache
+        userLogsCache[userId] = { data: logsData, timestamp: Date.now() };
+
         setLogs(logsData);
         setError(null);
         setLoading(false);
@@ -109,6 +126,10 @@ interface UsePublicFeedReturn {
     addOptimisticLog: (log: CoffeeLogWithUsername) => void;
 }
 
+// Simple in-memory cache for public feed
+const publicFeedCache: Record<string, { data: CoffeeLogWithUsername[], timestamp: number }> = {};
+const PUBLIC_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
 export function usePublicCoffeeFeed(options?: {
     limit?: number;
     city?: string;
@@ -123,14 +144,30 @@ export function usePublicCoffeeFeed(options?: {
     // Destructure options to avoid object reference issues in dependency array
     const { limit, city, currentUserId, initialLogs } = options || {};
 
-    const fetchFeed = useCallback(async (isInitialRender: boolean = false) => {
+    const fetchFeed = useCallback(async (isInitialRender: boolean = false, forceRefresh = false) => {
         // Skip fetching if we already have initialLogs and it's the very first render cycle
         if (isInitialRender && initialLogs) {
             return;
         }
 
-        setLoading(true);
+        // Cache Key
+        const cacheKey = `${limit || 'all'}-${city || 'all'}-${currentUserId || 'anon'}`;
+        const cached = publicFeedCache[cacheKey];
+
+        // Check Cache first
+        if (!forceRefresh && cached && Date.now() - cached.timestamp < PUBLIC_CACHE_TTL) {
+            setLogs(cached.data);
+            setLoading(false);
+            return;
+        }
+
+        if (!cached && !initialLogs) setLoading(true); // Don't show loading spinner if we have cached or initial logs
+
         const feedData = await coffeeService.fetchPublicCoffeeFeed({ limit, city, currentUserId });
+
+        // Update cache
+        publicFeedCache[cacheKey] = { data: feedData, timestamp: Date.now() };
+
         setLogs(feedData);
         setError(null);
         setLoading(false);
@@ -142,7 +179,7 @@ export function usePublicCoffeeFeed(options?: {
     }, [fetchFeed]);
 
     const refreshFeed = useCallback(async () => {
-        await fetchFeed(false);
+        await fetchFeed(false, true); // forceRefresh = true
     }, [fetchFeed]);
 
     const addOptimisticLog = useCallback((log: CoffeeLogWithUsername) => {

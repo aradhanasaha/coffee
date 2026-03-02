@@ -28,24 +28,41 @@ export function useAuth(): UseAuthReturn {
 
     // Initialize auth state
     useEffect(() => {
+        let mounted = true;
+
         const initAuth = async () => {
-            const currentSession = await authService.getSession();
-            if (currentSession) {
-                setSession(currentSession);
-                setUser(currentSession.user);
+            try {
+                const currentSession = await authService.getSession();
+                if (mounted) {
+                    if (currentSession) {
+                        setSession(currentSession);
+                        setUser(currentSession.user);
+                    }
+                    setLoading(false);
+                }
+            } catch (err: any) {
+                if (err.name !== 'AbortError' && mounted) {
+                    setLoading(false);
+                }
             }
-            setLoading(false);
         };
 
-        initAuth();
+        if (loading) {
+            initAuth();
+        }
 
         // Subscribe to auth state changes
         const unsubscribe = authService.onAuthStateChange((newSession) => {
-            setSession(newSession);
-            setUser(newSession?.user || null);
+            if (mounted) {
+                setSession(newSession);
+                setUser(newSession?.user || null);
+            }
         });
 
-        return () => unsubscribe();
+        return () => {
+            mounted = false;
+            unsubscribe();
+        };
     }, []);
 
     const login = useCallback(async (email: string, password: string) => {
