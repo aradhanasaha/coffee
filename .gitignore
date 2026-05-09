@@ -45,3 +45,7 @@ Supabase Snippet Public Schema Column Inventory.csv
 Supabase Snippet Row-Level Security Policies Overview (1).csv
 Supabase Snippet Public Schema Column Inventory (1).csv
 
+#claude
+claude.log
+.claude*
+/.claude
