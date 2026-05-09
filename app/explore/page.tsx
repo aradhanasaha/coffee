@@ -11,6 +11,7 @@ export default function ExplorePage() {
     const router = useRouter();
     const [locations, setLocations] = useState<TopLocation[]>([]);
     const [loading, setLoading] = useState(true);
+    const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         fetchTopLocations(50).then((locs) => {
@@ -42,11 +43,12 @@ export default function ExplorePage() {
                                 onClick={() => router.push(`/locations/${loc.id}`)}
                                 className="group relative aspect-square rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-primary/20 transition-all duration-300 text-left"
                             >
-                                {loc.image ? (
+                                {loc.image && !failedImages.has(loc.id) ? (
                                     <img
                                         src={loc.image}
                                         alt={loc.name}
                                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        onError={() => setFailedImages(prev => new Set(prev).add(loc.id))}
                                     />
                                 ) : (
                                     <div className="absolute inset-0 bg-secondary/40 flex items-center justify-center p-4">
@@ -55,7 +57,7 @@ export default function ExplorePage() {
                                         </p>
                                     </div>
                                 )}
-                                {loc.image && (
+                                {loc.image && !failedImages.has(loc.id) && (
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
                                 )}
                                 <div className="absolute bottom-0 left-0 right-0 p-3">
