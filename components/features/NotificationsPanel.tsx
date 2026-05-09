@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Heart, MessageCircle, UserPlus, Bookmark, Bell, Coffee } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, Bell, Coffee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchNotifications, markAllAsRead, markAsRead } from '@/services/notificationService';
@@ -85,10 +85,6 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
             router.push(`/user/${notification.sender?.username}`);
         } else if (notification.type === 'like') {
             router.push(`/user/${notification.sender?.username}`);
-        } else if (notification.type === 'save_list') {
-            // Navigate to the list? Or the user who saved it?
-            // Let's go to the user for now
-            router.push(`/user/${notification.sender?.username}`);
         }
 
         onClose();
@@ -137,8 +133,6 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
                 return <>{actorSpan} posted a new coffee log</>;
             case 'like':
                 return <>{actorSpan} liked your coffee log</>;
-            case 'save_list':
-                return <>{actorSpan} saved your coffee log</>;
             default:
                 return <>{actorSpan} interacted with you</>;
         }
@@ -191,7 +185,6 @@ export default function NotificationsPanel({ isOpen, onClose, mobile = false }: 
                                     {notification.type === 'follow' && <UserPlus className="w-4 h-4 text-blue-500" />}
                                     {notification.type === 'post' && <Coffee className="w-4 h-4 text-amber-700" />}
                                     {notification.type === 'like' && <Heart className="w-4 h-4 text-red-500 fill-red-500" />}
-                                    {notification.type === 'save_list' && <Bookmark className="w-4 h-4 text-orange-500 fill-orange-500" />}
                                 </div>
                                 <div>
                                     <p className="text-sm text-journal-text">

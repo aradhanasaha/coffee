@@ -31,9 +31,9 @@ export async function searchUsers(query: string, limit: number = 5): Promise<Sea
 
         if (error) throw error;
 
-        return (data || []).map(user => ({
+        return (data || []).map((user: { user_id: string; username: string; follower_count: number | null }) => ({
             id: user.user_id,
-            type: 'user',
+            type: 'user' as const,
             title: user.username,
             subtitle: `${user.follower_count || 0} followers`
         }));

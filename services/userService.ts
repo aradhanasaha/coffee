@@ -114,7 +114,7 @@ export async function getUserProfiles(userIds: string[]): Promise<UserProfile[]>
 
         if (error || !data) return [];
 
-        return data.map(profile => ({
+        return data.map((profile: any) => ({
             user_id: profile.user_id,
             username: profile.username,
             username_last_changed_at: profile.username_last_changed_at,

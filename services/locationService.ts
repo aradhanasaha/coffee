@@ -129,7 +129,7 @@ export async function fetchLocationDetails(locationId: string): Promise<ServiceR
                 .in('user_id', userIds);
 
             if (profiles) {
-                const profileMap = Object.fromEntries(profiles.map(p => [p.user_id, p.username]));
+                const profileMap = Object.fromEntries(profiles.map((p: { user_id: string; username: string }) => [p.user_id, p.username]));
                 validLogs = validLogs.map(log => ({
                     ...log,
                     username: profileMap[log.user_id]
@@ -178,14 +178,12 @@ export async function getDistinctCities(): Promise<ServiceResult<string[]>> {
         }
 
         // Filter valid cities and remove duplicates
-        let cities = Array.from(new Set(
-            data
-                ?.map(item => item.city)
-                .filter((city): city is string => !!city && city.trim().length > 0)
-        ));
+        const rawCities: string[] = (data ?? [])
+            .map((item: { city: string | null }) => item.city)
+            .filter((city: string | null): city is string => !!city && city.trim().length > 0);
 
         // Map 'New Delhi' to 'Delhi' and deduplicate again
-        cities = Array.from(new Set(cities.map(c => c === 'New Delhi' ? 'Delhi' : c))).sort();
+        const cities: string[] = Array.from(new Set(rawCities.map(c => c === 'New Delhi' ? 'Delhi' : c))).sort();
 
         return { success: true, data: cities };
     } catch (err: any) {

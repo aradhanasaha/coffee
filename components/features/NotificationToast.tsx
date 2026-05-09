@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Heart, UserPlus, Coffee, Bookmark, X } from 'lucide-react';
+import { Heart, UserPlus, Coffee, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Notification } from '@/core/types/types';
 
@@ -44,7 +44,6 @@ export default function NotificationToast({ notification, onDismiss }: Notificat
             case 'like': return <Heart className="w-5 h-5 text-red-500 fill-red-500" />;
             case 'follow': return <UserPlus className="w-5 h-5 text-blue-500" />;
             case 'post': return <Coffee className="w-5 h-5 text-amber-700" />;
-            case 'save_list': return <Bookmark className="w-5 h-5 text-orange-500 fill-orange-500" />;
             default: return <Coffee className="w-5 h-5 text-gray-500" />;
         }
     };
@@ -55,7 +54,6 @@ export default function NotificationToast({ notification, onDismiss }: Notificat
             case 'like': return <><b>@{username}</b> liked your coffee log</>;
             case 'follow': return <><b>@{username}</b> started following you</>;
             case 'post': return <><b>@{username}</b> posted a new coffee log</>;
-            case 'save_list': return <><b>@{username}</b> saved your coffee log</>;
             default: return <>New notification from <b>@{username}</b></>;
         }
     };

@@ -54,9 +54,6 @@ export default function HomeClient({ initialLogs }: HomeClientProps) {
         }
     };
 
-    const handleListClick = (listId: string) => {
-        router.push(`/lists/${listId}`);
-    };
 
     const handleShareClick = async () => {
         const shareData = {
@@ -91,7 +88,6 @@ export default function HomeClient({ initialLogs }: HomeClientProps) {
             <JournalLayout
                 onLogCoffeeClick={handleLogCoffeeClick}
                 onCafeClick={handleCafeClick}
-                onListClick={handleListClick}
                 onShareClick={handleShareClick}
             >
                 <div className="space-y-8">

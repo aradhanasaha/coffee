@@ -29,7 +29,7 @@ export function validateLikeTarget(
         };
     }
 
-    const validTypes: LikeTargetType[] = ['coffee_log', 'list', 'photo', 'cafe'];
+    const validTypes: LikeTargetType[] = ['coffee_log', 'photo', 'cafe'];
     if (!validTypes.includes(targetType)) {
         return {
             isValid: false,
