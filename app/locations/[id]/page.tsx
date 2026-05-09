@@ -5,7 +5,6 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import JournalLayout from '@/components/layout/JournalLayout';
 import LocationHeader from '@/components/features/locations/LocationHeader';
-import FeaturedLists from '@/components/features/locations/FeaturedLists';
 import JournalFeedCard from '@/components/features/JournalFeedCard';
 import { fetchLocationDetails, LocationDetailsExtended } from '@/services/locationService';
 import Modal from '@/components/common/Modal';
@@ -51,13 +50,7 @@ export default function LocationDetailPage() {
     }
 
     return (
-        <JournalLayout
-            rightPanel={
-                <div className="sticky top-24">
-                    <FeaturedLists locationId={location.id} />
-                </div>
-            }
-        >
+        <JournalLayout showRightPanel={false}>
             <div className="space-y-10">
                 {fromFeed && (
                     <button

@@ -2,177 +2,80 @@
 
 import { useState, useEffect } from 'react';
 import JournalLayout from '@/components/layout/JournalLayout';
-import ExploreTabs from '@/components/features/explore/ExploreTabs';
-import ExploreListsGrid from '@/components/features/explore/ExploreListsGrid';
-import CityDropdown from '@/components/map/CityDropdown';
-import dynamic from 'next/dynamic';
-
-const GoogleMapExplore = dynamic(
-    () => import('@/components/map/GoogleMapExplore'),
-    {
-        ssr: false,
-        loading: () => (
-            <div className="w-full h-full flex items-center justify-center bg-[#F5E6D3]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
-            </div>
-        )
-    }
-);
-import { ArrowLeft } from 'lucide-react';
-import { getDistinctCities, getLocationsByCity } from '@/services/locationService';
-import { Location } from '@/core/types/types';
-
-
+import { useRouter } from 'next/navigation';
+import { fetchTopLocations } from '@/services/coffeeService';
+import type { TopLocation } from '@/core/types/types';
+import { MapPin } from 'lucide-react';
 
 export default function ExplorePage() {
-    const [activeTab, setActiveTab] = useState<'lists' | 'map'>('lists');
-    const [cities, setCities] = useState<string[]>([]);
-    const [selectedCity, setSelectedCity] = useState<string>('');
-    const [mapLocations, setMapLocations] = useState<Location[]>([]);
-    const [isLoadingCities, setIsLoadingCities] = useState(true);
-    const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+    const router = useRouter();
+    const [locations, setLocations] = useState<TopLocation[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Fetch cities on mount
     useEffect(() => {
-        async function fetchCities() {
-            try {
-                const { data, success } = await getDistinctCities();
-                if (success && data && data.length > 0) {
-                    setCities(data);
-                    setSelectedCity(data[0]); // Default to first city
-                }
-            } catch (error) {
-                console.error("Failed to fetch cities", error);
-            } finally {
-                setIsLoadingCities(false);
-            }
-        }
-        fetchCities();
+        fetchTopLocations(50).then((locs) => {
+            setLocations(locs);
+            setLoading(false);
+        });
     }, []);
 
-    // Fetch locations when city changes
-    useEffect(() => {
-        if (!selectedCity) return;
-
-        async function fetchLocs() {
-            setIsLoadingLocations(true);
-            try {
-                const { data, success } = await getLocationsByCity(selectedCity);
-                if (success && data) {
-                    // Filter out locations without lat/lng
-                    const validLocs = data.filter(l => l.lat && l.lng);
-                    setMapLocations(validLocs);
-                }
-            } catch (error) {
-                console.error("Failed to fetch locations", error);
-            } finally {
-                setIsLoadingLocations(false);
-            }
-        }
-        fetchLocs();
-    }, [selectedCity]);
-
-    const handleCityChange = (city: string) => {
-        setSelectedCity(city);
-    };
-
-
     return (
-        <JournalLayout showRightPanel={false} fullWidth={true}>
-            <div className="flex flex-col min-h-[calc(100vh-64px)]">
+        <JournalLayout showRightPanel={false}>
+            <div className="space-y-8">
+                <h1 className="text-3xl font-sans font-medium text-journal-text lowercase">explore</h1>
 
-                {/* Mobile Header - Removed entirely per user request */}
-
-                {/* Desktop Header */}
-                <div className="hidden md:flex items-center justify-between px-8 py-6 max-w-[900px] mx-auto w-full">
-                    <div className="flex items-center gap-4">
-                        <h1 className="text-3xl font-sans font-medium text-[#4A2C2A]">explore</h1>
+                {loading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {Array.from({ length: 9 }).map((_, i) => (
+                            <div key={i} className="aspect-square rounded-2xl bg-journal-text/5 animate-pulse" />
+                        ))}
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm text-[#4A2C2A]/60 italic">{mapLocations.length} places logged</span>
-                        <CityDropdown
-                            cities={cities}
-                            selectedCity={selectedCity}
-                            onSelectCity={handleCityChange}
-                            isLoading={isLoadingCities}
-                        />
-                    </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="flex-1 relative w-full min-h-[500px]">
-
-                    {/* Mobile: Conditional Rendering based on Tab */}
-                    <div className="md:hidden absolute inset-0">
-                        {/* Floating City Dropdown - Global for Mobile */}
-                        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
-                            <div className="bg-[#F5E6D3]/90 backdrop-blur-sm rounded-lg shadow-sm border border-[#4A2C2A]/10">
-                                <CityDropdown
-                                    cities={cities}
-                                    selectedCity={selectedCity}
-                                    onSelectCity={handleCityChange}
-                                    isLoading={isLoadingCities}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Floating Toggle Tabs at the bottom - Global for Mobile */}
-                        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 w-[200px] shadow-lg rounded-full pointer-events-auto">
-                            <ExploreTabs activeTab={activeTab} onTabChange={setActiveTab} />
-                        </div>
-
-                        {activeTab === 'lists' ? (
-                            <div className="p-4 overflow-y-auto h-full pb-20 pt-16">
-                                <ExploreListsGrid />
-                            </div>
-                        ) : (
-                            <div className="w-full h-full relative z-0">
-                                {isLoadingLocations ? (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-[#F5E6D3]/50 z-20 backdrop-blur-[1px]">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
-                                    </div>
+                ) : locations.length === 0 ? (
+                    <p className="text-journal-text/50 italic text-center py-20">
+                        no places logged yet. start logging!
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {locations.map((loc) => (
+                            <button
+                                key={loc.id}
+                                onClick={() => router.push(`/locations/${loc.id}`)}
+                                className="group relative aspect-square rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-primary/20 transition-all duration-300 text-left"
+                            >
+                                {loc.image ? (
+                                    <img
+                                        src={loc.image}
+                                        alt={loc.name}
+                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
                                 ) : (
-                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
-                                )}
-
-                                {mapLocations.length === 0 && !isLoadingLocations && (
-                                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
-                                        <div className="p-6 bg-[#F5E6D3]/90 rounded-xl border border-[#4A2C2A]/10 text-center max-w-xs shadow-sm backdrop-blur-sm">
-                                            <p className="text-[#4A2C2A] font-medium mb-1">No places logged yet</p>
-                                            <p className="text-[#4A2C2A]/60 text-sm">Select another city or start logging!</p>
-                                        </div>
+                                    <div className="absolute inset-0 bg-secondary/40 flex items-center justify-center p-4">
+                                        <p className="text-journal-text font-serif text-xl font-bold text-center leading-tight opacity-40 uppercase tracking-widest break-words w-full">
+                                            {loc.name}
+                                        </p>
                                     </div>
                                 )}
-                            </div>
-                        )}
+                                {loc.image && (
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
+                                )}
+                                <div className="absolute bottom-0 left-0 right-0 p-3">
+                                    <h3 className="text-white font-semibold text-sm line-clamp-2 leading-tight">
+                                        {loc.name.toLowerCase()}
+                                    </h3>
+                                    {loc.area && (
+                                        <p className="text-white/60 text-xs mt-0.5 flex items-center gap-1">
+                                            <MapPin className="w-3 h-3" />
+                                            {loc.area.toLowerCase()}
+                                        </p>
+                                    )}
+                                    <p className="text-white/50 text-xs mt-0.5">
+                                        {loc.count} {loc.count === 1 ? 'log' : 'logs'}
+                                    </p>
+                                </div>
+                            </button>
+                        ))}
                     </div>
-
-                    {/* Desktop: Always Map */}
-                    <div className="hidden md:flex absolute inset-0 justify-center pb-8 px-8">
-                        <div className="w-full max-w-[900px] h-full relative rounded-2xl overflow-hidden shadow-sm">
-                            {isLoadingLocations && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-[#F5E6D3]/50 z-20 backdrop-blur-[1px]">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A2C2A]"></div>
-                                </div>
-                            )}
-
-                            {!isLoadingLocations && (
-                                <div className="absolute inset-0 z-0">
-                                    <GoogleMapExplore locations={mapLocations} selectedCity={selectedCity} />
-                                </div>
-                            )}
-                            {mapLocations.length === 0 && !isLoadingLocations && (
-                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
-                                    <div className="p-6 bg-[#F5E6D3]/90 rounded-xl border border-[#4A2C2A]/10 text-center max-w-xs shadow-sm backdrop-blur-sm">
-                                        <p className="text-[#4A2C2A] font-medium mb-1">No places logged yet</p>
-                                        <p className="text-[#4A2C2A]/60 text-sm">Select another city or start logging!</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                </div>
+                )}
             </div>
         </JournalLayout>
     );

@@ -11,7 +11,6 @@ interface JournalLayoutProps {
     children: ReactNode;
     onLogCoffeeClick?: () => void;
     onCafeClick?: (cafe: string) => void;
-    onListClick?: (listId: string) => void;
     onShareClick?: () => void;
     showRightPanel?: boolean;
     rightPanel?: ReactNode;
@@ -21,7 +20,6 @@ export default function JournalLayout({
     children,
     onLogCoffeeClick,
     onCafeClick,
-    onListClick,
     onShareClick,
     showRightPanel = true,
     rightPanel,
@@ -62,7 +60,6 @@ export default function JournalLayout({
                         {rightPanel ? rightPanel : (
                             <DiscoveryPanel
                                 onCafeClick={onCafeClick}
-                                onListClick={onListClick}
                             />
                         )}
                     </div>
