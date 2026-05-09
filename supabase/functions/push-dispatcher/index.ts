@@ -74,6 +74,13 @@ serve(async (req) => {
         }
 
         switch (notification.type) {
+            case 'post':
+                title = 'New Coffee Log';
+                body = notification.actor_count > 1
+                    ? `${actorName} posted ${notification.actor_count} new coffee logs`
+                    : `${actorName} posted a new coffee log`;
+                url = `/log/${notification.entity_id}`;
+                break;
             case 'like':
                 title = 'New Like';
                 body = `${actorName} liked your coffee log`;
