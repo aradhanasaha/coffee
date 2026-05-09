@@ -40,19 +40,8 @@ serve(async (req) => {
         const cleanKey = serviceRoleKey.trim();
 
         if (cleanHeader !== cleanKey) {
-            const receivedSuffix = cleanHeader.slice(-5);
-            const expectedSuffix = cleanKey.slice(-5);
-            console.error(`Unauthorized Mismatch!`);
-            console.error(`Received Key (from GitHub) ends with: ...${receivedSuffix}`);
-            console.error(`Expected Key (on Server) ends with:   ...${expectedSuffix}`);
-
-            return new Response(JSON.stringify({
-                error: 'Unauthorized',
-                debug: {
-                    received_suffix: receivedSuffix,
-                    expected_suffix: expectedSuffix
-                }
-            }), {
+            console.error('Unauthorized: Authorization header does not match expected key.');
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 401,
             });
