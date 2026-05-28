@@ -208,6 +208,31 @@ export interface FollowStatus {
 
 export type NotificationType = 'follow' | 'post' | 'like';
 
+// ============================================================================
+// Coffee Map Types
+// ============================================================================
+
+export interface CoffeeMapPin {
+    location_id: string;
+    place_name: string;
+    city: string | null;
+    state: string | null;
+    lat: number;
+    lng: number;
+    google_place_id: string | null;
+    visit_count: number;
+    last_visited: string;
+    latest_image: string | null;
+    log_ids: string[];
+}
+
+export interface CoffeeMapStats {
+    total_cafes: number;
+    total_cities: number;
+    most_visited: CoffeeMapPin | null;
+    recent: CoffeeMapPin | null;
+}
+
 export interface Notification {
     id: string;
     recipient_id: string;
