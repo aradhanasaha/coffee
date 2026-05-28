@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/common";
 import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { validateUsername } from "@/lib/usernameValidation";
 import LogCoffeeForm from "@/components/features/LogCoffeeForm";
 import UserProfileCard from "@/components/features/UserProfileCard";
@@ -13,13 +14,38 @@ import ProfileFeedCard from "@/components/features/ProfileFeedCard";
 import type { CoffeeLog } from '@/core/types/types';
 import { useAuth } from "@/hooks/useAuth";
 import Modal from "@/components/common/Modal";
+import { useCoffeeMap } from "@/hooks/useCoffeeMap";
+
+const CoffeeMap = dynamic(
+    () => import('@/components/map/CoffeeMap'),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="h-20 rounded-2xl bg-journal-text/5 animate-pulse" />
+                    ))}
+                </div>
+                <div className="w-full h-[380px] md:h-[460px] rounded-2xl bg-journal-text/5 animate-pulse" />
+            </div>
+        ),
+    }
+);
+
+type ProfileTab = 'logs' | 'map';
 
 export default function UserDashboard() {
     const { logout } = useAuth();
     const [user, setUser] = useState<any>(null);
     const [logs, setLogs] = useState<CoffeeLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<ProfileTab>('logs');
     const router = useRouter();
+
+    const { pins, stats: mapStats, loading: mapLoading } = useCoffeeMap(
+        activeTab === 'map' ? (user?.id ?? null) : null
+    );
 
     useEffect(() => {
         const fetchData = async () => {
@@ -211,28 +237,51 @@ export default function UserDashboard() {
                     editError={usernameError}
                 />
 
-                <section>
-                    {logs.length === 0 ? (
-                        <div className="bg-card/50 border-2 border-dashed border-primary/10 rounded-2xl p-12 text-center">
-                            <p className="text-muted-foreground">You haven't logged any coffees yet.</p>
-                            <Link href="/log" className="mt-4 inline-block">
-                                <Button size="md">Log your first coffee</Button>
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {logs.map((log) => (
-                                <ProfileFeedCard
-                                    key={log.id}
-                                    log={log}
-                                    author={user}
-                                    isOwner={user?.id === log.user_id}
-                                    onEdit={handleEditClick}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </section>
+                {/* Tabs */}
+                <div className="flex gap-6 border-b border-journal-text/10">
+                    {(['logs', 'map'] as ProfileTab[]).map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`pb-2.5 text-sm font-medium transition-colors lowercase tracking-wide ${
+                                activeTab === tab
+                                    ? 'text-journal-text border-b-2 border-journal-text'
+                                    : 'text-journal-text/40 hover:text-journal-text/70'
+                            }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+
+                {activeTab === 'logs' && (
+                    <section>
+                        {logs.length === 0 ? (
+                            <div className="bg-card/50 border-2 border-dashed border-primary/10 rounded-2xl p-12 text-center">
+                                <p className="text-muted-foreground">You haven't logged any coffees yet.</p>
+                                <Link href="/log" className="mt-4 inline-block">
+                                    <Button size="md">Log your first coffee</Button>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {logs.map((log) => (
+                                    <ProfileFeedCard
+                                        key={log.id}
+                                        log={log}
+                                        author={user}
+                                        isOwner={user?.id === log.user_id}
+                                        onEdit={handleEditClick}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {activeTab === 'map' && (
+                    <CoffeeMap pins={pins} stats={mapStats} loading={mapLoading} />
+                )}
             </main>
 
             <Modal isOpen={!!editingLogId} onClose={handleCancelEdit}>
