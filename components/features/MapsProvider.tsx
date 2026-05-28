@@ -9,7 +9,8 @@ export default function MapsProvider({ children }: { children: React.ReactNode }
         <>
             <Script
                 src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`}
-                strategy="beforeInteractive"
+                strategy="afterInteractive"
+                onLoad={() => window.dispatchEvent(new CustomEvent('google-maps-loaded'))}
             />
             {children}
         </>

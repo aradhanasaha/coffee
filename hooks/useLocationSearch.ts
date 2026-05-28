@@ -25,13 +25,22 @@ export function useLocationSearch(debounceMs: number = 300): UseLocationSearchRe
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
     const adapter = useRef(getGoogleMapsAdapter());
 
-    // Initialize adapter
+    // Initialize adapter — retry when the Maps script fires its load event
     useEffect(() => {
-        const init = async () => {
+        const tryInit = async () => {
+            const success = await adapter.current.initialize();
+            if (success) setInitialized(true);
+        };
+
+        tryInit();
+
+        const handleMapsLoaded = async () => {
             const success = await adapter.current.initialize();
             setInitialized(success);
         };
-        init();
+        window.addEventListener('google-maps-loaded', handleMapsLoaded, { once: true });
+
+        return () => window.removeEventListener('google-maps-loaded', handleMapsLoaded);
     }, []);
 
     const onInputFocus = useCallback(() => {
