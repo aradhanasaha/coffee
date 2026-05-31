@@ -25,7 +25,10 @@ serve(async (req) => {
     const webhookSecret = req.headers.get('x-webhook-secret');
     const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
 
+    console.log('Incoming request — secret header present:', !!webhookSecret, '| expected present:', !!expectedSecret);
+
     if (!expectedSecret || webhookSecret !== expectedSecret) {
+        console.error('Auth failed — header:', webhookSecret?.slice(0, 6), 'expected:', expectedSecret?.slice(0, 6));
         return new Response('Unauthorized: Invalid Webhook Secret', { status: 401 });
     }
 
@@ -102,14 +105,22 @@ serve(async (req) => {
         }
 
         // Fetch Subscriptions
-        const { data: subscriptions } = await supabase
+        const { data: subscriptions, error: subError } = await supabase
             .from('push_subscriptions')
             .select('*')
             .eq('user_id', notification.recipient_id);
 
+        if (subError) {
+            console.error('Error fetching subscriptions:', subError.message);
+            return new Response(JSON.stringify({ error: subError.message }), { status: 500, headers: corsHeaders });
+        }
+
         if (!subscriptions || subscriptions.length === 0) {
+            console.log('No subscriptions for recipient:', notification.recipient_id);
             return new Response('No subscriptions found', { status: 200 });
         }
+
+        console.log(`Sending to ${subscriptions.length} subscription(s) for type: ${notification.type}`);
 
         // Send Pushes
         const pushPayload = JSON.stringify({ title, body, url });
@@ -119,13 +130,15 @@ serve(async (req) => {
                     endpoint: sub.endpoint,
                     keys: { p256dh: sub.p256dh, auth: sub.auth }
                 }, pushPayload);
+                console.log(`Push sent successfully to sub ${sub.id}`);
                 return { success: true, id: sub.id };
-            } catch (err) {
-                console.error(`Push failed for sub ${sub.id}:`, err);
-                if (err.statusCode === 410) {
+            } catch (err: any) {
+                console.error(`Push failed for sub ${sub.id}: status=${err.statusCode} body=${err.body ?? err.message}`);
+                if (err.statusCode === 410 || err.statusCode === 404) {
                     await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+                    console.log(`Removed expired subscription ${sub.id}`);
                 }
-                return { success: false, id: sub.id, error: err };
+                return { success: false, id: sub.id, error: String(err.message) };
             }
         }));
 
