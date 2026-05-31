@@ -18,8 +18,8 @@ self.addEventListener('push', (event) => {
         const data = event.data.json();
         const options = {
             body: data.body,
-            icon: '/icon-192x192.png', // Ensure this exists or use a valid path
-            badge: '/icon-192x192.png', // valid badge
+            icon: '/logo.png',
+            badge: '/logo.png',
             data: {
                 url: data.url || '/',
             },
@@ -34,7 +34,7 @@ self.addEventListener('push', (event) => {
         // Fallback for simple text support if needed
         const options = {
             body: event.data.text(),
-            icon: '/icon-192x192.png',
+            icon: '/logo.png',
         };
         event.waitUntil(
             self.registration.showNotification('New Notification', options)
