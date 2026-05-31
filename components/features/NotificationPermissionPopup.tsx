@@ -12,23 +12,19 @@ export default function NotificationPermissionPopup() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Check functionality support
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-        // Check if already granted
-        if (Notification.permission === 'granted') return;
-
-        // Check if denied (don't pester)
         if (Notification.permission === 'denied') return;
 
-        // Check if user dismissed it recently (e.g., don't show for 7 days or just session?)
-        // The user said "when people open the app", so maybe every time until they say yes or no?
-        // Let's use a session-based approach or a simple localStorage flag "notification_popup_dismissed"
+        if (Notification.permission === 'granted') {
+            // Permission already granted — silently subscribe if not already saved
+            silentlySubscribe();
+            return;
+        }
+
         const dismissed = localStorage.getItem('notification_popup_dismissed');
         if (dismissed) return;
 
-        // Show popup
-        // Add a small delay so it doesn't pop immediately on load
         const timer = setTimeout(() => {
             setIsOpen(true);
         }, 3000);
@@ -69,6 +65,20 @@ export default function NotificationPermissionPopup() {
                 auth,
                 user_agent: navigator.userAgent
             }, { onConflict: 'user_id, endpoint' });
+    };
+
+    const silentlySubscribe = async () => {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+            const sub = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            });
+            await saveSubscriptionHeight(sub);
+        } catch (e) {
+            // Silent — user already granted permission, just save the subscription
+        }
     };
 
     const handleEnable = async () => {
