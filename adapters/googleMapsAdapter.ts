@@ -77,8 +77,7 @@ export class GoogleMapsAdapter implements LocationSearchAdapter {
                 {
                     input: query,
                     sessionToken: this.sessionToken || undefined,
-                    componentRestrictions: { country: 'in' }, // Restrict to India
-                    types: ['establishment'], // Focus on cafes/businesses
+                    types: ['establishment'],
                 },
                 (results, status) => {
                     if (status === google.maps.places.PlacesServiceStatus.OK && results) {
