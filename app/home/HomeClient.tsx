@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import JournalLayout from "@/components/layout/JournalLayout";
 import JournalFeedCard from "@/components/features/JournalFeedCard";
@@ -28,10 +28,23 @@ export default function HomeClient({ initialLogs }: HomeClientProps) {
     const { profile } = useUserProfile(user?.id || null);
 
     // Fetch public coffee feed with initial data
-    const { logs, loading: feedLoading, refreshFeed, addOptimisticLog } = usePublicCoffeeFeed({
+    const { logs, loading: feedLoading, loadingMore, hasMore, refreshFeed, loadMore, addOptimisticLog } = usePublicCoffeeFeed({
         currentUserId: user?.id || null,
         initialLogs
     });
+
+    // Infinite scroll sentinel
+    const sentinelRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const el = sentinelRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            (entries) => { if (entries[0].isIntersecting) loadMore(); },
+            { rootMargin: '200px' }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [loadMore]);
 
     // Navigation and auth logic
     useEffect(() => {
@@ -105,15 +118,29 @@ export default function HomeClient({ initialLogs }: HomeClientProps) {
                             <p>no coffee logs yet. be the first to log one!</p>
                         </div>
                     ) : (
-                        logs.map((log) => (
-                            <JournalFeedCard
-                                key={log.id}
-                                log={log}
-                                onUsernameClick={handleUsernameClick}
-                                isAdmin={profile?.is_admin}
-                                onAdminDelete={() => refreshFeed()}
-                            />
-                        ))
+                        <>
+                            {logs.map((log) => (
+                                <JournalFeedCard
+                                    key={log.id}
+                                    log={log}
+                                    onUsernameClick={handleUsernameClick}
+                                    isAdmin={profile?.is_admin}
+                                    onAdminDelete={() => refreshFeed()}
+                                />
+                            ))}
+                            {/* Infinite scroll sentinel */}
+                            <div ref={sentinelRef} />
+                            {loadingMore && (
+                                <div className="py-8 text-center text-journal-text/40 text-sm lowercase animate-pulse">
+                                    loading more...
+                                </div>
+                            )}
+                            {!hasMore && logs.length > 0 && (
+                                <div className="py-8 text-center text-journal-text/20 text-xs lowercase">
+                                    you've reached the beginning
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </JournalLayout>

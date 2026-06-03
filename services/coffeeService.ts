@@ -163,11 +163,12 @@ export async function fetchUserCoffeeLogs(userId: string): Promise<CoffeeLog[]> 
  */
 export async function fetchPublicCoffeeFeed(options?: {
     limit?: number;
+    cursor?: string | null; // created_at of last item — fetch logs older than this
     city?: string;
     currentUserId?: string | null;
 }): Promise<CoffeeLogWithUsername[]> {
+    const PAGE_SIZE = options?.limit ?? 20;
     try {
-        // Build base query with location data
         let query = supabase
             .from('coffee_logs')
             .select(`
@@ -178,17 +179,14 @@ export async function fetchPublicCoffeeFeed(options?: {
             `)
             .is('deleted_at', null);
 
-        // If currentUserId is provided, we'll need to join with follows
-        // to prioritize followed users' posts
-        // Note: Supabase client doesn't support complex joins in the query builder,
-        // so we'll fetch all logs and sort in-memory for now
-        // TODO: Consider using a Postgres view or RPC for better performance
-
-        if (options?.limit) {
-            query = query.limit(options.limit * 2); // Fetch more to account for filtering
+        if (options?.cursor) {
+            // Pagination: fetch logs strictly older than the cursor
+            query = query.lt('created_at', options.cursor);
         }
 
-        const { data: logsData, error: logsError } = await query.order('created_at', { ascending: false });
+        const { data: logsData, error: logsError } = await query
+            .order('created_at', { ascending: false })
+            .limit(options?.cursor ? PAGE_SIZE : PAGE_SIZE * 2); // extra on first page for weighted sort
 
         if (logsError) {
             console.error('Error fetching logs:', logsError);
@@ -251,27 +249,20 @@ export async function fetchPublicCoffeeFeed(options?: {
             }));
         }
 
-        // Sort logs: Weighted Chronological
-        // Concept: Give "Following" and "Self" posts a time boost so they compete better against new stranger posts.
-        // This solves "Following 2h ago > Stranger 1h ago" while preventing "Self post 1 year ago > Stranger now".
-        if (options?.currentUserId) {
-            const BOOST_MS = 12 * 60 * 60 * 1000; // 12 Hours Boost
-
+        // Weighted sort only on first page (no cursor) — boosts followed/self posts
+        if (!options?.cursor && options?.currentUserId) {
+            const BOOST_MS = 12 * 60 * 60 * 1000;
             enrichedLogs.sort((a, b) => {
-                const getTimeScore = (log: CoffeeLogWithUsername) => {
-                    const timestamp = new Date(log.created_at).getTime();
-                    const isRelevant = log.user_id === options.currentUserId || followedUserIds.has(log.user_id);
-                    return timestamp + (isRelevant ? BOOST_MS : 0);
+                const score = (log: CoffeeLogWithUsername) => {
+                    const t = new Date(log.created_at).getTime();
+                    const relevant = log.user_id === options.currentUserId || followedUserIds.has(log.user_id);
+                    return t + (relevant ? BOOST_MS : 0);
                 };
-
-                return getTimeScore(b) - getTimeScore(a);
+                return score(b) - score(a);
             });
         }
 
-        // Apply limit after sorting if specified
-        if (options?.limit) {
-            enrichedLogs = enrichedLogs.slice(0, options.limit);
-        }
+        enrichedLogs = enrichedLogs.slice(0, PAGE_SIZE);
 
         // Filter out soft-deleted images from the result
         return enrichedLogs.map((log: any) => ({

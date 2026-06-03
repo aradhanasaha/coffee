@@ -121,14 +121,15 @@ export function useCoffeeLogs(userId: string | null): UseCoffeeLogsReturn {
 interface UsePublicFeedReturn {
     logs: CoffeeLogWithUsername[];
     loading: boolean;
+    loadingMore: boolean;
+    hasMore: boolean;
     error: string | null;
     refreshFeed: () => Promise<void>;
+    loadMore: () => Promise<void>;
     addOptimisticLog: (log: CoffeeLogWithUsername) => void;
 }
 
-// Simple in-memory cache for public feed
-const publicFeedCache: Record<string, { data: CoffeeLogWithUsername[], timestamp: number }> = {};
-const PUBLIC_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const PAGE_SIZE = 20;
 
 export function usePublicCoffeeFeed(options?: {
     limit?: number;
@@ -136,51 +137,44 @@ export function usePublicCoffeeFeed(options?: {
     currentUserId?: string | null;
     initialLogs?: CoffeeLogWithUsername[];
 }): UsePublicFeedReturn {
-    // If initialLogs is provided, use it as the initial state and assume loading is false initially.
-    const [logs, setLogs] = useState<CoffeeLogWithUsername[]>(options?.initialLogs || []);
-    const [loading, setLoading] = useState(!options?.initialLogs);
+    const { city, currentUserId, initialLogs } = options || {};
+
+    const [logs, setLogs] = useState<CoffeeLogWithUsername[]>(initialLogs || []);
+    const [loading, setLoading] = useState(!initialLogs);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState((initialLogs?.length ?? 0) >= PAGE_SIZE);
     const [error, setError] = useState<string | null>(null);
 
-    // Destructure options to avoid object reference issues in dependency array
-    const { limit, city, currentUserId, initialLogs } = options || {};
-
-    const fetchFeed = useCallback(async (isInitialRender: boolean = false, forceRefresh = false) => {
-        // Skip fetching if we already have initialLogs and it's the very first render cycle
-        if (isInitialRender && initialLogs) {
-            return;
-        }
-
-        // Cache Key
-        const cacheKey = `${limit || 'all'}-${city || 'all'}-${currentUserId || 'anon'}`;
-        const cached = publicFeedCache[cacheKey];
-
-        // Check Cache first
-        if (!forceRefresh && cached && Date.now() - cached.timestamp < PUBLIC_CACHE_TTL) {
-            setLogs(cached.data);
-            setLoading(false);
-            return;
-        }
-
-        if (!cached && !initialLogs) setLoading(true); // Don't show loading spinner if we have cached or initial logs
-
-        const feedData = await coffeeService.fetchPublicCoffeeFeed({ limit, city, currentUserId });
-
-        // Update cache
-        publicFeedCache[cacheKey] = { data: feedData, timestamp: Date.now() };
-
-        setLogs(feedData);
-        setError(null);
-        setLoading(false);
-    }, [limit, city, currentUserId, initialLogs]);
-
     useEffect(() => {
-        // True indicates it's triggered by the mount effect
-        fetchFeed(true);
-    }, [fetchFeed]);
+        if (initialLogs) return; // SSR-provided first page, skip client fetch
+        setLoading(true);
+        coffeeService.fetchPublicCoffeeFeed({ limit: PAGE_SIZE, city, currentUserId })
+            .then(data => {
+                setLogs(data);
+                setHasMore(data.length >= PAGE_SIZE);
+                setLoading(false);
+            });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUserId, city]);
+
+    const loadMore = useCallback(async () => {
+        if (loadingMore || !hasMore) return;
+        const cursor = logs[logs.length - 1]?.created_at;
+        if (!cursor) return;
+        setLoadingMore(true);
+        const data = await coffeeService.fetchPublicCoffeeFeed({ limit: PAGE_SIZE, cursor, city, currentUserId });
+        setLogs(prev => [...prev, ...data]);
+        setHasMore(data.length >= PAGE_SIZE);
+        setLoadingMore(false);
+    }, [loadingMore, hasMore, logs, city, currentUserId]);
 
     const refreshFeed = useCallback(async () => {
-        await fetchFeed(false, true); // forceRefresh = true
-    }, [fetchFeed]);
+        setLoading(true);
+        const data = await coffeeService.fetchPublicCoffeeFeed({ limit: PAGE_SIZE, city, currentUserId });
+        setLogs(data);
+        setHasMore(data.length >= PAGE_SIZE);
+        setLoading(false);
+    }, [city, currentUserId]);
 
     const addOptimisticLog = useCallback((log: CoffeeLogWithUsername) => {
         setLogs(prev => [log, ...prev]);
@@ -189,8 +183,11 @@ export function usePublicCoffeeFeed(options?: {
     return {
         logs,
         loading,
+        loadingMore,
+        hasMore,
         error,
         refreshFeed,
+        loadMore,
         addOptimisticLog,
     };
 }
