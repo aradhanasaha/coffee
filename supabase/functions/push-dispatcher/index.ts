@@ -21,15 +21,20 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders });
     }
 
-    // Security: Verify Webhook Secret
+    // Security: accept EITHER the webhook secret (dashboard webhook) OR the
+    // service-role key as a bearer token (our DB trigger calls it this way).
     const webhookSecret = req.headers.get('x-webhook-secret');
     const expectedSecret = Deno.env.get('WEBHOOK_SECRET');
+    const bearer = (req.headers.get('authorization') || '').replace('Bearer ', '').trim();
+    const serviceKey = (Deno.env.get('SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '').trim();
 
-    console.log('Incoming request — secret header present:', !!webhookSecret, '| expected present:', !!expectedSecret);
+    const authorized =
+        (!!expectedSecret && webhookSecret === expectedSecret) ||
+        (!!serviceKey && bearer === serviceKey);
 
-    if (!expectedSecret || webhookSecret !== expectedSecret) {
-        console.error('Auth failed — header:', webhookSecret?.slice(0, 6), 'expected:', expectedSecret?.slice(0, 6));
-        return new Response('Unauthorized: Invalid Webhook Secret', { status: 401 });
+    if (!authorized) {
+        console.error('Auth failed — webhook secret present:', !!webhookSecret, '| bearer present:', !!bearer);
+        return new Response('Unauthorized', { status: 401 });
     }
 
     try {
@@ -47,15 +52,15 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         );
 
-        // Setup WebPush
+        // Setup WebPush — keys come from Edge Function secrets (single source of truth).
         const vapidSubject = 'mailto:admin@imnotupyet.com';
-        const publicKey = 'BKntPVco71jin1umb6iMv8Ct8SDzt0kcq70TUT0W8ata_FXHUVTadyLiRH9vV4FJWatELUzzaLhIWEgr4z6flnY';
+        const publicKey = Deno.env.get('VAPID_PUBLIC_KEY');
         const privateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
-        if (!privateKey) {
-            console.error('VAPID_PRIVATE_KEY is missing');
+        if (!publicKey || !privateKey) {
+            console.error('VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY is missing');
             // Fail gracefully so we don't crash, but log it
-            return new Response('Configuration Error: Missing Private Key', { status: 500 });
+            return new Response('Configuration Error: Missing VAPID keys', { status: 500 });
         }
 
         webpush.setVapidDetails(vapidSubject, publicKey, privateKey);
@@ -102,6 +107,20 @@ serve(async (req) => {
                 title = 'We miss you!';
                 body = 'It has been a while since your last coffee log.';
                 break;
+        }
+
+        // Respect the recipient's social opt-out (nudge is a re-engagement nudge,
+        // still allowed). Missing preferences row = opted-in (default true).
+        if (notification.type !== 'nudge') {
+            const { data: prefs } = await supabase
+                .from('notification_preferences')
+                .select('social')
+                .eq('user_id', notification.recipient_id)
+                .maybeSingle();
+            if (prefs && prefs.social === false) {
+                console.log('Recipient opted out of social notifications:', notification.recipient_id);
+                return new Response('Recipient opted out', { status: 200 });
+            }
         }
 
         // Fetch Subscriptions

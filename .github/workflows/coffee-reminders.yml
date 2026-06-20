@@ -1,14 +1,11 @@
-name: Daily Coffee Reminders
+name: Daily Coffee Reminders (manual fallback)
 
+# Scheduled reminders now run via Supabase pg_cron
+# (supabase/migrations/20260620000200_daily_reminders_cron.sql), which is far more
+# reliable than GitHub Actions cron. This workflow is kept only as a MANUAL
+# fallback to fire a one-off reminder broadcast if pg_cron is ever unavailable.
 on:
-  schedule:
-    # 02:00 UTC = 7:30 AM IST (Morning)
-    - cron: "0 2 * * *"
-    # 07:30 UTC = 1:00 PM IST (Afternoon)
-    - cron: "30 7 * * *"
-    # 13:00 UTC = 6:30 PM IST (Evening)
-    - cron: "0 13 * * *"
-  workflow_dispatch: # Allows manual testing
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   send-notification:
@@ -43,6 +40,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{
               \"broadcast\": true,
+              \"category\": \"reminder\",
               \"title\": \"$TITLE\",
               \"body\": \"$BODY\",
               \"url\": \"/home\",

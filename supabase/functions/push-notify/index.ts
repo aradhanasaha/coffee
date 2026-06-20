@@ -47,21 +47,19 @@ serve(async (req) => {
             });
         }
 
-        const { user_id, title, body, url, icon, broadcast } = await req.json();
+        const { user_id, title, body, url, icon, broadcast, category } = await req.json();
 
         if ((!user_id && !broadcast) || !title || !body) {
             throw new Error('Missing required fields: user_id (or broadcast: true), title, body');
         }
 
-        // Initialize web-push
-        // In production, these should be env vars.
-        // For this implementation, I will use the keys generated earlier.
+        // Initialize web-push — keys come from Edge Function secrets (single source of truth).
         const vapidSubject = 'mailto:admin@imnotupyet.com';
-        const publicKey = 'BKntPVco71jin1umb6iMv8Ct8SDzt0kcq70TUT0W8ata_FXHUVTadyLiRH9vV4FJWatELUzzaLhIWEgr4z6flnY';
+        const publicKey = Deno.env.get('VAPID_PUBLIC_KEY');
         const privateKey = Deno.env.get('VAPID_PRIVATE_KEY');
 
-        if (!privateKey) {
-            throw new Error('VAPID_PRIVATE_KEY not set in Edge Function secrets');
+        if (!publicKey || !privateKey) {
+            throw new Error('VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY not set in Edge Function secrets');
         }
 
         webpush.setVapidDetails(
@@ -81,7 +79,19 @@ serve(async (req) => {
 
             if (subError) throw subError;
             subscriptions = allSubs || [];
-            console.log(`Broadcasting to ${subscriptions.length} subscriptions`);
+
+            // Honor opt-outs for categorized broadcasts (e.g. daily reminders).
+            // A missing preferences row means opted-in (default true).
+            if (category === 'reminder') {
+                const { data: optedOut } = await supabase
+                    .from('notification_preferences')
+                    .select('user_id')
+                    .eq('daily_reminders', false);
+                const blocked = new Set((optedOut || []).map((r) => r.user_id));
+                subscriptions = subscriptions.filter((s) => !blocked.has(s.user_id));
+            }
+
+            console.log(`Broadcasting to ${subscriptions.length} subscriptions (category=${category ?? 'none'})`);
         } else {
             // Fetch specific user subscriptions
             const { data: userSubs, error: subError } = await supabase
@@ -123,8 +133,8 @@ serve(async (req) => {
             } catch (error) {
                 console.error(`Error sending to subscription ${sub.id}:`, error);
 
-                // If 410 Gone, remove the subscription
-                if (error.statusCode === 410) {
+                // If 410 Gone or 404 Not Found, the subscription is dead — remove it.
+                if (error.statusCode === 410 || error.statusCode === 404) {
                     await supabase.from('push_subscriptions').delete().eq('id', sub.id);
                     return { success: false, id: sub.id, error: 'Expired subscription removed' };
                 }

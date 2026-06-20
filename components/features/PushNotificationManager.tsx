@@ -1,122 +1,37 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { Bell, BellOff, Loader2 } from 'lucide-react';
-
-const VAPID_PUBLIC_KEY = 'BKntPVco71jin1umb6iMv8Ct8SDzt0kcq70TUT0W8ata_FXHUVTadyLiRH9vV4FJWatELUzzaLhIWEgr4z6flnY'; // Hardcoded from generation
+import { Bell, Loader2, Share } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface PushNotificationManagerProps {
     hideWhenActive?: boolean;
 }
 
 export default function PushNotificationManager({ hideWhenActive = false }: PushNotificationManagerProps) {
-    const [isSupported, setIsSupported] = useState(false);
-    const [subscription, setSubscription] = useState<PushSubscription | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { status, enable, error } = usePushNotifications();
 
-    useEffect(() => {
-        console.log('PushNotificationManager mounted');
-        console.log('ServiceWorker support:', 'serviceWorker' in navigator);
-        console.log('PushManager support:', 'PushManager' in window);
-
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            setIsSupported(true);
-            registerServiceWorker();
-        } else {
-            console.log('Push notifications NOT supported');
-            setIsSupported(false); // Explicitly set false even though it is default
-            setLoading(false);
-        }
-    }, []);
-
-    const registerServiceWorker = async () => {
-        try {
-            const registration = await navigator.serviceWorker.register('/sw.js');
-            const sub = await registration.pushManager.getSubscription();
-            setSubscription(sub);
-        } catch (error) {
-            console.error('Service Worker registration failed:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const urlBase64ToUint8Array = (base64String: string) => {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding)
-            .replace(/\-/g, '+')
-            .replace(/_/g, '/');
-
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    };
-
-    const subscribeToPush = async () => {
-        setLoading(true);
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            const sub = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-            });
-
-            setSubscription(sub);
-            await saveSubscriptionHeight(sub);
-            alert('Notifications enabled!');
-        } catch (error) {
-            console.error('Failed to subscribe to push:', error);
-            if (Notification.permission === 'denied') {
-                alert('You have blocked notifications. Please enable them in your browser settings.');
-            } else {
-                alert('Failed to enable notifications.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const saveSubscriptionHeight = async (sub: PushSubscription) => {
-        const { user } = (await supabase.auth.getUser()).data;
-        if (!user) return;
-
-        const p256dh = sub.toJSON().keys?.p256dh;
-        const auth = sub.toJSON().keys?.auth;
-
-        if (!p256dh || !auth) {
-            console.error('Invalid keys');
-            return;
-        }
-
-        const { error } = await supabase
-            .from('push_subscriptions')
-            .upsert({
-                user_id: user.id,
-                endpoint: sub.endpoint,
-                p256dh,
-                auth,
-                user_agent: navigator.userAgent
-            }, { onConflict: 'user_id, endpoint' });
-
-        if (error) {
-            console.error('Error saving subscription to DB:', error);
-        }
-    };
-
-    // We don't usually implement "unsubscribe" from the browser push manager completely in UI often, 
-    // but we can just clear backend state or unsubscribe locally.
-    // For simplicity, we'll just show "Enabled" state.
-
-    if (loading) {
+    if (status === 'loading') {
         return <Loader2 className="w-5 h-5 animate-spin text-journal-brown" />;
     }
 
-    if (subscription) {
+    if (status === 'unsupported') {
+        return (
+            <p className="text-xs text-journal-brown/70 text-center">
+                Notifications aren&apos;t supported on this browser.
+            </p>
+        );
+    }
+
+    if (status === 'needs-install') {
+        return (
+            <div className="flex items-center gap-2 text-sm text-journal-brown/80 justify-center">
+                <Share className="w-4 h-4" />
+                <span>Add to Home Screen to enable notifications</span>
+            </div>
+        );
+    }
+
+    if (status === 'subscribed') {
         if (hideWhenActive) return null;
         return (
             <div className="flex items-center gap-2 text-sm text-journal-brown font-medium">
@@ -126,13 +41,24 @@ export default function PushNotificationManager({ hideWhenActive = false }: Push
         );
     }
 
+    const label = status === 'denied' ? 'Notifications Blocked' : 'Enable Notifications';
+
     return (
-        <button
-            onClick={subscribeToPush}
-            className="flex items-center gap-2 px-4 py-2 bg-journal-brown/10 text-journal-brown rounded-xl text-sm font-medium hover:bg-journal-brown/20 transition-colors w-full justify-center"
-        >
-            <Bell className="w-4 h-4" />
-            Enable Notifications
-        </button>
+        <div className="flex flex-col items-center gap-1 w-full">
+            <button
+                onClick={enable}
+                disabled={status === 'denied'}
+                className="flex items-center gap-2 px-4 py-2 bg-journal-brown/10 text-journal-brown rounded-xl text-sm font-medium hover:bg-journal-brown/20 transition-colors w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <Bell className="w-4 h-4" />
+                {label}
+            </button>
+            {status === 'denied' && (
+                <p className="text-xs text-journal-brown/70 text-center">
+                    Unblock notifications in your browser settings.
+                </p>
+            )}
+            {error && <p className="text-xs text-red-600 text-center">{error}</p>}
+        </div>
     );
 }

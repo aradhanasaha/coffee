@@ -49,3 +49,7 @@ Supabase Snippet Public Schema Column Inventory (1).csv
 claude.log
 .claude*
 /.claude
+
+docs/
+
+*.md

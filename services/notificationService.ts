@@ -1,18 +1,5 @@
 import { supabase } from '@/adapters/supabaseClient';
-import type { Notification, ServiceResult, NotificationType } from '@/core/types/types';
-
-/**
- * Create a notification (DEPRECATED - Handled by DB Triggers)
- */
-export async function createNotification(
-    recipientId: string,
-    senderId: string,
-    type: NotificationType,
-    entityId: string | null
-): Promise<ServiceResult<void>> {
-    // Logic moved to Database Triggers
-    return { success: true };
-}
+import type { Notification, ServiceResult } from '@/core/types/types';
 
 /**
  * Fetch notifications for a user

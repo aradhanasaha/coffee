@@ -382,3 +382,11 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+# These functions enforce their own auth (webhook secret / service-role key),
+# so the gateway JWT check must be disabled or the webhook/cron calls get 401'd.
+[functions.push-dispatcher]
+verify_jwt = false
+
+[functions.push-notify]
+verify_jwt = false

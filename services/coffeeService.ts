@@ -11,8 +11,6 @@ import type {
     ServiceResult,
     TopLocation
 } from '@/core/types/types';
-import { createNotification } from './notificationService';
-import { getFollowers } from './followService';
 
 /**
  * Create a new coffee log
@@ -50,16 +48,8 @@ export async function createCoffeeLog(
             return { success: false, error: 'Failed to create log' };
         }
 
-        // Trigger notifications for followers
-        if (data) {
-            // We do this asynchronously so we don't block the UI response
-            getFollowers(userId).then(followers => {
-                followers.forEach(follower => {
-                    createNotification(follower.follower_id, userId, 'post', data.id);
-                });
-            });
-        }
-
+        // Follower notifications are created server-side by the
+        // `on_new_coffee_log_notify` DB trigger (followers-only, aggregated).
         return { success: true, data };
     } catch (err: any) {
         return { success: false, error: err.message || 'Failed to create log' };
